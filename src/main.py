@@ -1,6 +1,6 @@
 from datetime import datetime
-from services.summarize_service import SummaryService
 
+from services.summarize_service import SummaryService
 
 def main() -> None:
     SummaryService.summarize_git_loc(

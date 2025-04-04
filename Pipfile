@@ -4,11 +4,12 @@ verify_ssl = true
 name = "pypi"
 
 [scripts]
-main = "python main.py"
+main = "python src/main.py"
 
 [packages]
 pydantic = "*"
 gitpython = "*"
+python-dotenv = "*"
 
 [dev-packages]
 
