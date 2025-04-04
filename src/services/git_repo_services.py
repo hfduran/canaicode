@@ -5,9 +5,9 @@ from config.config import CONFIG
 from consumers.git_repo_consumer import GitRepoConsumer, ModifiedLinesDTO
 
 
-class SummaryService:
+class GitRepoServices:
     @staticmethod
-    def summarize_git_loc(start_date: datetime, end_date: datetime) -> None:
+    def summarize_loc(start_date: datetime, end_date: datetime) -> None:
         st = time.time()
         result: list[ModifiedLinesDTO] = GitRepoConsumer(
             CONFIG.repo_path

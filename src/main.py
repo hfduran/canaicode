@@ -2,8 +2,8 @@ import typer
 
 from datetime import datetime
 
-from consumers.gh_copilot.gh_copilot_consumer import GhCopilotConsumer
-from services.summarize_service import SummaryService
+from services.gh_copilot_services import GhCopilotServices
+from services.git_repo_services import GitRepoServices
 
 app = typer.Typer()
 
@@ -15,12 +15,12 @@ def main() -> None:
     )
 
     if option == 1:
-        SummaryService.summarize_git_loc(
+        GitRepoServices.summarize_loc(
             start_date=datetime(2024, 1, 1),
             end_date=datetime.now(),
         )
     elif option == 2:
-        GhCopilotConsumer().getMetrics()
+        GhCopilotServices.summarize_metrics()
     else:
         print("Invalid option!")
 
