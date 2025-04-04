@@ -24,9 +24,13 @@ pipenv install
 pipenv run main
 ```
 
-pretty simple, huh?
+For now the program has two functionalities:
 
-For now the target repo can be changed by the REPO_PATH variable on `summarize_service.py`, but it defaults to this own repo.
+1. summarize the LOC of a repo
+
+2. consume gh_copilot api (for now you need to put a json file of the response on sensible_data)
+
+You may want to config the system with .env, with the variables contained on config.py
 
 ## Developing
 
