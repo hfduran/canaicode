@@ -1,3 +1,5 @@
+from pydantic import BaseModel
+from typing import Callable
 import typer
 
 from datetime import datetime
@@ -8,21 +10,53 @@ from services.git_repo_services import GitRepoServices
 app = typer.Typer()
 
 
-@app.command()
-def main() -> None:
-    option = typer.prompt(
-        "Please select a function:\n 1: summarize git\n 2: gh copilot\n", type=int
-    )
+class Feature(BaseModel):
+    title: str
+    func: Callable
 
-    if option == 1:
-        GitRepoServices.summarize_loc(
+
+available_features: list[Feature] = [
+    Feature(
+        title="Summarize git",
+        func=lambda: GitRepoServices.summarize_loc(
             start_date=datetime(2024, 1, 1),
             end_date=datetime.now(),
-        )
-    elif option == 2:
-        GhCopilotServices.summarize_metrics()
-    else:
-        print("Invalid option!")
+        ),
+    ),
+    Feature(
+        title="Get GitHub Copilot metrics", func=GhCopilotServices.summarize_metrics
+    ),
+]
+
+
+@app.command()
+def main() -> None:
+    number_of_functions: int = len(available_features)
+
+    typer.echo("WELCOME TO CANAICODE!")
+
+    while True:
+        typer.echo("0. Exit")
+        index: int = 0
+        for feature in available_features:
+            typer.echo(f"{index + 1}. {feature.title}")
+            index += 1
+
+        option_prompt = typer.prompt("")
+        try:
+            option: int = int(option_prompt)
+        except Exception:
+            typer.echo("Invalid selection!")
+            continue
+
+        if option == 0:
+            typer.echo("Bye!! ><")
+            return
+        if option > number_of_functions:
+            typer.echo("Invalid selection!")
+            continue
+        feature = available_features[option - 1]
+        feature.func()
 
 
 if __name__ == "__main__":
