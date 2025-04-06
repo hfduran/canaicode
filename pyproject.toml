@@ -7,3 +7,6 @@ warn_return_any = true
 
 [tool.ruffus]
 line_length = 88
+
+[tool.black]
+line-length = 88
