@@ -68,6 +68,14 @@ pipenv install <your dependency>
 
 ## Tests
 
+Before running tests, be sure to run the following command:
+
+```bash
+git submodule update --init --recursive
+```
+
+This is needed because some tests use an example git repo to test the integration. This command will pull the test submodule.
+
 To run the automated tests:
 
 ```bash

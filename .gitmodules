@@ -1,0 +1,3 @@
+[submodule "tests/data/example_git_repo"]
+	path = tests/data/example_git_repo
+	url = https://github.com/hfduran/example_git_repo.git
