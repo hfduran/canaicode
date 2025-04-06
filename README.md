@@ -4,7 +4,6 @@
 ## Requirements
 - python 3.13.2 ([pyenv](https://github.com/pyenv/pyenv) reccomended)
 - [pipenv](https://pipenv.pypa.io/en/latest/)
-- [mypy](https://mypy.readthedocs.io/en/stable/getting_started.html)
 
 ## Intro
 
@@ -14,7 +13,7 @@ The project uses the following tools:
 - `mypy`: static analyser
 - `pyright` (or pylance in vscode): language server
 
-All extensions for that tools are included on the `.vscode` folder on this repo. Opening the project should popup the suggestions. It might be necessary to install some tools on your system (specially mypy) for the extensions to work properly.
+All extensions for that tools are included on the `.vscode` folder on this repo. Opening the project should popup the suggestions.
 
 ## Running
 
@@ -34,7 +33,13 @@ You may want to config the system with .env, with the variables contained on con
 
 ## Developing
 
-I strongly suggest setting up Pyright/Pylance (with strict rules), MyPy and Ruff on your IDE and assure it is working properly.
+First of all, install dev dependencies for the project:
+
+```bash
+pipenv install --dev
+```
+
+I strongly suggest setting up Pyright/Pylance (with strict rules), MyPy and Ruff on your IDE and assure it is working properly. MyPy and Ruff are being installed as dev deps by pipenv.
 
 Ensure that the python environment you are using is the Pipenv one. In vscode:
 
@@ -42,9 +47,16 @@ Ctrl+Shift+P > "Python: Select Interpreter" > (search for your project pipenv)
 
 
 ### IMPORTANT:
-Please, whenever submiting a PR run the static check and correct **ALL** errors.
+Please, whenever submiting a PR run the static check and correct **ALL** errors. The following command will run mypy on the codebase.
+
 ```bash
-mypy
+pipenv run type-check
+```
+
+Also, be sure the files are formatted on the right way:
+
+```bash
+pipenv run format
 ```
 
 ## Installing new dependencies

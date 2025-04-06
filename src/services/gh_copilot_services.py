@@ -1,5 +1,3 @@
-
-
 from consumers.gh_copilot.gh_copilot_consumer import GhCopilotConsumer
 
 

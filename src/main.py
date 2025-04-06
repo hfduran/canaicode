@@ -59,6 +59,7 @@ def main() -> None:
         feature = available_features[option - 1]
         feature.func()
 
+
 def __print_welcome() -> None:
     with open("./assets/art.txt", "r") as file:
         content = file.read()
@@ -66,6 +67,7 @@ def __print_welcome() -> None:
     with open("./assets/title.txt", "r") as file:
         content = file.read()
         typer.echo(content)
+
 
 if __name__ == "__main__":
     app()

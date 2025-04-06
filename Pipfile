@@ -5,6 +5,8 @@ name = "pypi"
 
 [scripts]
 main = "python src/main.py"
+format = "ruff format"
+type-check="mypy"
 test = "pytest"
 coverage = "pytest --cov=src --cov-branch --cov-report=html --cov-report=term --cov-report=term-missing"
 
@@ -13,10 +15,12 @@ pydantic = "*"
 gitpython = "*"
 python-dotenv = "*"
 typer = "*"
-pytest = "*"
-pytest-cov = "*"
 
 [dev-packages]
+pytest = "*"
+pytest-cov = "*"
+ruff = "*"
+mypy = "*"
 
 [requires]
 python_version = "3.13"
