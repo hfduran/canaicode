@@ -53,3 +53,19 @@ Please use `pipenv` to install new dependencies. It will update the Pipenv lockf
 ```bash
 pipenv install <your dependency>
 ```
+
+## Tests
+
+To run the automated tests:
+
+```bash
+pipenv run test
+```
+
+To check test coverage:
+
+```bash
+pipenv run coverage
+```
+
+The coverage command is configured to put a summary on terminal, but also generate html files to inspect which branches of the code are not being covered. Opening the `index.html` on `htmlcov/` folder might give you hints on how to improve test coverage. 

@@ -5,12 +5,16 @@ name = "pypi"
 
 [scripts]
 main = "python src/main.py"
+test = "pytest"
+coverage = "pytest --cov=src --cov-branch --cov-report=html --cov-report=term --cov-report=term-missing"
 
 [packages]
 pydantic = "*"
 gitpython = "*"
 python-dotenv = "*"
 typer = "*"
+pytest = "*"
+pytest-cov = "*"
 
 [dev-packages]
 

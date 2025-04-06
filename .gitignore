@@ -3,3 +3,4 @@ __pycache__/
 .env
 sensible_data/*
 !sensible_data/.gitkeep
+.coverage
