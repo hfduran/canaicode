@@ -12,7 +12,7 @@ app = typer.Typer()
 
 class Feature(BaseModel):
     title: str
-    func: Callable
+    func: Callable[[], None]
 
 
 available_features: list[Feature] = [
@@ -33,9 +33,10 @@ available_features: list[Feature] = [
 def main() -> None:
     number_of_functions: int = len(available_features)
 
-    typer.echo("WELCOME TO CANAICODE!")
+    __print_welcome()
 
     while True:
+        typer.echo("\nPlease select an option from the list below:")
         typer.echo("0. Exit")
         index: int = 0
         for feature in available_features:
@@ -58,6 +59,13 @@ def main() -> None:
         feature = available_features[option - 1]
         feature.func()
 
+def __print_welcome() -> None:
+    with open("./assets/art.txt", "r") as file:
+        content = file.read()
+        typer.echo(content)
+    with open("./assets/title.txt", "r") as file:
+        content = file.read()
+        typer.echo(content)
 
 if __name__ == "__main__":
     app()
