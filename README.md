@@ -62,8 +62,15 @@ pipenv run format
 ## Installing new dependencies
 
 Please use `pipenv` to install new dependencies. It will update the Pipenv lockfiles
+
 ```bash
 pipenv install <your dependency>
+```
+
+For dev dependencies:
+
+```bash
+pipenv install --dev <your_dependency>
 ```
 
 ## Tests
