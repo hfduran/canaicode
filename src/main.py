@@ -42,8 +42,15 @@ def get_tomorrow() -> date:
 
 available_features: list[Feature] = [
     Feature(
-        title="Summarize git",
-        func=lambda: GitRepoServices.summarize_loc(
+        title="Summarize git LoC by author",
+        func=lambda: GitRepoServices.summarize_loc_by_author(
+            start_date=prompt_date("start date", get_old_date()),
+            end_date=prompt_date("end date", get_tomorrow()),
+        ),
+    ),
+    Feature(
+        title="Summarize git LoC by programming language",
+        func=lambda: GitRepoServices.summarize_loc_by_language(
             start_date=prompt_date("start date", get_old_date()),
             end_date=prompt_date("end date", get_tomorrow()),
         ),
