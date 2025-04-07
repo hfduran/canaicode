@@ -2,7 +2,7 @@ from pydantic import BaseModel
 from typing import Callable
 import typer
 
-from datetime import datetime
+from datetime import datetime, date, timedelta
 
 from services.gh_copilot_services import GhCopilotServices
 from services.git_repo_services import GitRepoServices
@@ -15,16 +15,45 @@ class Feature(BaseModel):
     func: Callable[[], None]
 
 
+def prompt_date(variable_name: str, default: date | None = None) -> date:
+    while True:
+        if default is None:
+            date_str = typer.prompt(
+                f"Enter {variable_name} (YYYY-MM-DD)",
+            )
+        else:
+            date_str = typer.prompt(
+                f"Enter {variable_name} (YYYY-MM-DD)",
+                default=default.strftime("%Y-%m-%d"),
+            )
+        try:
+            return datetime.strptime(date_str, "%Y-%m-%d").date()
+        except ValueError:
+            typer.secho("Invalid format. Try again.", fg=typer.colors.RED)
+
+
+def get_old_date() -> date:
+    return datetime.today().date() - timedelta(days=365)
+
+
+def get_tomorrow() -> date:
+    return datetime.today().date() + timedelta(days=1)
+
+
 available_features: list[Feature] = [
     Feature(
         title="Summarize git",
         func=lambda: GitRepoServices.summarize_loc(
-            start_date=datetime(2024, 1, 1),
-            end_date=datetime.now(),
+            start_date=prompt_date("start date", get_old_date()),
+            end_date=prompt_date("end date", get_tomorrow()),
         ),
     ),
     Feature(
-        title="Get GitHub Copilot metrics", func=GhCopilotServices.summarize_metrics
+        title="Get GitHub Copilot metrics",
+        func=lambda: GhCopilotServices.summarize_metrics(
+            start_date=prompt_date("start date", get_old_date()),
+            end_date=prompt_date("end date", get_tomorrow()),
+        ),
     ),
 ]
 
