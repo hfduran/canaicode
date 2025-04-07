@@ -16,9 +16,9 @@ class LocMetrics(BaseModel):
 
 class GhCopilotServices:
     @staticmethod
-    def summarize_metrics(start_date: date, end_date: date) -> None:
+    def summarize_metrics(start_date: date, end_date: date) -> dict[str, LocMetrics]:
         consumer = GhCopilotConsumer()
-        result: list[CopilotMetricsEntry] = consumer.getMetrics()
+        result: list[CopilotMetricsEntry] = consumer.get_metrics()
 
         language_loc_metrics: dict[str, LocMetrics] = {}
 
@@ -68,3 +68,5 @@ class GhCopilotServices:
             )
             echo("---")
         echo()
+
+        return language_loc_metrics

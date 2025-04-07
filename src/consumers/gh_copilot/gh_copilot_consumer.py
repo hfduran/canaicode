@@ -4,7 +4,7 @@ from consumers.gh_copilot.gh_copilot_models import CopilotMetricsEntry
 
 
 class GhCopilotConsumer:
-    def getMetrics(self) -> list[CopilotMetricsEntry]:
+    def get_metrics(self) -> list[CopilotMetricsEntry]:
         with open(CONFIG.gh_copilot_metrics_file_path, "r") as file:
             data = json.load(file)
 

@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from typing import Callable
+from typing import Any, Callable
 import typer
 
 from datetime import datetime, date, timedelta
@@ -12,7 +12,7 @@ app = typer.Typer()
 
 class Feature(BaseModel):
     title: str
-    func: Callable[[], None]
+    func: Callable[[], Any]
 
 
 def prompt_date(variable_name: str, default: date | None = None) -> date:

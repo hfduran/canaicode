@@ -1,0 +1,52 @@
+[
+    {
+        "date": "2025-01-01",
+        "copilot_ide_code_completions": {
+            "editors": [
+                {
+                    "name": "vscode",
+                    "models": [
+                        {
+                            "name": "default",
+                            "languages": [
+                                {
+                                    "name": "python",
+                                    "total_engaged_users": 4,
+                                    "total_code_acceptances": 140,
+                                    "total_code_suggestions": 260,
+                                    "total_code_lines_accepted": 300,
+                                    "total_code_lines_suggested": 761
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        }
+    },
+    {
+        "date": "2025-01-02",
+        "copilot_ide_code_completions": {
+            "editors": [
+                {
+                    "name": "vscode",
+                    "models": [
+                        {
+                            "name": "default",
+                            "languages": [
+                                {
+                                    "name": "python",
+                                    "total_engaged_users": 4,
+                                    "total_code_acceptances": 70,
+                                    "total_code_suggestions": 98,
+                                    "total_code_lines_accepted": 300,
+                                    "total_code_lines_suggested": 600
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        }
+    }
+]
