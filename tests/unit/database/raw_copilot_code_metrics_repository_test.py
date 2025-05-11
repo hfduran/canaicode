@@ -3,6 +3,7 @@ from unittest import TestCase
 from unittest.mock import MagicMock, patch
 
 from src.domain.entities.copilot_code_metrics import CopilotCodeMetrics
+from src.domain.entities.team import Team
 from src.infrastructure.database.dynamo.raw_copilot_code_metrics_repository import (
     RawCopilotCodeMetricsRepository,
 )
@@ -17,7 +18,7 @@ class TestRawCopilotCodeMetricsRepository(TestCase):
         mock_table.get_item.return_value = {
             "Item": {
                 "id": "123",
-                "team": "canaicode",
+                "team": {"name": "canaicode"},
                 "date": "2025-11-05T12:38:22.000Z",
                 "IDE": "VSCode",
                 "copilot_model": "default",
@@ -35,7 +36,9 @@ class TestRawCopilotCodeMetricsRepository(TestCase):
 
         expected_response = CopilotCodeMetrics(
             id="123",
-            team="canaicode",
+            team=Team(
+                name="canaicode",
+            ),
             date=datetime.strptime(
                 "2025-11-05T12:38:22.000Z", "%Y-%m-%dT%H:%M:%S.%fZ"
             ).replace(tzinfo=timezone.utc),
@@ -91,7 +94,9 @@ class TestRawCopilotCodeMetricsRepository(TestCase):
 
         copilot_code_metrics = CopilotCodeMetrics(
             id="123",
-            team="canaicode",
+            team=Team(
+                name="canaicode",
+            ),
             date=datetime.strptime(
                 "2025-11-05T12:38:22.000Z", "%Y-%m-%dT%H:%M:%S.%fZ"
             ).replace(tzinfo=timezone.utc),

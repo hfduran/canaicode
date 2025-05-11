@@ -2,7 +2,9 @@ from datetime import datetime, timezone
 from unittest import TestCase
 from unittest.mock import MagicMock, patch
 
+from src.domain.entities.author import Author
 from src.domain.entities.commit_metrics import CommitMetrics
+from src.domain.entities.repository import Repository
 from src.infrastructure.database.dynamo.raw_commit_metrics_repository import (
     RawCommitMetricsRepository,
 )
@@ -18,9 +20,9 @@ class TestRawCommitMetricsRepository(TestCase):
             "Item": {
                 "id": "123",
                 "hash": "123456",
-                "repository": "canaicode",
+                "repository": {"name": "canaicode", "team": "canaicode"},
                 "date": "2025-11-05T12:38:22.000Z",
-                "author": "johnDue",
+                "author": {"name": "johnDue", "teams": ["canaicode"]},
                 "language": "python",
                 "added_lines": "9",
                 "removed_lines": "1",
@@ -33,11 +35,11 @@ class TestRawCommitMetricsRepository(TestCase):
         expected_response = CommitMetrics(
             id="123",
             hash="123456",
-            repository="canaicode",
+            repository=Repository(name="canaicode", team="canaicode"),
             date=datetime.strptime(
                 "2025-11-05T12:38:22.000Z", "%Y-%m-%dT%H:%M:%S.%fZ"
             ).replace(tzinfo=timezone.utc),
-            author="johnDue",
+            author=Author(name="johnDue", teams=["canaicode"]),
             language="python",
             added_lines=9,
             removed_lines=1,
@@ -86,9 +88,11 @@ class TestRawCommitMetricsRepository(TestCase):
         commit = CommitMetrics(
             id="123",
             hash="123456",
-            repository="canaicode",
-            date=datetime(2025, 11, 5, 12, 38, 22, tzinfo=timezone.utc),
-            author="johnDue",
+            repository=Repository(name="canaicode", team="canaicode"),
+            date=datetime.strptime(
+                "2025-11-05T12:38:22.000Z", "%Y-%m-%dT%H:%M:%S.%fZ"
+            ).replace(tzinfo=timezone.utc),
+            author=Author(name="johnDue", teams=["canaicode"]),
             language="python",
             added_lines=9,
             removed_lines=1,
