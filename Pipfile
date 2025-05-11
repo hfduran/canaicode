@@ -15,12 +15,15 @@ pydantic = "*"
 gitpython = "*"
 python-dotenv = "*"
 typer = "*"
+boto3 = "*"
 
 [dev-packages]
 pytest = "*"
 pytest-cov = "*"
 ruff = "*"
 mypy = "*"
+boto3-stubs = "*"
+types-boto3 = {extras = ["dynamodb"], version = "*"}
 
 [requires]
 python_version = "3.13"
