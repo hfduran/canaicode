@@ -1,0 +1,117 @@
+from datetime import datetime, timezone
+from unittest import TestCase
+from unittest.mock import MagicMock, patch
+
+from src.domain.entities.copilot_code_metrics import CopilotCodeMetrics
+from src.domain.entities.team import Team
+from src.infrastructure.database.dynamo.raw_copilot_code_metrics_repository import (
+    RawCopilotCodeMetricsRepository,
+)
+
+
+class TestRawCopilotCodeMetricsRepository(TestCase):
+    @patch("boto3.resource")
+    def test_raw_copilot_code_metrics_repository_get_item(
+        self, mock_boto_resource: MagicMock
+    ) -> None:
+        mock_table = MagicMock()
+        mock_table.get_item.return_value = {
+            "Item": {
+                "id": "123",
+                "team": {"name": "canaicode"},
+                "date": "2025-11-05T12:38:22.000Z",
+                "IDE": "VSCode",
+                "copilot_model": "default",
+                "language": "python",
+                "total_users": "9",
+                "code_acceptances": "1",
+                "code_suggestions": "1",
+                "lines_accepted": "1",
+                "lines_suggested": "1",
+            }
+        }
+
+        mock_dynamodb = mock_boto_resource.return_value
+        mock_dynamodb.Table.return_value = mock_table
+
+        expected_response = CopilotCodeMetrics(
+            id="123",
+            team=Team(
+                name="canaicode",
+            ),
+            date=datetime.strptime(
+                "2025-11-05T12:38:22.000Z", "%Y-%m-%dT%H:%M:%S.%fZ"
+            ).replace(tzinfo=timezone.utc),
+            IDE="VSCode",
+            copilot_model="default",
+            language="python",
+            total_users=9,
+            code_acceptances=1,
+            code_suggestions=1,
+            lines_accepted=1,
+            lines_suggested=1,
+        )
+
+        raw_copilot_code_metrics_repository = RawCopilotCodeMetricsRepository()
+
+        item = raw_copilot_code_metrics_repository.get_item("123")
+
+        self.assertEqual(
+            item,
+            expected_response,
+        )
+        mock_table.get_item.assert_called_once_with(Key={"id": "123"})
+
+    @patch("boto3.resource")
+    def test_raw_copilot_code_metrics_repository_get_item_no_item(
+        self, mock_boto_resource: MagicMock
+    ) -> None:
+        mock_table = MagicMock()
+        mock_table.get_item.return_value = {"Item": {}}
+
+        mock_dynamodb = mock_boto_resource.return_value
+        mock_dynamodb.Table.return_value = mock_table
+
+        raw_copilot_code_metrics_repository = RawCopilotCodeMetricsRepository()
+
+        item = raw_copilot_code_metrics_repository.get_item("123")
+
+        self.assertEqual(
+            item,
+            None,
+        )
+        mock_table.get_item.assert_called_once_with(Key={"id": "123"})
+
+    @patch("boto3.resource")
+    def test_raw_copilot_code_metrics_repository_put_item(
+        self, mock_boto_resource: MagicMock
+    ) -> None:
+        mock_table = MagicMock()
+        mock_dynamodb = mock_boto_resource.return_value
+        mock_dynamodb.Table.return_value = mock_table
+
+        raw_copilot_code_metrics_repository = RawCopilotCodeMetricsRepository()
+
+        copilot_code_metrics = CopilotCodeMetrics(
+            id="123",
+            team=Team(
+                name="canaicode",
+            ),
+            date=datetime.strptime(
+                "2025-11-05T12:38:22.000Z", "%Y-%m-%dT%H:%M:%S.%fZ"
+            ).replace(tzinfo=timezone.utc),
+            IDE="VSCode",
+            copilot_model="default",
+            language="python",
+            total_users=9,
+            code_acceptances=1,
+            code_suggestions=1,
+            lines_accepted=1,
+            lines_suggested=1,
+        )
+
+        raw_copilot_code_metrics_repository.put_item(copilot_code_metrics)
+
+        mock_table.put_item.assert_called_once_with(
+            Item=copilot_code_metrics.model_dump()
+        )

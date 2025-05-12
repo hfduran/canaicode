@@ -1,5 +1,7 @@
+from typing import Optional
+
 from pydantic import BaseModel
 
 
 class Entity(BaseModel):
-    id: str | None = None
+    id: Optional[str] = None
