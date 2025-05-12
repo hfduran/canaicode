@@ -3,4 +3,4 @@ from typing import List
 
 class Author(Entity):
     name: str
-    teams: List[str]
+    teams: List[str] # mudar para list[Team]
