@@ -7,8 +7,8 @@ class RawCopilotCodeMetricsRepository:
     def __init__(self) -> None:
         self.table = boto3.resource("dynamodb").Table("raw_copilot_code_metrics")  # type: ignore
 
-    def put_item(self, commit: CopilotCodeMetrics) -> None:
-        item = commit.model_dump()
+    def put_item(self, code_metrics: CopilotCodeMetrics) -> None:
+        item = code_metrics.model_dump()
         self.table.put_item(Item=item)
 
     def get_item(self, id: str) -> CopilotCodeMetrics | None:

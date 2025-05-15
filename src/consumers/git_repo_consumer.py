@@ -1,8 +1,15 @@
-from collections import defaultdict
 import os
-from git import Repo
+import uuid
+from collections import defaultdict
 from datetime import datetime
+from typing import List
+
+from git import Repo
 from pydantic import BaseModel
+
+from src.domain.entities.commit_metrics import CommitMetrics
+from src.domain.entities.value_objects.author import Author
+from src.domain.entities.value_objects.repository import Repository
 
 
 class ModifiedLinesDTO(BaseModel):
@@ -105,6 +112,51 @@ class GitRepoConsumer:
                 )
             )
 
+        return result
+
+    def get_commits_by_date(self, date: datetime) -> List[CommitMetrics]:
+        result: List[CommitMetrics] = []
+
+        for commit in self.repo.iter_commits():
+            commit_date = datetime.fromtimestamp(commit.committed_date)
+            if not (commit_date == date):
+                continue
+
+            if not commit.parents:
+                diff = self.repo.git.diff(self.__NULL_TREE, commit.hexsha, "--numstat")
+            else:
+                diff = self.repo.git.diff(
+                    commit.parents[0].hexsha, commit.hexsha, "--numstat"
+                )
+
+            author: str | None = commit.author.email
+
+            for line in diff.splitlines():
+                parts = line.strip().split("\t")
+                if len(parts) != 3:
+                    continue
+
+                added, removed, filename = parts
+                if added == "-":
+                    added = 0
+                if removed == "-":
+                    removed = 0
+
+                language = self.__get_language(filename)
+                result.append(
+                    CommitMetrics(
+                        id=str(uuid.uuid4()),
+                        added_lines=int(added),
+                        author=Author(
+                            name=author, teams=[]
+                        ),  # TODO: ver como associar o autor ao time (usar 'default' para os primeiros testes?)
+                        date=commit_date,
+                        hash=commit.hexsha,
+                        language=language,
+                        removed_lines=int(removed),
+                        repository=Repository(name=self.repo_path, team=""),
+                    )
+                )
         return result
 
     def __get_language(self, filename: str) -> str:
