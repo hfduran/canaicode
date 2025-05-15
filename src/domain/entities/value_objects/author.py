@@ -5,4 +5,4 @@ from pydantic import BaseModel
 
 class Author(BaseModel):
     name: Optional[str]
-    teams: List[str]
+    teams: List[str]  # mudar para Team
