@@ -1,8 +1,8 @@
 from datetime import datetime
 
-from src.domain.entities.author import Author
 from src.domain.entities.entity import Entity
-from src.domain.entities.repository import Repository
+from src.domain.entities.value_objects.author import Author
+from src.domain.entities.value_objects.repository import Repository
 
 
 class CommitMetrics(Entity):

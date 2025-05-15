@@ -2,9 +2,9 @@ from datetime import datetime, timezone
 from unittest import TestCase
 from unittest.mock import MagicMock, patch
 
-from src.domain.entities.author import Author
 from src.domain.entities.commit_metrics import CommitMetrics
-from src.domain.entities.repository import Repository
+from src.domain.entities.value_objects.author import Author
+from src.domain.entities.value_objects.repository import Repository
 from src.infrastructure.database.dynamo.raw_commit_metrics_repository import (
     RawCommitMetricsRepository,
 )

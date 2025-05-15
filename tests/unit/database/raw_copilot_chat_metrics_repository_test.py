@@ -3,7 +3,7 @@ from unittest import TestCase
 from unittest.mock import MagicMock, patch
 
 from src.domain.entities.copilot_chat_metrics import CopilotChatMetrics
-from src.domain.entities.team import Team
+from src.domain.entities.value_objects.team import Team
 from src.infrastructure.database.dynamo.raw_copilot_chat_metrics_repository import (
     RawCopilotChatMetricsRepository,
 )
