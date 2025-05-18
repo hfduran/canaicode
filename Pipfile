@@ -16,6 +16,8 @@ gitpython = "*"
 python-dotenv = "*"
 typer = "*"
 boto3 = "*"
+fastapi = "*"
+uvicorn = "*"
 
 [dev-packages]
 pytest = "*"
