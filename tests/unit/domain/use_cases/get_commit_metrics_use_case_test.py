@@ -25,6 +25,7 @@ class TestGetCommitMetricsUseCase(TestCase):
             language="python",
             removed_lines=2,
             repository=Repository(name="canaicode", team="canaicode"),
+            created_at=date,
         )
 
         commit_metrics_list: List[CommitMetrics] = [commit_metrics, commit_metrics]

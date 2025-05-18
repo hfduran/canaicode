@@ -3,7 +3,7 @@ from typing import List
 
 from src.consumers.git_repo_consumer import GitRepoConsumer
 from src.domain.entities.commit_metrics import CommitMetrics
-from src.infrastructure.database.dynamo.raw_commit_metrics_repository import (
+from src.infrastructure.database.postgre.raw_commit_metrics.raw_commit_metrics_repository import (
     RawCommitMetricsRepository,
 )
 
@@ -21,6 +21,6 @@ class GetCommitMetricsUseCase:
         commits_metrics = self.git_repo_consumer.get_commits_by_date(date)
 
         for commit_metrics in commits_metrics:
-            self.commit_metrics_repository.put_item(commit_metrics)
+            self.commit_metrics_repository.create(commit_metrics)
 
         return commits_metrics

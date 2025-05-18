@@ -18,6 +18,8 @@ typer = "*"
 boto3 = "*"
 fastapi = "*"
 uvicorn = "*"
+sqlalchemy = "*"
+psycopg2-binary = "*"
 
 [dev-packages]
 pytest = "*"

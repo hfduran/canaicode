@@ -32,6 +32,7 @@ class TestGetCopilotMetricsUseCase(TestCase):
             code_suggestions=1,
             lines_accepted=1,
             lines_suggested=1,
+            created_at=date,
         )
         copilot_chat_metrics = CopilotChatMetrics(
             id="123",
@@ -45,6 +46,7 @@ class TestGetCopilotMetricsUseCase(TestCase):
             total_chats=1,
             copy_events=1,
             insertion_events=1,
+            created_at=date,
         )
 
         copilot_metrics: Dict[str, List[CopilotMetrics]] = {
