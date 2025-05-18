@@ -4,10 +4,10 @@ from typing import Dict, List
 from src.consumers.gh_copilot.gh_copilot_consumer import GhCopilotConsumer
 from src.domain.entities.copilot_chat_metrics import CopilotChatMetrics
 from src.domain.entities.copilot_code_metrics import CopilotCodeMetrics
-from src.infrastructure.database.dynamo.raw_copilot_chat_metrics_repository import (
+from src.infrastructure.database.postgre.raw_copilot_chat_metrics.raw_copilot_chat_metrics_repository import (
     RawCopilotChatMetricsRepository,
 )
-from src.infrastructure.database.dynamo.raw_copilot_code_metrics_repository import (
+from src.infrastructure.database.postgre.raw_copilot_code_metrics.raw_copilot_code_metrics_repository import (
     RawCopilotCodeMetricsRepository,
 )
 
@@ -28,12 +28,12 @@ class GetCopilotMetricsUseCase:
     ) -> Dict[str, List[CopilotCodeMetrics | CopilotChatMetrics]]:
         copilot_metrics = self.github_copilot_consumer.get_metrics_by_date(date)
 
-        # for copilot_code_metrics in copilot_metrics["code"]:
-        #     if isinstance(copilot_code_metrics, CopilotCodeMetrics):
-        #         self.copilot_code_metrics_repository.put_item(copilot_code_metrics)
+        for copilot_code_metrics in copilot_metrics["code"]:
+            if isinstance(copilot_code_metrics, CopilotCodeMetrics):
+                self.copilot_code_metrics_repository.create(copilot_code_metrics)
 
-        # for copilot_chat_metrics in copilot_metrics["chat"]:
-        #     if isinstance(copilot_chat_metrics, CopilotChatMetrics):
-        #         self.copilot_chat_metrics_repository.put_item(copilot_chat_metrics)
+        for copilot_chat_metrics in copilot_metrics["chat"]:
+            if isinstance(copilot_chat_metrics, CopilotChatMetrics):
+                self.copilot_chat_metrics_repository.create(copilot_chat_metrics)
 
         return copilot_metrics
