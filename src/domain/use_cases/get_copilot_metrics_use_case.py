@@ -1,4 +1,5 @@
-from datetime import datetime
+from datetime import date
+from typing import Dict, List
 
 from src.consumers.gh_copilot.gh_copilot_consumer import GhCopilotConsumer
 from src.domain.entities.copilot_chat_metrics import CopilotChatMetrics
@@ -22,13 +23,17 @@ class GetCopilotMetricsUseCase:
         self.copilot_chat_metrics_repository = copilot_chat_metrics_repository
         self.github_copilot_consumer = github_copilot_consumer
 
-    def execute(self, date: datetime) -> None:
+    def execute(
+        self, date: date
+    ) -> Dict[str, List[CopilotCodeMetrics | CopilotChatMetrics]]:
         copilot_metrics = self.github_copilot_consumer.get_metrics_by_date(date)
 
-        for copilot_code_metrics in copilot_metrics["code"]:
-            if isinstance(copilot_code_metrics, CopilotCodeMetrics):
-                self.copilot_code_metrics_repository.put_item(copilot_code_metrics)
+        # for copilot_code_metrics in copilot_metrics["code"]:
+        #     if isinstance(copilot_code_metrics, CopilotCodeMetrics):
+        #         self.copilot_code_metrics_repository.put_item(copilot_code_metrics)
 
-        for copilot_chat_metrics in copilot_metrics["chat"]:
-            if isinstance(copilot_chat_metrics, CopilotChatMetrics):
-                self.copilot_chat_metrics_repository.put_item(copilot_chat_metrics)
+        # for copilot_chat_metrics in copilot_metrics["chat"]:
+        #     if isinstance(copilot_chat_metrics, CopilotChatMetrics):
+        #         self.copilot_chat_metrics_repository.put_item(copilot_chat_metrics)
+
+        return copilot_metrics

@@ -1,0 +1,15 @@
+{
+  "name": "canaicode",
+  "version": "1.0.0",
+  "description": "![Kurisu](https://i.pinimg.com/564x/85/63/a7/8563a71c903571dcf7f98ce36226e848.jpg)",
+  "main": "index.js",
+  "directories": {
+    "test": "tests"
+  },
+  "scripts": {
+    "start": "uvicorn src.main:app --reload"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}

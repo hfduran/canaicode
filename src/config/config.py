@@ -1,12 +1,13 @@
-from dotenv import load_dotenv
 import os
+
+from dotenv import load_dotenv
 
 load_dotenv()
 
 
 class Config:
     __REPO_PATH_ENV = "REPO_PATH"
-    __GH_COPILOT_METRICS_FILE_PATH_ENV = "GH_COPILOT_MERICS_FILE_PATH"
+    __GH_COPILOT_METRICS_FILE_PATH_ENV = "GH_COPILOT_METRICS_FILE_PATH"
 
     __DEFAULT_REPO_PATH = "."
 
