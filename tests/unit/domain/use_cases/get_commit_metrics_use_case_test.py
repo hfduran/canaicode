@@ -36,7 +36,7 @@ class TestGetCommitMetricsUseCase(TestCase):
             commit_metrics_repository, git_repo_consumer
         )
 
-        get_commit_metrics_use_case.execute(date)
+        get_commit_metrics_use_case.execute(date, "canaicode")
 
         self.assertEqual(commit_metrics_repository.put_item.call_count, 2)
         commit_metrics_repository.put_item.assert_called_with(commit_metrics)

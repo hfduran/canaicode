@@ -34,25 +34,27 @@ def get_db() -> Any:
         db.close()
 
 
-@router.get("/commit_metrics")
+@router.get("/commit_metrics/{team_name}")
 def get_commit_metrics(
+    team_name: str,
     date_string: str = "",
     db: Session = Depends(get_db),
 ) -> List[CommitMetrics]:
     date = datetime.strptime(date_string, "%Y-%m-%d").replace(tzinfo=timezone.utc)
     get_commit_metrics_use_case = set_get_commit_metrics_dependencies(db)
-    response = get_commit_metrics_use_case.execute(date)
+    response = get_commit_metrics_use_case.execute(date, team_name)
     return response
 
 
-@router.get("/copilot_metrics")
+@router.get("/copilot_metrics/{team_name}")
 def get_copilot_metrics(
+    team_name: str,
     date_string: str = "",
     db: Session = Depends(get_db),
 ) -> Dict[str, List[Any]]:
     date = datetime.strptime(date_string, "%Y-%m-%d").date()
     get_copilot_metrics_use_case = set_get_copilot_metrics_dependencies(db)
-    response = get_copilot_metrics_use_case.execute(date)
+    response = get_copilot_metrics_use_case.execute(date, team_name)
     return response
 
 
