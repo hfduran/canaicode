@@ -62,7 +62,7 @@ class TestGetCopilotMetricsUseCase(TestCase):
             github_copilot_consumer,
         )
 
-        get_copilot_metrics_use_case.execute(date)
+        get_copilot_metrics_use_case.execute(date, "canaicode")
 
         self.assertEqual(copilot_code_metrics_repository.put_item.call_count, 2)
         copilot_code_metrics_repository.put_item.assert_called_with(

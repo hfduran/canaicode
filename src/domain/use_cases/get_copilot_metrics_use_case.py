@@ -24,9 +24,11 @@ class GetCopilotMetricsUseCase:
         self.github_copilot_consumer = github_copilot_consumer
 
     def execute(
-        self, date: date
+        self, date: date, team_name: str
     ) -> Dict[str, List[CopilotCodeMetrics | CopilotChatMetrics]]:
-        copilot_metrics = self.github_copilot_consumer.get_metrics_by_date(date)
+        copilot_metrics = self.github_copilot_consumer.get_metrics_by_date(
+            date, team_name
+        )
 
         for copilot_code_metrics in copilot_metrics["code"]:
             if isinstance(copilot_code_metrics, CopilotCodeMetrics):

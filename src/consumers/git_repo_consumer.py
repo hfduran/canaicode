@@ -114,7 +114,9 @@ class GitRepoConsumer:
 
         return result
 
-    def get_commits_by_date(self, date: datetime) -> List[CommitMetrics]:
+    def get_commits_by_date(
+        self, date: datetime, team_name: str
+    ) -> List[CommitMetrics]:
         result: List[CommitMetrics] = []
 
         for commit in self.repo.iter_commits():
@@ -154,7 +156,7 @@ class GitRepoConsumer:
                         hash=commit.hexsha,
                         language=language,
                         removed_lines=int(removed),
-                        repository=Repository(name=self.repo_path, team=""),
+                        repository=Repository(name=self.repo_path, team=team_name),
                     )
                 )
         return result

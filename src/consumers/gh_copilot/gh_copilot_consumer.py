@@ -23,7 +23,7 @@ class GhCopilotConsumer:
         return result
 
     def get_metrics_by_date(
-        self, date: date
+        self, date: date, team_name: str
     ) -> Dict[str, List[CopilotCodeMetrics | CopilotChatMetrics]]:
         with open(CONFIG.gh_copilot_metrics_file_path, "r") as file:
             data = json.load(file)
@@ -50,7 +50,7 @@ class GhCopilotConsumer:
                                     language=language.name,  # type: ignore
                                     lines_accepted=language.total_code_lines_accepted,  # type: ignore
                                     lines_suggested=language.total_code_lines_suggested,  # type: ignore
-                                    team=Team(name=""),  # TODO: team name
+                                    team=Team(name=team_name),  # TODO: team name
                                     total_users=language.total_engaged_users,  # type: ignore
                                 )
                             )
@@ -65,7 +65,7 @@ class GhCopilotConsumer:
                                 date=parsed_entry.date,  # type: ignore
                                 IDE=chat_editor.name,  # type: ignore
                                 insertion_events=chat_model.total_chat_insertion_events,  # type: ignore
-                                team=Team(name=""),  # TODO: team name
+                                team=Team(name=team_name),  # TODO: team name
                                 total_chats=chat_model.total_chats,  # type: ignore
                                 total_users=chat_model.total_engaged_users,  # type: ignore
                             )
