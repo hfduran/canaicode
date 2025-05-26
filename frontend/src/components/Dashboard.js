@@ -1,0 +1,72 @@
+import React, { useState } from 'react';
+import Filters from './Filters';
+import mockDashboardData from '../data/mockData';
+import { BarChart, Bar, CartesianGrid, XAxis, YAxis, Tooltip, Legend } from 'recharts';
+
+const Dashboard = () => {
+  const [filters, setFilters] = useState({
+    languages: [],
+    teams: [],
+    initialDate: '',
+    finalDate: '',
+    period: '',
+    numberOfAuthors: ''
+  });
+
+  // Gera opções únicas
+  const availableLanguages = Array.from(new Set(mockDashboardData.flatMap(item => item.languages)));
+  const availableTeams = Array.from(new Set(mockDashboardData.map(item => item.team)));
+
+  // Filtra os dados conforme os filtros
+  const filteredData = mockDashboardData.filter(item => {
+    return (
+      (filters.languages.length === 0 || filters.languages.some(lang => item.languages.includes(lang))) &&
+      (filters.teams.length === 0 || filters.teams.includes(item.team)) &&
+      (filters.period === '' || filters.period === item.period)
+    );
+  });
+
+  // Flatten os dados filtrados
+  const flattenedData = filteredData.flatMap(item =>
+    item.data.filter(entry => (
+      (!filters.numberOfAuthors || Number(filters.numberOfAuthors) === entry.number_of_authors) &&
+      (!filters.initialDate || new Date(entry.initial_date) >= new Date(filters.initialDate)) &&
+      (!filters.finalDate || new Date(entry.final_date) <= new Date(filters.finalDate))
+    )).map(entry => ({
+      ...entry,
+      team: item.team,
+      period: item.period,
+      languages: item.languages
+    }))
+  );
+
+  console.log("Flattened Data: ", flattenedData);
+
+  return (
+    <div className="dashboard-container" style={{ display: 'flex', gap: '20px', padding: '20px' }}>
+      <div className="dashboard-main" style={{ flex: 0.7 }}>
+        <h2>Dashboard</h2>
+
+        <BarChart width={600} height={300} data={flattenedData}>
+          <CartesianGrid strokeDasharray="3 3" />
+          <XAxis dataKey="initial_date" />
+          <YAxis />
+          <Tooltip />
+          <Legend />
+          <Bar dataKey="relative_added_lines" fill="#8884d8" />
+        </BarChart>
+      </div>
+
+      <div className="dashboard-filters" style={{ flex: 0.3 }}>
+        <Filters
+          filters={filters}
+          setFilters={setFilters}
+          availableLanguages={availableLanguages}
+          availableTeams={availableTeams}
+        />
+      </div>
+    </div>
+  );
+};
+
+export default Dashboard;
