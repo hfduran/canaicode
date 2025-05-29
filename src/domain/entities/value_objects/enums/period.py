@@ -3,6 +3,6 @@ from enum import StrEnum
 
 class Period(StrEnum):
     WEEK = "W"
-    MONTH = "M"
+    MONTH = "ME"
     QUARTER = "Q"
     YEAR = "Y"

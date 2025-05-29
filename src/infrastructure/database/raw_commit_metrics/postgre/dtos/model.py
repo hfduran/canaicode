@@ -2,7 +2,8 @@ from datetime import datetime, timezone
 
 from sqlalchemy import Column, DateTime, Integer, String
 
-from src.infrastructure.database.postgre.connection.database_connection import Base
+from src.infrastructure.database.connection.database_connection import Base
+
 
 
 class RawCommitMetrics(Base):

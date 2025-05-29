@@ -3,10 +3,7 @@ from typing import Optional, cast
 
 from src.domain.entities.copilot_code_metrics import CopilotCodeMetrics
 from src.domain.entities.value_objects.team import Team
-from src.infrastructure.database.postgre.raw_copilot_code_metrics.dtos.model import (
-    RawCopilotCodeMetrics,
-)
-
+from src.infrastructure.database.raw_copilot_code_metrics.postgre.dtos.model import RawCopilotCodeMetrics
 
 class DatabaseRawCopilotCodeMetricsMapper:
     @staticmethod

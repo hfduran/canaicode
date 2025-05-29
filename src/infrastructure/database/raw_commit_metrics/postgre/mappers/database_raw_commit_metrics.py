@@ -4,9 +4,8 @@ from typing import cast
 from src.domain.entities.commit_metrics import CommitMetrics
 from src.domain.entities.value_objects.author import Author
 from src.domain.entities.value_objects.repository import Repository
-from src.infrastructure.database.postgre.raw_commit_metrics.dtos.model import (
-    RawCommitMetrics,
-)
+from src.infrastructure.database.raw_commit_metrics.postgre.dtos.model import RawCommitMetrics
+
 
 
 class DatabaseRawCommitMetricsMapper:
@@ -35,7 +34,7 @@ class DatabaseRawCommitMetricsMapper:
 
         author = Author(
             name=cast(str, db_schema.author_name),
-            teams=cast(str, db_schema.author_teams).split(),
+            teams=cast(str, db_schema.author_teams).split(','),
         )
 
         return CommitMetrics(

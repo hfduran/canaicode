@@ -4,12 +4,8 @@ from typing import List, Optional
 from sqlalchemy.orm import Session
 
 from src.domain.entities.commit_metrics import CommitMetrics
-from src.infrastructure.database.postgre.raw_commit_metrics.dtos.model import (
-    RawCommitMetrics,
-)
-from src.infrastructure.database.postgre.raw_commit_metrics.mappers.database_raw_commit_metrics import (
-    DatabaseRawCommitMetricsMapper,
-)
+from src.infrastructure.database.raw_commit_metrics.postgre.dtos.model import RawCommitMetrics
+from src.infrastructure.database.raw_commit_metrics.postgre.mappers.database_raw_commit_metrics import DatabaseRawCommitMetricsMapper
 
 
 class RawCommitMetricsRepository:
@@ -35,7 +31,7 @@ class RawCommitMetricsRepository:
             query = query.filter(RawCommitMetrics.date >= initial_date)
 
         if final_date:
-            query = query.filter(RawCommitMetrics.date >= final_date)
+            query = query.filter(RawCommitMetrics.date <= final_date)
 
         if languages:
             query = query.filter(RawCommitMetrics.language.in_(languages))

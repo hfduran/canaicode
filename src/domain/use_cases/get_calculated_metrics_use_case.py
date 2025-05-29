@@ -14,12 +14,8 @@ from src.domain.use_cases.dtos.code_line_metrics import (
     CodeLineMetricsData,
 )
 from src.domain.use_cases.metrics_calculator import MetricsCalculator
-from src.infrastructure.database.postgre.raw_commit_metrics.raw_commit_metrics_repository import (
-    RawCommitMetricsRepository,
-)
-from src.infrastructure.database.postgre.raw_copilot_code_metrics.raw_copilot_code_metrics_repository import (
-    RawCopilotCodeMetricsRepository,
-)
+from src.infrastructure.database.raw_commit_metrics.postgre.raw_commit_metrics_repository import RawCommitMetricsRepository
+from src.infrastructure.database.raw_copilot_code_metrics.postgre.raw_copilot_code_metrics_repository import RawCopilotCodeMetricsRepository
 
 
 class GetCalculatedMetricsUseCase:
@@ -36,9 +32,9 @@ class GetCalculatedMetricsUseCase:
         team: str,
         period: Period,
         productivity_metric: Productivity_metric,
-        initial_date: Optional[datetime],
-        final_date: Optional[datetime],
-        languages: Optional[List[str]],
+        initial_date: Optional[datetime] = None,
+        final_date: Optional[datetime] = None,
+        languages: Optional[List[str]] = None,
     ) -> CodeLineMetrics | None:
         raw_commit_metrics = self.commit_metrics_repository.listByTeam(
             team, initial_date, final_date, languages
@@ -72,8 +68,12 @@ class GetCalculatedMetricsUseCase:
             [{"metrics": c, "date": c.date} for c in raw_commit_metrics]
         )
         df_copilot_code_metrics = pd.DataFrame(
-            [{"metrics": c, "date": c.date} for c in raw_copilot_code_metrics]
+            [{"metrics": c, "date": c.date} for c in raw_copilot_code_metrics],
+            columns=["metrics", "date"]
         )
+        df_copilot_code_metrics["date"] = pd.to_datetime(df_copilot_code_metrics["date"], errors="coerce") # type: ignore
+
+        print(df_copilot_code_metrics)
 
         grouped_commit_metrics = df_commit_metrics.groupby(  # type: ignore
             pd.Grouper(key="date", freq=period)
@@ -108,7 +108,7 @@ class GetCalculatedMetricsUseCase:
             response.data.append(
                 CodeLineMetricsData(
                     initial_date=period_final_date.to_period(  # type: ignore
-                        "M"
+                        period
                     ).start_time.to_pydatetime(),
                     final_date=period_final_date.to_pydatetime(),  # type: ignore
                     relative_added_lines=relative_added_lines,
