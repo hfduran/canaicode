@@ -1,7 +1,5 @@
 from src.domain.entities.copilot_chat_metrics import CopilotChatMetrics
-from src.infrastructure.database.postgre.raw_copilot_chat_metrics.dtos.model import (
-    RawCopilotChatMetrics,
-)
+from src.infrastructure.database.raw_copilot_chat_metrics.postgre.dtos.model import RawCopilotChatMetrics
 
 
 class DatabaseRawCopilotChatMetricsMapper:

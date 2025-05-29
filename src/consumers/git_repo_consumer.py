@@ -1,7 +1,7 @@
 import os
 import uuid
 from collections import defaultdict
-from datetime import datetime
+from datetime import date, datetime, time
 from typing import List
 
 from git import Repo
@@ -115,12 +115,12 @@ class GitRepoConsumer:
         return result
 
     def get_commits_by_date(
-        self, date: datetime, team_name: str
+        self, date: date, team_name: str
     ) -> List[CommitMetrics]:
         result: List[CommitMetrics] = []
 
         for commit in self.repo.iter_commits():
-            commit_date = datetime.fromtimestamp(commit.committed_date)
+            commit_date = datetime.fromtimestamp(commit.committed_date).date()
             if not (commit_date == date):
                 continue
 
@@ -152,7 +152,7 @@ class GitRepoConsumer:
                         author=Author(
                             name=author, teams=[]
                         ),  # TODO: ver como associar o autor ao time (usar 'default' para os primeiros testes?)
-                        date=commit_date,
+                        date=datetime.combine(commit_date, time.min),
                         hash=commit.hexsha,
                         language=language,
                         removed_lines=int(removed),
