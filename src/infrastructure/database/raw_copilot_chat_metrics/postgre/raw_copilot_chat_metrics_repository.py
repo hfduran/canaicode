@@ -1,10 +1,7 @@
 from sqlalchemy.orm import Session
 
 from src.domain.entities.copilot_chat_metrics import CopilotChatMetrics
-from src.infrastructure.database.postgre.raw_copilot_chat_metrics.mappers.database_raw_copilot_chat_metrics import (
-    DatabaseRawCopilotChatMetricsMapper,
-)
-
+from src.infrastructure.database.raw_copilot_chat_metrics.postgre.mappers.database_raw_copilot_chat_metrics import DatabaseRawCopilotChatMetricsMapper
 
 class RawCopilotChatMetricsRepository:
     def __init__(self, db: Session) -> None:

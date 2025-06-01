@@ -4,14 +4,8 @@ from typing import Dict, List
 from src.consumers.gh_copilot.gh_copilot_consumer import GhCopilotConsumer
 from src.domain.entities.copilot_chat_metrics import CopilotChatMetrics
 from src.domain.entities.copilot_code_metrics import CopilotCodeMetrics
-from src.infrastructure.database.postgre.raw_copilot_chat_metrics.raw_copilot_chat_metrics_repository import (
-    RawCopilotChatMetricsRepository,
-)
-from src.infrastructure.database.postgre.raw_copilot_code_metrics.raw_copilot_code_metrics_repository import (
-    RawCopilotCodeMetricsRepository,
-)
-
-
+from src.infrastructure.database.raw_copilot_chat_metrics.postgre.raw_copilot_chat_metrics_repository import RawCopilotChatMetricsRepository
+from src.infrastructure.database.raw_copilot_code_metrics.postgre.raw_copilot_code_metrics_repository import RawCopilotCodeMetricsRepository
 class GetCopilotMetricsUseCase:
     def __init__(
         self,
