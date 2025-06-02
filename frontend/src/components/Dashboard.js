@@ -2,8 +2,9 @@ import React, { useState } from 'react';
 import Filters from './Filters';
 import mockDashboardData from '../data/mockData';
 import { BarChart, Bar, CartesianGrid, XAxis, YAxis, Tooltip, Legend } from 'recharts';
+import RequestDataButton from './RequestData';
 
-const Dashboard = () => {
+const CalculatedMetricsDashboard = () => {
   const [filters, setFilters] = useState({
     languages: [],
     teams: [],
@@ -13,11 +14,11 @@ const Dashboard = () => {
     numberOfAuthors: ''
   });
 
-  // Gera opções únicas
+  // Gera opções únicas - p/ fazer o dropdown do filtro
   const availableLanguages = Array.from(new Set(mockDashboardData.flatMap(item => item.languages)));
   const availableTeams = Array.from(new Set(mockDashboardData.map(item => item.team)));
 
-  // Filtra os dados conforme os filtros
+  // Filter
   const filteredData = mockDashboardData.filter(item => {
     return (
       (filters.languages.length === 0 || filters.languages.some(lang => item.languages.includes(lang))) &&
@@ -43,17 +44,31 @@ const Dashboard = () => {
   console.log("Flattened Data: ", flattenedData);
 
   return (
-    <div className="dashboard-container" style={{ display: 'flex', gap: '20px', padding: '20px' }}>
+    <div className="dashboard-container" style={{ display: 'flex', gap: '20px', padding: '30px' }}>
       <div className="dashboard-main" style={{ flex: 0.7 }}>
-        <h2>Dashboard</h2>
+        <h2>Select Language and Team data</h2>
+          <RequestDataButton
+            timeOptions={['Week', 'Month', 'Year', 'Semester']} // deve vir do back depois
+            teamOptions={['Team Alpha', 'Team Beta']} // deve vir do back depois
+          />
+        <h2>Calculated Metrics</h2>
 
-        <BarChart width={600} height={300} data={flattenedData}>
+        <BarChart width={800} height={340} data={flattenedData}>
           <CartesianGrid strokeDasharray="3 3" />
           <XAxis dataKey="initial_date" />
           <YAxis />
-          <Tooltip />
+          <Tooltip 
+            formatter={(value, name, props) => {
+              if (name === 'Copilot Added Lines') {
+                const percentage = props.payload.percentage_lines_added_by_copilot;
+                return [`${value} lines (${percentage}%)`, name];
+              }
+              return [`${value} lines`, name];
+            }}
+          />
           <Legend />
-          <Bar dataKey="relative_added_lines" fill="#8884d8" />
+          <Bar dataKey="relative_added_lines" fill="#8884d8" name="Total Added Lines" />
+          <Bar dataKey="relative_added_lines_by_copilot" fill="#82ca9d" name="Copilot Added Lines" />
         </BarChart>
       </div>
 
@@ -69,4 +84,4 @@ const Dashboard = () => {
   );
 };
 
-export default Dashboard;
+export default CalculatedMetricsDashboard;

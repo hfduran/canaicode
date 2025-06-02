@@ -43,7 +43,6 @@ const Filters = ({
         />
       </div>
 
-      {/* restante do código permanece igual */}
       <div className="filter-group">
         <label>Initial Date:</label>
         <input

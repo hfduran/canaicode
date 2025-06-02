@@ -1,4 +1,4 @@
-import Dashboard from '../components/Dashboard';
+// import GrossMetricsDashboard from '../components/Dashboard';
 import Filters from '../components/Filters';
 
 function GrossMetrics() {
@@ -6,9 +6,9 @@ function GrossMetrics() {
     <div>
       <p>This dashboard shows gross metrics of the system...</p>
       <div style={{ display: 'flex', gap: '20px', margin: '0 50px' }}>
-        <div style={{ flex: 7 }}>
+        {/* <div style={{ flex: 7 }}>
           <Dashboard />
-        </div>
+        </div> */}
         <div style={{ flex: 3 }}>
           <Filters />
         </div>
