@@ -1,0 +1,13 @@
+.dashboard-container {
+  display: flex;
+  gap: 20px;
+  padding: 20px;
+}
+
+.dashboard-main {
+  flex: 3;
+}
+
+.dashboard-filters {
+  flex: 1;
+}
