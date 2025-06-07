@@ -55,10 +55,10 @@ const CalculatedMetricsDashboard: React.FC = () => {
     <div className="dashboard-container" style={{ display: "flex", gap: "20px", padding: "30px" }}>
       <div className="dashboard-main" style={{ flex: 0.7 }}>
         <h2>Select Language and Team data</h2>
-        <RequestDataButton
-          timeOptions={["Week", "Month", "Year", "Semester"]} // deve vir do back depois
-          teamOptions={["Team Alpha", "Team Beta"]} // deve vir do back depois
-        />
+          <RequestDataButton
+            timeOptions={['Week', 'Month', 'Year', 'Semester']}
+            metricOptions={['Codelines', 'Commit']}
+          />
         <h2>Calculated Metrics</h2>
 
         <BarChart width={800} height={340} data={flattenedData}>

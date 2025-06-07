@@ -1,14 +1,17 @@
-import React, { useState } from "react";
-import DropdownButton from "./DropdownButton";
-import { RequestDataButtonProps } from "../types/ui";
+import React, { useState } from 'react';
+import DropdownButton from './DropdownButton';
+import InputForm from './InputForm';
+import { RequestDataButtonProps } from '../types/ui';
 
-const RequestDataButton: React.FC<RequestDataButtonProps> = ({ timeOptions, teamOptions }) => {
-  const [timeRange, setTimeRange] = useState<string>("");
-  const [team, setTeam] = useState<string>("");
+const RequestDataButton: React.FC<RequestDataButtonProps> = ({ timeOptions, metricOptions }) => {
+  const [timeRange, setTimeRange] = useState<string>('');
+  const [team, setTeam] = useState<string>('');
+  const [metricOption, setMetricOption] = useState<string>('');
 
   const handleRequisitarDados = (): void => {
-    console.log("Opção de tempo selecionada: ", timeRange);
-    console.log("Equipe selecionada: ", team);
+    console.log('Time period selected: ', timeRange);
+    console.log('Team selected: ', team);
+    console.log('Metric option selected: ', metricOption);
   };
 
   return (
@@ -17,17 +20,26 @@ const RequestDataButton: React.FC<RequestDataButtonProps> = ({ timeOptions, team
         options={timeOptions}
         selected={timeRange}
         setSelected={setTimeRange}
-        label="Selecione o período:"
+        label="Select time period "
       />
 
       <DropdownButton
-        options={teamOptions}
-        selected={team}
-        setSelected={setTeam}
-        label="Selecione a equipe:"
+        options={metricOptions}
+        selected={metricOption}
+        setSelected={setMetricOption}
+        label="Select metric option "
       />
 
-      <button onClick={handleRequisitarDados}>Requisitar Dados</button>
+      <InputForm 
+        value={team}
+        setValue={setTeam}
+        label="Enter developer team "
+        placeholder="e.g., Team Alpha, Team Beta"
+      />
+
+      <button onClick={handleRequisitarDados}>
+        Click to Request Data
+      </button>
     </div>
   );
 };
