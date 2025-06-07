@@ -9,8 +9,9 @@ from src.domain.entities.value_objects.enums.period import Period
 class CodeLineMetricsData(BaseModel):
     initial_date: datetime
     final_date: datetime
-    relative_added_lines: int
-    percentage_added_lines_by_copilot: float
+    net_changed_lines: int
+    net_changed_lines_by_copilot: int
+    percentage_changed_lines_by_copilot: float
     number_of_authors: int
 
 
