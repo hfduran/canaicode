@@ -1,0 +1,25 @@
+# Dependencies
+node_modules/
+
+# Production builds
+build/
+dist/
+
+# Coverage reports
+coverage/
+
+# IDE files
+.vscode/
+.idea/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Package manager files
+package-lock.json
+yarn.lock
+
+# Other
+*.min.js
+*.min.css

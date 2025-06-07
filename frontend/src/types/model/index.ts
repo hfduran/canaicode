@@ -1,4 +1,3 @@
-
 export interface CalculatedDataEntry {
   initial_date: string;
   final_date: string;
@@ -16,8 +15,8 @@ export interface CalculatedDashboardData {
 
 export interface CalculatedMetricsRequest {
   team_name: string;
-  period: 'W' | 'M' | 'Q' | 'Y'; // Week, Month, Quarter, Year
-  productivity_metric: 'code_lines' | 'commits';
+  period: "W" | "M" | "Q" | "Y"; // Week, Month, Quarter, Year
+  productivity_metric: "code_lines" | "commits";
   initial_date: Date;
   final_date: Date;
   languages?: string[];
@@ -35,7 +34,7 @@ export interface CodeLineMetricsData {
 export interface CodeLineMetrics {
   team: string;
   languages: string[];
-  period: 'W' | 'M' | 'Q' | 'Y';
+  period: "W" | "M" | "Q" | "Y";
   data: CodeLineMetricsData[];
 }
 

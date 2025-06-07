@@ -1,10 +1,10 @@
-import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
-import Dashboard from './components/Dashboard';
+import React from "react";
+import { BrowserRouter as Router, Routes, Route, Link } from "react-router-dom";
+import Dashboard from "./components/Dashboard";
 
 const Home: React.FC = () => {
   return (
-    <div style={{ display: 'flex' }}>
+    <div style={{ display: "flex" }}>
       <div style={{ flex: 1 }}>
         <p>Welcome to the Home Page - Column 1</p>
       </div>
@@ -25,7 +25,14 @@ const CalculatedMetrics: React.FC = () => {
 
 const Footer: React.FC = () => {
   return (
-    <footer style={{ display: 'flex', justifyContent: 'space-around', padding: '20px', background: '#eee' }}>
+    <footer
+      style={{
+        display: "flex",
+        justifyContent: "space-around",
+        padding: "20px",
+        background: "#eee",
+      }}
+    >
       <div>Column 1</div>
       <div>Column 2</div>
       <div>Column 3</div>
@@ -37,9 +44,13 @@ const App: React.FC = () => {
   return (
     <Router>
       <div>
-        <nav style={{ padding: '10px', background: '#ddd' }}>
-          <Link to="/" style={{ marginRight: '10px' }}>Home</Link>
-          <Link to="/gross-metrics" style={{ marginRight: '10px' }}>Gross Metrics</Link>
+        <nav style={{ padding: "10px", background: "#ddd" }}>
+          <Link to="/" style={{ marginRight: "10px" }}>
+            Home
+          </Link>
+          <Link to="/gross-metrics" style={{ marginRight: "10px" }}>
+            Gross Metrics
+          </Link>
           <Link to="/calculated-metrics">Calculated Metrics</Link>
         </nav>
 
@@ -53,6 +64,6 @@ const App: React.FC = () => {
       </div>
     </Router>
   );
-}
+};
 
 export default App;
