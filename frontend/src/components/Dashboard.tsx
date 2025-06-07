@@ -1,72 +1,26 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import Filters from "./Filters";
 import mockDashboardData from "../data/mockData";
 import { BarChart, Bar, CartesianGrid, XAxis, YAxis, Tooltip, Legend } from "recharts";
 import RequestParamsForm from "./RequestParamsForm";
-import { DashboardData, Filters as FiltersType, FlattenedDataEntry } from "../types/ui";
+import { DashboardData, FlattenedDataEntry } from "../types/ui";
 import { CalculatedMetricsService } from "../services/calculatedMetricsService";
 import { CalculatedMetricsRequest } from "../types/model";
 import { Button, Modal, Box, SpaceBetween } from "@cloudscape-design/components";
-
-const DEFAULT_FILTERS: FiltersType = {
-  languages: [],
-  teams: [],
-  initialDate: "",
-  finalDate: "",
-  period: "",
-  numberOfAuthors: "",
-};
+import { useDataFiltering } from "../hooks/useDataFiltering";
+import { DashboardFiltersModal } from "./DashboardFiltersModal";
 
 const CalculatedMetricsDashboard: React.FC = () => {
-  const [filters, setFilters] = useState<FiltersType>(DEFAULT_FILTERS);
   const [requestData, setRequestData] = useState<DashboardData[]>([]);
-  const [flattenedData, setFlattenedData] = useState<FlattenedDataEntry[]>([]);
-  const [availableLanguages, setAvailableLanguages] = useState<Set<string>>(new Set());
-  const [availableTeams, setAvailableTeams] = useState<Set<string>>(new Set());
-  const [isFiltersModalVisible, setIsFiltersModalVisible] = useState<boolean>(false);
-  const [tempFilters, setTempFilters] = useState<FiltersType>(filters);
-
+  
   // Form state
   const [timeRange, setTimeRange] = useState<string>("");
   const [team, setTeam] = useState<string>("");
   const [metric, setMetric] = useState<string>("");
   const [initialDate, setInitialDate] = useState<string>("");
   const [finalDate, setFinalDate] = useState<string>("");
-
-  useEffect(() => {
-    setAvailableLanguages(new Set(requestData.flatMap((item) => item.languages)));
-    setAvailableTeams(new Set(requestData.map((item) => item.team)));
-  }, [requestData]);
-
-  useEffect(() => {
-    // Filter and flatten data
-    const filteredData = requestData.filter((item) => {
-      return (
-        (filters.languages.length === 0 ||
-          filters.languages.some((lang) => item.languages.includes(lang))) &&
-        (filters.teams.length === 0 || filters.teams.includes(item.team)) &&
-        (filters.period === "" || filters.period === item.period)
-      );
-    });
-    const flat = filteredData.flatMap((item) =>
-      item.data
-        .filter(
-          (entry) =>
-            (!filters.numberOfAuthors ||
-              Number(filters.numberOfAuthors) === entry.number_of_authors) &&
-            (!filters.initialDate ||
-              new Date(entry.initial_date) >= new Date(filters.initialDate)) &&
-            (!filters.finalDate || new Date(entry.final_date) <= new Date(filters.finalDate))
-        )
-        .map((entry) => ({
-          ...entry,
-          team: item.team,
-          period: item.period,
-          languages: item.languages,
-        }))
-    );
-    setFlattenedData(flat);
-  }, [filters, requestData]);
+  const [filteredData, setFilteredData] = useState<FlattenedDataEntry[]>([]);
+  const [isFiltersModalVisible, setIsFiltersModalVisible] = useState<boolean>(false);
 
   async function handleRequestData() {
     console.log("Form Data:", {
@@ -152,27 +106,12 @@ const CalculatedMetricsDashboard: React.FC = () => {
     }
   }
 
-  const handleOpenFiltersModal = () => {
-    setTempFilters(filters);
-    setIsFiltersModalVisible(true);
-  };
-
-  const handleApplyFilters = () => {
-    setFilters(tempFilters);
-    setIsFiltersModalVisible(false);
-  };
-
-  const handleCancelFilters = () => {
-    setTempFilters(filters);
-    setIsFiltersModalVisible(false);
-  };
-
-  const handleResetFilters = () => {
-    setTempFilters(DEFAULT_FILTERS);
-  };
-
   const handleLoadDemoData = () => {
     setRequestData(mockDashboardData);
+  }
+
+  const handleOpenFiltersModal = () => {
+    setIsFiltersModalVisible(true)
   }
 
   return (
@@ -208,7 +147,7 @@ const CalculatedMetricsDashboard: React.FC = () => {
           </SpaceBetween>
         </SpaceBetween>
         <h2>Calculated Metrics</h2>
-        <BarChart width={800} height={340} data={flattenedData}>
+        <BarChart width={800} height={340} data={filteredData}>
           <CartesianGrid strokeDasharray="3 3" />
           <XAxis dataKey="initial_date" />
           <YAxis />
@@ -225,35 +164,13 @@ const CalculatedMetricsDashboard: React.FC = () => {
           <Bar dataKey="net_changed_lines" fill="#8884d8" name="Total Added Lines" />
           <Bar dataKey="net_changed_lines_by_copilot" fill="#82ca9d" name="Copilot Added Lines" />
         </BarChart>
-      </div>
-
-      <Modal
-        onDismiss={handleCancelFilters}
-        visible={isFiltersModalVisible}
-        footer={
-          <Box float="right">
-            <SpaceBetween direction="horizontal" size="xs">
-              <Button variant="normal" onClick={handleResetFilters}>
-                Reset Filters
-              </Button>
-              <Button variant="link" onClick={handleCancelFilters}>
-                Cancel
-              </Button>
-              <Button variant="primary" onClick={handleApplyFilters}>
-                Apply Filters
-              </Button>
-            </SpaceBetween>
-          </Box>
-        }
-        header="Chart Filters"
-      >
-        <Filters
-          filters={tempFilters}
-          setFilters={setTempFilters}
-          availableLanguages={Array.from(availableLanguages)}
-          availableTeams={Array.from(availableTeams)}
+        <DashboardFiltersModal
+          data={requestData}
+          setFilteredData={setFilteredData}
+          visible={isFiltersModalVisible}
+          setVisible={setIsFiltersModalVisible}
         />
-      </Modal>
+      </div>
     </div>
   );
 };
