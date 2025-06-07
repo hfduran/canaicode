@@ -2,7 +2,7 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
 import Dashboard from './components/Dashboard';
 
-function Home() {
+const Home: React.FC = () => {
   return (
     <div style={{ display: 'flex' }}>
       <div style={{ flex: 1 }}>
@@ -13,17 +13,17 @@ function Home() {
       </div>
     </div>
   );
-}
+};
 
-function GrossMetrics() {
+const GrossMetrics: React.FC = () => {
   return <Dashboard />;
-}
+};
 
-function CalculatedMetrics() {
+const CalculatedMetrics: React.FC = () => {
   return <Dashboard />;
-}
+};
 
-function Footer() {
+const Footer: React.FC = () => {
   return (
     <footer style={{ display: 'flex', justifyContent: 'space-around', padding: '20px', background: '#eee' }}>
       <div>Column 1</div>
@@ -31,9 +31,9 @@ function Footer() {
       <div>Column 3</div>
     </footer>
   );
-}
+};
 
-function App() {
+const App: React.FC = () => {
   return (
     <Router>
       <div>

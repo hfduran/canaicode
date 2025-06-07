@@ -1,6 +1,7 @@
+import React from 'react';
 import { Link } from 'react-router-dom';
 
-function Navbar() {
+const Navbar: React.FC = () => {
   return (
     <div style={{ padding: '10px', backgroundColor: '#eee' }}>
       <Link to="/" style={{ margin: '10px' }}>Home</Link>
@@ -8,6 +9,6 @@ function Navbar() {
       <Link to="/calculated-metrics" style={{ margin: '10px' }}>Calculated Metrics</Link>
     </div>
   );
-}
+};
 
 export default Navbar;

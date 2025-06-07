@@ -1,4 +1,6 @@
-const mockDashboardData = [
+import { DashboardData } from '../types';
+
+const mockDashboardData: DashboardData[] = [
   {
     team: "Team Alpha",
     languages: ["JavaScript", "Python"],

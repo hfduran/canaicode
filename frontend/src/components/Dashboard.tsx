@@ -3,9 +3,10 @@ import Filters from './Filters';
 import mockDashboardData from '../data/mockData';
 import { BarChart, Bar, CartesianGrid, XAxis, YAxis, Tooltip, Legend } from 'recharts';
 import RequestDataButton from './RequestData';
+import { Filters as FiltersType, FlattenedDataEntry } from '../types';
 
-const CalculatedMetricsDashboard = () => {
-  const [filters, setFilters] = useState({
+const CalculatedMetricsDashboard: React.FC = () => {
+  const [filters, setFilters] = useState<FiltersType>({
     languages: [],
     teams: [],
     initialDate: '',
@@ -28,7 +29,7 @@ const CalculatedMetricsDashboard = () => {
   });
 
   // Flatten os dados filtrados
-  const flattenedData = filteredData.flatMap(item =>
+  const flattenedData: FlattenedDataEntry[] = filteredData.flatMap(item =>
     item.data.filter(entry => (
       (!filters.numberOfAuthors || Number(filters.numberOfAuthors) === entry.number_of_authors) &&
       (!filters.initialDate || new Date(entry.initial_date) >= new Date(filters.initialDate)) &&
@@ -58,7 +59,7 @@ const CalculatedMetricsDashboard = () => {
           <XAxis dataKey="initial_date" />
           <YAxis />
           <Tooltip 
-            formatter={(value, name, props) => {
+            formatter={(value: any, name: string, props: any) => {
               if (name === 'Copilot Added Lines') {
                 const percentage = props.payload.percentage_lines_added_by_copilot;
                 return [`${value} lines (${percentage}%)`, name];
