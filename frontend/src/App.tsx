@@ -1,5 +1,6 @@
 import React from "react";
-import { BrowserRouter as Router, Routes, Route, Link } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import TopNavigation from "@cloudscape-design/components/top-navigation";
 import Dashboard from "./components/Dashboard";
 
 const Home: React.FC = () => {
@@ -44,15 +45,29 @@ const App: React.FC = () => {
   return (
     <Router>
       <div>
-        <nav style={{ padding: "10px", background: "#ddd" }}>
-          <Link to="/" style={{ marginRight: "10px" }}>
-            Home
-          </Link>
-          <Link to="/gross-metrics" style={{ marginRight: "10px" }}>
-            Gross Metrics
-          </Link>
-          <Link to="/calculated-metrics">Calculated Metrics</Link>
-        </nav>
+        <TopNavigation
+          identity={{
+            href: "/",
+            title: "Canaicode Dashboard",
+          }}
+          utilities={[
+            {
+              type: "button",
+              text: "Home",
+              href: "/",
+            },
+            {
+              type: "button", 
+              text: "Gross Metrics",
+              href: "/gross-metrics",
+            },
+            {
+              type: "button",
+              text: "Calculated Metrics", 
+              href: "/calculated-metrics",
+            },
+          ]}
+        />
 
         <Routes>
           <Route path="/" element={<Home />} />
