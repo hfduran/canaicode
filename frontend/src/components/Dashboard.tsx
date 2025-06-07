@@ -6,22 +6,26 @@ import RequestParamsForm from "./RequestParamsForm";
 import { DashboardData, Filters as FiltersType, FlattenedDataEntry } from "../types/ui";
 import { CalculatedMetricsService } from "../services/calculatedMetricsService";
 import { CalculatedMetricsRequest } from "../types/model";
-import { Button } from "@cloudscape-design/components";
+import { Button, Modal, Box, SpaceBetween } from "@cloudscape-design/components";
+
+const DEFAULT_FILTERS: FiltersType = {
+  languages: [],
+  teams: [],
+  initialDate: "",
+  finalDate: "",
+  period: "",
+  numberOfAuthors: "",
+};
 
 const CalculatedMetricsDashboard: React.FC = () => {
-  const [filters, setFilters] = useState<FiltersType>({
-    languages: [],
-    teams: [],
-    initialDate: "",
-    finalDate: "",
-    period: "",
-    numberOfAuthors: "",
-  });
-  const [requestData, setRequestData] = useState<DashboardData[]>(mockDashboardData);
+  const [filters, setFilters] = useState<FiltersType>(DEFAULT_FILTERS);
+  const [requestData, setRequestData] = useState<DashboardData[]>([]);
   const [flattenedData, setFlattenedData] = useState<FlattenedDataEntry[]>([]);
   const [availableLanguages, setAvailableLanguages] = useState<Set<string>>(new Set());
   const [availableTeams, setAvailableTeams] = useState<Set<string>>(new Set());
-  
+  const [isFiltersModalVisible, setIsFiltersModalVisible] = useState<boolean>(false);
+  const [tempFilters, setTempFilters] = useState<FiltersType>(filters);
+
   // Form state
   const [timeRange, setTimeRange] = useState<string>("");
   const [team, setTeam] = useState<string>("");
@@ -70,27 +74,25 @@ const CalculatedMetricsDashboard: React.FC = () => {
       team,
       metric,
       initialDate,
-      finalDate
+      finalDate,
     });
 
     try {
-      // Map form values to request format
       const periodMap: { [key: string]: "W" | "M" | "Q" | "Y" } = {
-        "Week": "W",
-        "Month": "M",
-        "Semester": "Q", // Using Q for semester/quarter
-        "Year": "Y"
+        Week: "W",
+        Month: "M",
+        Semester: "Q",
+        Year: "Y",
       };
 
       const productivityMetricMap: { [key: string]: "code_lines" | "commits" } = {
-        "Codelines": "code_lines",
-        "Commit": "commits"
+        Codelines: "code_lines",
+        Commit: "commits",
       };
 
-      // Use form date inputs or fallback to default range
       let requestInitialDate: Date;
       let requestFinalDate: Date;
-      
+
       if (initialDate && finalDate) {
         requestInitialDate = new Date(initialDate);
         requestFinalDate = new Date(finalDate);
@@ -104,10 +106,10 @@ const CalculatedMetricsDashboard: React.FC = () => {
       const request: CalculatedMetricsRequest = {
         team_name: team,
         period: periodMap[timeRange] || "M",
-        productivity_metric: productivityMetricMap[metric] || "code_lines", 
+        productivity_metric: productivityMetricMap[metric] || "code_lines",
         initial_date: requestInitialDate,
         final_date: requestFinalDate,
-        languages: [] // Empty for now, could be extended later
+        languages: [], // Empty for now, could be extended later
       };
 
       console.log("Sending request:", request);
@@ -118,56 +120,94 @@ const CalculatedMetricsDashboard: React.FC = () => {
       if (response) {
         // Convert API response format to UI format
         const apiToDashboardPeriodMap: { [key: string]: string } = {
-          "W": "week",
-          "M": "month", 
-          "Q": "quarter",
-          "Y": "year"
+          W: "week",
+          M: "month",
+          Q: "quarter",
+          Y: "year",
         };
 
-        const dashboardData: DashboardData[] = [{
-          team: response.team,
-          languages: response.languages,
-          period: apiToDashboardPeriodMap[response.period] || response.period,
-          data: response.data.map(item => ({
-            initial_date: item.initial_date,
-            final_date: item.final_date,
-            net_changed_lines: item.net_changed_lines,
-            net_changed_lines_by_copilot: item.net_changed_lines_by_copilot,
-            percentage_changed_lines_by_copilot: item.percentage_changed_lines_by_copilot,
-            number_of_authors: item.number_of_authors
-          }))
-        }];
+        const dashboardData: DashboardData[] = [
+          {
+            team: response.team,
+            languages: response.languages,
+            period: apiToDashboardPeriodMap[response.period] || response.period,
+            data: response.data.map((item) => ({
+              initial_date: item.initial_date,
+              final_date: item.final_date,
+              net_changed_lines: item.net_changed_lines,
+              net_changed_lines_by_copilot: item.net_changed_lines_by_copilot,
+              percentage_changed_lines_by_copilot: item.percentage_changed_lines_by_copilot,
+              number_of_authors: item.number_of_authors,
+            })),
+          },
+        ];
 
         setRequestData(dashboardData);
         console.log("Updated requestData state:", dashboardData);
+      } else {
+        setRequestData([])
       }
-
     } catch (error) {
       console.error("Error calling API:", error);
     }
   }
 
-  return (
-    <div className="dashboard-container" style={{ display: "flex", gap: "20px", padding: "30px" }}>
-      <div className="dashboard-main" style={{ flex: 0.7 }}>
-        <h2>Select Language and Team data</h2>
-        <RequestParamsForm 
-          timeRange={timeRange}
-          setTimeRange={setTimeRange}
-          team={team}
-          setTeam={setTeam}
-          metric={metric}
-          setMetric={setMetric}
-          initialDate={initialDate}
-          setInitialDate={setInitialDate}
-          finalDate={finalDate}
-          setFinalDate={setFinalDate}
-        />
-        <Button variant="primary" onClick={handleRequestData}>
-          Request Data
-        </Button>
-        <h2>Calculated Metrics</h2>
+  const handleOpenFiltersModal = () => {
+    setTempFilters(filters);
+    setIsFiltersModalVisible(true);
+  };
 
+  const handleApplyFilters = () => {
+    setFilters(tempFilters);
+    setIsFiltersModalVisible(false);
+  };
+
+  const handleCancelFilters = () => {
+    setTempFilters(filters);
+    setIsFiltersModalVisible(false);
+  };
+
+  const handleResetFilters = () => {
+    setTempFilters(DEFAULT_FILTERS);
+  };
+
+  const handleLoadDemoData = () => {
+    setRequestData(mockDashboardData);
+  }
+
+  return (
+    <div
+      className="dashboard-container"
+      style={{ display: "flex", flexDirection: "column", gap: "20px", padding: "30px" }}
+    >
+      <div className="dashboard-main">
+        <h2>Select Language and Team data</h2>
+        <SpaceBetween size="m" direction="vertical">
+          <RequestParamsForm
+            timeRange={timeRange}
+            setTimeRange={setTimeRange}
+            team={team}
+            setTeam={setTeam}
+            metric={metric}
+            setMetric={setMetric}
+            initialDate={initialDate}
+            setInitialDate={setInitialDate}
+            finalDate={finalDate}
+            setFinalDate={setFinalDate}
+          />
+          <SpaceBetween direction="horizontal" size="m">
+            <Button variant="primary" onClick={handleRequestData}>
+              Request Data
+            </Button>
+            <Button variant="normal" onClick={handleOpenFiltersModal}>
+              Open Filters
+            </Button>
+            <Button variant="normal" onClick={handleLoadDemoData}>
+              Load demo data
+            </Button>
+          </SpaceBetween>
+        </SpaceBetween>
+        <h2>Calculated Metrics</h2>
         <BarChart width={800} height={340} data={flattenedData}>
           <CartesianGrid strokeDasharray="3 3" />
           <XAxis dataKey="initial_date" />
@@ -187,14 +227,33 @@ const CalculatedMetricsDashboard: React.FC = () => {
         </BarChart>
       </div>
 
-      <div className="dashboard-filters" style={{ flex: 0.3 }}>
+      <Modal
+        onDismiss={handleCancelFilters}
+        visible={isFiltersModalVisible}
+        footer={
+          <Box float="right">
+            <SpaceBetween direction="horizontal" size="xs">
+              <Button variant="normal" onClick={handleResetFilters}>
+                Reset Filters
+              </Button>
+              <Button variant="link" onClick={handleCancelFilters}>
+                Cancel
+              </Button>
+              <Button variant="primary" onClick={handleApplyFilters}>
+                Apply Filters
+              </Button>
+            </SpaceBetween>
+          </Box>
+        }
+        header="Chart Filters"
+      >
         <Filters
-          filters={filters}
-          setFilters={setFilters}
+          filters={tempFilters}
+          setFilters={setTempFilters}
           availableLanguages={Array.from(availableLanguages)}
           availableTeams={Array.from(availableTeams)}
         />
-      </div>
+      </Modal>
     </div>
   );
 };
