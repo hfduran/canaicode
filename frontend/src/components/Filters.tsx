@@ -1,21 +1,22 @@
 import React from 'react';
-import Select from 'react-select';
+import Select, { MultiValue } from 'react-select';
 import './Filters.css';
+import { FiltersProps, SelectOption } from '../types';
 
-const Filters = ({
+const Filters: React.FC<FiltersProps> = ({
   filters,
   setFilters,
   availableLanguages = [],
   availableTeams = []
 }) => {
 
-  const handleMultiSelectChange = (selectedOptions, field) => {
+  const handleMultiSelectChange = (selectedOptions: MultiValue<SelectOption>, field: keyof typeof filters) => {
     const values = selectedOptions ? selectedOptions.map(option => option.value) : [];
     setFilters({ ...filters, [field]: values });
   };
 
-  const languageOptions = availableLanguages.map(lang => ({ value: lang, label: lang }));
-  const teamOptions = availableTeams.map(team => ({ value: team, label: team }));
+  const languageOptions: SelectOption[] = availableLanguages.map(lang => ({ value: lang, label: lang }));
+  const teamOptions: SelectOption[] = availableTeams.map(team => ({ value: team, label: team }));
 
   return (
     <div className="filters-container">

@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
 import DropdownButton from './DropdownButton';
+import { RequestDataButtonProps } from '../types';
 
-const RequestDataButton = ({ timeOptions, teamOptions }) => {
-  const [timeRange, setTimeRange] = useState('');
-  const [team, setTeam] = useState('');
+const RequestDataButton: React.FC<RequestDataButtonProps> = ({ timeOptions, teamOptions }) => {
+  const [timeRange, setTimeRange] = useState<string>('');
+  const [team, setTeam] = useState<string>('');
 
-  const handleRequisitarDados = () => {
+  const handleRequisitarDados = (): void => {
     console.log('Opção de tempo selecionada: ', timeRange);
     console.log('Equipe selecionada: ', team);
   };

@@ -1,7 +1,8 @@
 import React from 'react';
+import { DropdownButtonProps } from '../types';
 
-const DropdownButton = ({ options, selected, setSelected, label }) => {
-  const handleSelectChange = (event) => {
+const DropdownButton: React.FC<DropdownButtonProps> = ({ options, selected, setSelected, label }) => {
+  const handleSelectChange = (event: React.ChangeEvent<HTMLSelectElement>): void => {
     const value = event.target.value;
     setSelected(value);
     console.log('Selected option:', value);

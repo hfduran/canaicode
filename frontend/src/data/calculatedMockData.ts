@@ -1,4 +1,6 @@
-const calculatedMockData_1 = [
+import { CalculatedDashboardData } from '../types';
+
+const calculatedMockData_1: CalculatedDashboardData[] = [
     {
         team: "Team Alpha",
         languages: ["JavaScript", "Python"],

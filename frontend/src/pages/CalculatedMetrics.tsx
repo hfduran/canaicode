@@ -1,12 +1,13 @@
-// CalculatedMetrics.js
+// CalculatedMetrics.tsx
 
-import { useState } from "react";
+import React, { useState } from "react";
 import CalculatedMetricsDashboard from "../components/Dashboard";
 import Filters from "../components/Filters";
 import mockDashboardData from "../data/mockData";
+import { Filters as FiltersType } from "../types";
 
-function CalculatedMetrics() {
-  const [filters, setFilters] = useState({
+const CalculatedMetrics: React.FC = () => {
+  const [filters, setFilters] = useState<FiltersType>({
     languages: [],
     teams: [],
     initialDate: "",
@@ -16,19 +17,19 @@ function CalculatedMetrics() {
   });
 
   // remover abaixo, vai vir do back
-  const availableLanguages = Array.from(
+  const availableLanguages: string[] = Array.from(
     new Set(mockDashboardData.flatMap((item) => item.languages ?? []))
   );
 
   // remover abaixo, vai vir do back
-  const availableTeams = Array.from(new Set(mockDashboardData.map((item) => item.team)));
+  const availableTeams: string[] = Array.from(new Set(mockDashboardData.map((item) => item.team)));
 
   return (
     <div>
       <p>This dashboard shows calculated metrics of the system...</p>
       <div style={{ display: "flex", gap: "20px", margin: "0 50px" }}>
         <div style={{ flex: 7 }}>
-          <CalculatedMetricsDashboard filters={filters} />
+          <CalculatedMetricsDashboard />
         </div>
         <div style={{ flex: 3 }}>
           <Filters
@@ -41,6 +42,6 @@ function CalculatedMetrics() {
       </div>
     </div>
   );
-}
+};
 
 export default CalculatedMetrics;
