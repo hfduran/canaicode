@@ -45,7 +45,7 @@ export interface FiltersProps {
 
 export interface RequestDataButtonProps {
   timeOptions: string[];
-  teamOptions: string[];
+  metricOptions: string[];
 }
 
 export interface CalculatedDataEntry {
@@ -68,4 +68,11 @@ export interface DropdownButtonProps {
   selected: string;
   setSelected: (value: string) => void;
   label: string;
+}
+
+export interface InputFormProps {
+    value: string;
+    setValue: (value: string) => void;
+    label: string;
+    placeholder?: string;
 }

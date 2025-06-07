@@ -49,8 +49,8 @@ const CalculatedMetricsDashboard: React.FC = () => {
       <div className="dashboard-main" style={{ flex: 0.7 }}>
         <h2>Select Language and Team data</h2>
           <RequestDataButton
-            timeOptions={['Week', 'Month', 'Year', 'Semester']} // deve vir do back depois
-            teamOptions={['Team Alpha', 'Team Beta']} // deve vir do back depois
+            timeOptions={['Week', 'Month', 'Year', 'Semester']}
+            metricOptions={['Codelines', 'Commit']}
           />
         <h2>Calculated Metrics</h2>
 
