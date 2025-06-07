@@ -8,6 +8,7 @@ from src.config.config import CONFIG
 from src.consumers.gh_copilot.gh_copilot_consumer import GhCopilotConsumer
 from src.consumers.git_repo_consumer import GitRepoConsumer
 from src.domain.entities.commit_metrics import CommitMetrics
+from src.domain.use_cases.dtos.code_line_metrics import CodeLineMetrics
 from src.domain.use_cases.get_calculated_metrics_use_case import GetCalculatedMetricsUseCase
 from src.domain.use_cases.get_commit_metrics_use_case import GetCommitMetricsUseCase
 from src.domain.use_cases.get_copilot_metrics_use_case import GetCopilotMetricsUseCase
@@ -60,7 +61,7 @@ def get_calculated_metrics(
     final_date_string: str = "",
     languages_string: str = "",
     db: Session = Depends(get_db),
-) -> Any:
+) -> CodeLineMetrics | None:
     initial_date = datetime.strptime(initial_date_string, "%Y-%m-%d")
     final_date = datetime.strptime(final_date_string, "%Y-%m-%d")
     languages: List[str] = []

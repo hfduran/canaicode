@@ -1,4 +1,4 @@
-import { InputFormProps } from '../types';
+import { InputFormProps } from "../types/ui";
 
 const InputForm: React.FC<InputFormProps> = ({ value, setValue, label, placeholder }) => {
     const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>): void => {

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import DropdownButton from './DropdownButton';
 import InputForm from './InputForm';
-import { RequestDataButtonProps } from '../types';
+import { RequestDataButtonProps } from '../types/ui';
 
 const RequestDataButton: React.FC<RequestDataButtonProps> = ({ timeOptions, metricOptions }) => {
   const [timeRange, setTimeRange] = useState<string>('');

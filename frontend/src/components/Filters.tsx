@@ -1,22 +1,27 @@
-import React from 'react';
-import Select, { MultiValue } from 'react-select';
-import './Filters.css';
-import { FiltersProps, SelectOption } from '../types';
+import React from "react";
+import Select, { MultiValue } from "react-select";
+import "./Filters.css";
+import { FiltersProps, SelectOption } from "../types/ui";
 
 const Filters: React.FC<FiltersProps> = ({
   filters,
   setFilters,
   availableLanguages = [],
-  availableTeams = []
+  availableTeams = [],
 }) => {
-
-  const handleMultiSelectChange = (selectedOptions: MultiValue<SelectOption>, field: keyof typeof filters) => {
-    const values = selectedOptions ? selectedOptions.map(option => option.value) : [];
+  const handleMultiSelectChange = (
+    selectedOptions: MultiValue<SelectOption>,
+    field: keyof typeof filters
+  ) => {
+    const values = selectedOptions ? selectedOptions.map((option) => option.value) : [];
     setFilters({ ...filters, [field]: values });
   };
 
-  const languageOptions: SelectOption[] = availableLanguages.map(lang => ({ value: lang, label: lang }));
-  const teamOptions: SelectOption[] = availableTeams.map(team => ({ value: team, label: team }));
+  const languageOptions: SelectOption[] = availableLanguages.map((lang) => ({
+    value: lang,
+    label: lang,
+  }));
+  const teamOptions: SelectOption[] = availableTeams.map((team) => ({ value: team, label: team }));
 
   return (
     <div className="filters-container">
@@ -28,8 +33,8 @@ const Filters: React.FC<FiltersProps> = ({
           isMulti
           name="languages"
           options={languageOptions}
-          value={languageOptions.filter(opt => filters.languages.includes(opt.value))}
-          onChange={(selected) => handleMultiSelectChange(selected, 'languages')}
+          value={languageOptions.filter((opt) => filters.languages.includes(opt.value))}
+          onChange={(selected) => handleMultiSelectChange(selected, "languages")}
         />
       </div>
 
@@ -39,8 +44,8 @@ const Filters: React.FC<FiltersProps> = ({
           isMulti
           name="teams"
           options={teamOptions}
-          value={teamOptions.filter(opt => filters.teams.includes(opt.value))}
-          onChange={(selected) => handleMultiSelectChange(selected, 'teams')}
+          value={teamOptions.filter((opt) => filters.teams.includes(opt.value))}
+          onChange={(selected) => handleMultiSelectChange(selected, "teams")}
         />
       </div>
 
