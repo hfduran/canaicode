@@ -1,5 +1,5 @@
 import React from 'react';
-import { DropdownButtonProps } from '../types';
+import { DropdownButtonProps } from "../types/ui";
 
 const DropdownButton: React.FC<DropdownButtonProps> = ({ options, selected, setSelected, label }) => {
   const handleSelectChange = (event: React.ChangeEvent<HTMLSelectElement>): void => {

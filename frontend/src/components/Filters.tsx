@@ -1,7 +1,7 @@
 import React from 'react';
 import Select, { MultiValue } from 'react-select';
 import './Filters.css';
-import { FiltersProps, SelectOption } from '../types';
+import { FiltersProps, SelectOption } from "../types/ui";
 
 const Filters: React.FC<FiltersProps> = ({
   filters,

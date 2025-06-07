@@ -3,7 +3,7 @@ import Filters from './Filters';
 import mockDashboardData from '../data/mockData';
 import { BarChart, Bar, CartesianGrid, XAxis, YAxis, Tooltip, Legend } from 'recharts';
 import RequestDataButton from './RequestData';
-import { Filters as FiltersType, FlattenedDataEntry } from '../types';
+import { Filters as FiltersType, FlattenedDataEntry } from "../types/ui";
 
 const CalculatedMetricsDashboard: React.FC = () => {
   const [filters, setFilters] = useState<FiltersType>({

@@ -1,4 +1,4 @@
-import { CalculatedDashboardData } from '../types';
+import { CalculatedDashboardData } from "../types/model";
 
 const calculatedMockData_1: CalculatedDashboardData[] = [
     {

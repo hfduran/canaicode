@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import DropdownButton from './DropdownButton';
-import { RequestDataButtonProps } from '../types';
+import { RequestDataButtonProps } from "../types/ui";
 
 const RequestDataButton: React.FC<RequestDataButtonProps> = ({ timeOptions, teamOptions }) => {
   const [timeRange, setTimeRange] = useState<string>('');

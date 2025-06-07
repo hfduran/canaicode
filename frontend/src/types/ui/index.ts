@@ -1,3 +1,4 @@
+
 // Data types for the metrics dashboard
 
 export interface DataEntry {
@@ -46,26 +47,10 @@ export interface FiltersProps {
 export interface RequestDataButtonProps {
   timeOptions: string[];
   teamOptions: string[];
-}
-
-export interface CalculatedDataEntry {
-  initial_date: string;
-  final_date: string;
-  relative_added_lines: number;
-  percentage_lines_added_by_copilot: number;
-  number_of_authors: number;
-}
-
-export interface CalculatedDashboardData {
-  team: string;
-  languages: string[];
-  period: string;
-  data: CalculatedDataEntry[];
-}
-
-export interface DropdownButtonProps {
+}export interface DropdownButtonProps {
   options: string[];
   selected: string;
   setSelected: (value: string) => void;
   label: string;
 }
+

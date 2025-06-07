@@ -4,7 +4,7 @@ import React, { useState } from "react";
 import CalculatedMetricsDashboard from "../components/Dashboard";
 import Filters from "../components/Filters";
 import mockDashboardData from "../data/mockData";
-import { Filters as FiltersType } from "../types";
+import { Filters as FiltersType } from "../types/ui";
 
 const CalculatedMetrics: React.FC = () => {
   const [filters, setFilters] = useState<FiltersType>({
