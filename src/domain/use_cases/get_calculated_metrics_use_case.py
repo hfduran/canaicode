@@ -41,7 +41,12 @@ class GetCalculatedMetricsUseCase:
         )
 
         if not raw_commit_metrics:
-            return None
+            return CodeLineMetrics(
+                team=team,
+                languages=[],
+                period=period,
+                data=[],
+            )
 
         raw_copilot_code_metrics = self.copilot_code_metrics_repository.listByTeam(
             team, initial_date, final_date, languages
@@ -73,8 +78,6 @@ class GetCalculatedMetricsUseCase:
         )
         df_copilot_code_metrics["date"] = pd.to_datetime(df_copilot_code_metrics["date"], errors="coerce") # type: ignore
 
-        print(df_copilot_code_metrics)
-
         grouped_commit_metrics = df_commit_metrics.groupby(  # type: ignore
             pd.Grouper(key="date", freq=period)
         )
@@ -94,13 +97,13 @@ class GetCalculatedMetricsUseCase:
 
         for period_final_date, commit_metrics_df in grouped_commit_metrics:  # type: ignore
             authors = []
-            relative_added_lines = 0
+            net_changed_lines = 0
             for commit_metrics in commit_metrics_df["metrics"]:  # type: ignore
                 if commit_metrics.language not in response.languages:  # type: ignore
                     response.languages.append(commit_metrics.language)  # type: ignore
                 if commit_metrics.author.name not in authors:  # type: ignore
                     authors.append(commit_metrics.author.name)  # type: ignore
-                relative_added_lines += MetricsCalculator.calculate_gross_productivity(
+                net_changed_lines += MetricsCalculator.calculate_gross_productivity(
                     [commit_metrics]
                 )
                 total_added_lines += commit_metrics.added_lines  # type: ignore
@@ -111,8 +114,9 @@ class GetCalculatedMetricsUseCase:
                         period
                     ).start_time.to_pydatetime(),
                     final_date=period_final_date.to_pydatetime(),  # type: ignore
-                    relative_added_lines=relative_added_lines,
-                    percentage_added_lines_by_copilot=0,
+                    net_changed_lines=net_changed_lines,
+                    net_changed_lines_by_copilot=0,
+                    percentage_changed_lines_by_copilot=0,
                     number_of_authors=authors.__len__(),
                 )
             )
@@ -129,12 +133,13 @@ class GetCalculatedMetricsUseCase:
             total_added_lines_by_copilot = MetricsCalculator.calculate_gross_use_of_AI(
                 copilot_code_metrics_df["metrics"].to_list()  # type: ignore
             )
-            percentage_added_lines_by_copilot = (  # type: ignore
+            percentage_changed_lines_by_copilot = (  # type: ignore
                 total_added_lines_by_copilot / total_added_lines
             )
             response.data[
                 index
-            ].percentage_added_lines_by_copilot = percentage_added_lines_by_copilot
+            ].percentage_changed_lines_by_copilot = percentage_changed_lines_by_copilot
+            response.data[index].net_changed_lines_by_copilot = round(percentage_changed_lines_by_copilot * response.data[index].net_changed_lines) # type: ignore
 
         return response
 
