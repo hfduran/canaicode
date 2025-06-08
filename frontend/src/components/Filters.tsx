@@ -1,7 +1,14 @@
 import React from "react";
-import Select, { MultiValue } from "react-select";
-import "./Filters.css";
-import { FiltersProps, SelectOption } from "../types/ui";
+import { 
+  Multiselect, 
+  DatePicker, 
+  Select, 
+  Input, 
+  FormField, 
+  SpaceBetween,
+  Header 
+} from "@cloudscape-design/components";
+import { FiltersProps } from "../types/ui";
 
 const Filters: React.FC<FiltersProps> = ({
   filters,
@@ -9,88 +16,106 @@ const Filters: React.FC<FiltersProps> = ({
   availableLanguages = [],
   availableTeams = [],
 }) => {
-  const handleMultiSelectChange = (
-    selectedOptions: MultiValue<SelectOption>,
-    field: keyof typeof filters
-  ) => {
-    const values = selectedOptions ? selectedOptions.map((option) => option.value) : [];
-    setFilters({ ...filters, [field]: values });
-  };
-
-  const languageOptions: SelectOption[] = availableLanguages.map((lang) => ({
-    value: lang,
+  // Convert arrays to CloudScape option format
+  const languageOptions = availableLanguages.map((lang) => ({
     label: lang,
+    value: lang,
   }));
-  const teamOptions: SelectOption[] = availableTeams.map((team) => ({ value: team, label: team }));
+  
+  const teamOptions = availableTeams.map((team) => ({
+    label: team,
+    value: team,
+  }));
+
+  const periodOptions = [
+    { label: "All", value: "" },
+    { label: "Week", value: "week" },
+    { label: "Month", value: "month" },
+    { label: "Quarter", value: "quarter" },
+    { label: "6 Months", value: "6 months" },
+    { label: "Year", value: "year" },
+  ];
 
   return (
-    <div className="filters-container">
-      <h3>Filters</h3>
+    <SpaceBetween direction="vertical" size="m">
+      <Header variant="h3">Filters</Header>
 
-      <div className="filter-group">
-        <label>Languages:</label>
-        <Select
-          isMulti
-          name="languages"
+      <FormField label="Languages">
+        <Multiselect
+          selectedOptions={languageOptions.filter((opt) => 
+            filters.languages.includes(opt.value)
+          )}
+          onChange={({ detail }) => {
+            const selectedValues = detail.selectedOptions.map(opt => opt.value || '');
+            setFilters({ ...filters, languages: selectedValues });
+          }}
           options={languageOptions}
-          value={languageOptions.filter((opt) => filters.languages.includes(opt.value))}
-          onChange={(selected) => handleMultiSelectChange(selected, "languages")}
+          placeholder="Choose languages"
+          selectedAriaLabel="Selected languages"
         />
-      </div>
+      </FormField>
 
-      <div className="filter-group">
-        <label>Teams:</label>
-        <Select
-          isMulti
-          name="teams"
+      <FormField label="Teams">
+        <Multiselect
+          selectedOptions={teamOptions.filter((opt) => 
+            filters.teams.includes(opt.value)
+          )}
+          onChange={({ detail }) => {
+            const selectedValues = detail.selectedOptions.map(opt => opt.value || '');
+            setFilters({ ...filters, teams: selectedValues });
+          }}
           options={teamOptions}
-          value={teamOptions.filter((opt) => filters.teams.includes(opt.value))}
-          onChange={(selected) => handleMultiSelectChange(selected, "teams")}
+          placeholder="Choose teams"
+          selectedAriaLabel="Selected teams"
         />
-      </div>
+      </FormField>
 
-      <div className="filter-group">
-        <label>Initial Date:</label>
-        <input
-          type="date"
+      <FormField label="Initial Date">
+        <DatePicker
           value={filters.initialDate}
-          onChange={(e) => setFilters({ ...filters, initialDate: e.target.value })}
+          onChange={({ detail }) => 
+            setFilters({ ...filters, initialDate: detail.value })
+          }
+          placeholder="YYYY-MM-DD"
         />
-      </div>
+      </FormField>
 
-      <div className="filter-group">
-        <label>Final Date:</label>
-        <input
-          type="date"
+      <FormField label="Final Date">
+        <DatePicker
           value={filters.finalDate}
-          onChange={(e) => setFilters({ ...filters, finalDate: e.target.value })}
+          onChange={({ detail }) => 
+            setFilters({ ...filters, finalDate: detail.value })
+          }
+          placeholder="YYYY-MM-DD"
         />
-      </div>
+      </FormField>
 
-      <div className="filter-group">
-        <label>Period:</label>
-        <select
-          value={filters.period}
-          onChange={(e) => setFilters({ ...filters, period: e.target.value })}
-        >
-          <option value="">All</option>
-          <option value="week">Week</option>
-          <option value="month">Month</option>
-          <option value="quarter">Quarter</option>
-          <option value="6 months">6 Months</option>
-          <option value="year">Year</option>
-        </select>
-      </div>
+      <FormField label="Period">
+        <Select
+          selectedOption={periodOptions.find(opt => opt.value === filters.period) || null}
+          onChange={({ detail }) => 
+            setFilters({ ...filters, period: detail.selectedOption?.value || "" })
+          }
+          options={periodOptions}
+          placeholder="Select period"
+        />
+      </FormField>
 
-      <div className="filter-group">
-        <label>Number of Authors:</label>
-        <input
-          type="number"
+      <FormField label="Number of Authors">
+        <Input
           value={filters.numberOfAuthors}
-          onChange={(e) => setFilters({ ...filters, numberOfAuthors: e.target.value })}
+          onChange={({ detail }) => {
+            const value = detail.value;
+            if (value === '' || (Number(value) >= 0 && !isNaN(Number(value)))) {
+              setFilters({ ...filters, numberOfAuthors: value });
+            }
+          }}
+          type="number"
+          placeholder="Enter number of authors"
+          inputMode="numeric"
         />
-      </div>
-    </div>
+      </FormField>
+    </SpaceBetween>
   );
 };
 
