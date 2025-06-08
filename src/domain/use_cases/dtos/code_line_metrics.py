@@ -15,8 +15,16 @@ class CodeLineMetricsData(BaseModel):
     number_of_authors: int
 
 
-class CodeLineMetrics(BaseModel):
+class CommitMetricsData(BaseModel):
+    initial_date: datetime
+    final_date: datetime
+    total_commits: int
+    percentage_copilot_suggestions_accepted: float
+    number_of_authors: int
+
+
+class CalculatedMetrics(BaseModel):
     team: str
     languages: List[str]
     period: Period
-    data: List[CodeLineMetricsData]
+    data: List[CodeLineMetricsData | CommitMetricsData]

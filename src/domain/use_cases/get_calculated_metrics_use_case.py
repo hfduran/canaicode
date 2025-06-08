@@ -10,8 +10,9 @@ from src.domain.entities.value_objects.enums.productivity_metric import (
     Productivity_metric,
 )
 from src.domain.use_cases.dtos.code_line_metrics import (
-    CodeLineMetrics,
+    CalculatedMetrics,
     CodeLineMetricsData,
+    CommitMetricsData,
 )
 from src.domain.use_cases.metrics_calculator import MetricsCalculator
 from src.infrastructure.database.raw_commit_metrics.postgre.raw_commit_metrics_repository import RawCommitMetricsRepository
@@ -35,13 +36,13 @@ class GetCalculatedMetricsUseCase:
         initial_date: Optional[datetime] = None,
         final_date: Optional[datetime] = None,
         languages: Optional[List[str]] = None,
-    ) -> CodeLineMetrics | None:
+    ) -> CalculatedMetrics:
         raw_commit_metrics = self.commit_metrics_repository.listByTeam(
             team, initial_date, final_date, languages
         )
 
         if not raw_commit_metrics:
-            return CodeLineMetrics(
+            return CalculatedMetrics(
                 team=team,
                 languages=[],
                 period=period,
@@ -68,7 +69,7 @@ class GetCalculatedMetricsUseCase:
         raw_commit_metrics: List[CommitMetrics],
         raw_copilot_code_metrics: List[CopilotCodeMetrics],
         period: Period,
-    ) -> CodeLineMetrics | None:
+    ) -> CalculatedMetrics:
         df_commit_metrics = pd.DataFrame(
             [{"metrics": c, "date": c.date} for c in raw_commit_metrics]
         )
@@ -86,7 +87,7 @@ class GetCalculatedMetricsUseCase:
             pd.Grouper(key="date", freq=period)
         )
 
-        response = CodeLineMetrics(
+        response = CalculatedMetrics(
             team=raw_commit_metrics[0].repository.team,
             languages=[],
             period=period,
@@ -130,15 +131,13 @@ class GetCalculatedMetricsUseCase:
                 for i, data in enumerate(response.data)
                 if data.final_date == copilot_period_final_date
             )
-            total_added_lines_by_copilot = MetricsCalculator.calculate_gross_use_of_AI(
+            total_added_lines_by_copilot = MetricsCalculator.calculate_gross_use_of_AI_lines(
                 copilot_code_metrics_df["metrics"].to_list()  # type: ignore
             )
             percentage_changed_lines_by_copilot = (  # type: ignore
                 total_added_lines_by_copilot / total_added_lines
             )
-            response.data[
-                index
-            ].percentage_changed_lines_by_copilot = percentage_changed_lines_by_copilot
+            response.data[index].percentage_changed_lines_by_copilot = percentage_changed_lines_by_copilot # type: ignore
             response.data[index].net_changed_lines_by_copilot = round(percentage_changed_lines_by_copilot * response.data[index].net_changed_lines) # type: ignore
 
         return response
@@ -148,5 +147,62 @@ class GetCalculatedMetricsUseCase:
         raw_commit_metrics: List[CommitMetrics],
         raw_copilot_code_metrics: List[CopilotCodeMetrics],
         period: Period,
-    ) -> CodeLineMetrics | None:
-        return None
+    ) -> CalculatedMetrics:
+        df_commit_metrics = pd.DataFrame(
+            [{"metrics": c, "date": c.date} for c in raw_commit_metrics]
+        )
+        df_copilot_code_metrics = pd.DataFrame(
+            [{"metrics": c, "date": c.date} for c in raw_copilot_code_metrics],
+            columns=["metrics", "date"]
+        )
+        df_copilot_code_metrics["date"] = pd.to_datetime(df_copilot_code_metrics["date"], errors="coerce") # type: ignore
+
+        grouped_commit_metrics = df_commit_metrics.groupby(  # type: ignore
+            pd.Grouper(key="date", freq=period)
+        )
+
+        grouped_copilot_code_metrics = df_copilot_code_metrics.groupby(  # type: ignore
+            pd.Grouper(key="date", freq=period)
+        )
+
+        response = CalculatedMetrics(
+            team=raw_commit_metrics[0].repository.team,
+            languages=[],
+            period=period,
+            data=[],
+        )
+
+        for period_final_date, commit_metrics_df in grouped_commit_metrics:  # type: ignore
+            authors = []
+            for commit_metrics in commit_metrics_df["metrics"]:  # type: ignore
+                if commit_metrics.language not in response.languages:  # type: ignore
+                    response.languages.append(commit_metrics.language)  # type: ignore
+                if commit_metrics.author.name not in authors:  # type: ignore
+                    authors.append(commit_metrics.author.name)  # type: ignore
+            response.data.append(
+                CommitMetricsData(
+                    initial_date=period_final_date.to_period(  # type: ignore
+                        period
+                    ).start_time.to_pydatetime(),
+                    final_date=period_final_date.to_pydatetime(),  # type: ignore
+                    total_commits=commit_metrics_df["metrics"].__len__(),
+                    percentage_copilot_suggestions_accepted=0,
+                    number_of_authors=authors.__len__()
+                )
+            )
+
+        for (
+            copilot_period_final_date,  # type: ignore
+            copilot_code_metrics_df,
+        ) in grouped_copilot_code_metrics:
+            index = next(
+                i
+                for i, data in enumerate(response.data)
+                if data.final_date == copilot_period_final_date
+            )
+            response.data[index].percentage_copilot_suggestions_accepted = MetricsCalculator.calculate_relative_use_of_AI( # type: ignore
+                copilot_code_metrics_df["metrics"].to_list()  # type: ignore
+            )
+
+
+        return response

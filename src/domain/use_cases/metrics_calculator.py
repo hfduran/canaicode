@@ -25,7 +25,7 @@ class MetricsCalculator:
         return int(df["added_lines"].sum() + df["removed_lines"].sum())
 
     @staticmethod
-    def calculate_gross_use_of_AI(metrics: List[CopilotCodeMetrics]) -> int:
+    def calculate_gross_use_of_AI_lines(metrics: List[CopilotCodeMetrics]) -> int:
         if not metrics:
             return 0
 
@@ -33,13 +33,35 @@ class MetricsCalculator:
         return int(df["lines_accepted"].sum())
 
     @staticmethod
-    def calculate_relative_use_of_AI(metrics: List[CopilotCodeMetrics]) -> float:
+    def calculate_relative_use_of_AI_lines(metrics: List[CopilotCodeMetrics]) -> float:
         if not metrics:
             return 0.0
 
         df = pd.DataFrame([m.__dict__ for m in metrics])
         total_suggested = df["lines_suggested"].sum()
         total_accepted = df["lines_accepted"].sum()
+
+        if total_suggested == 0:
+            return 0.0
+
+        return float(total_accepted / total_suggested)
+    
+    @staticmethod
+    def calculate_gross_use_of_AI(metrics: List[CopilotCodeMetrics]) -> int:
+        if not metrics:
+            return 0
+
+        df = pd.DataFrame([m.__dict__ for m in metrics])
+        return int(df["code_acceptances"].sum())
+
+    @staticmethod
+    def calculate_relative_use_of_AI(metrics: List[CopilotCodeMetrics]) -> float:
+        if not metrics:
+            return 0.0
+
+        df = pd.DataFrame([m.__dict__ for m in metrics])
+        total_suggested = df["code_suggestions"].sum()
+        total_accepted = df["code_acceptances"].sum()
 
         if total_suggested == 0:
             return 0.0
