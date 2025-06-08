@@ -1,18 +1,17 @@
 import React, { useState } from "react";
-import Filters from "./Filters";
 import mockDashboardData from "../data/mockData";
 import { BarChart, Bar, CartesianGrid, XAxis, YAxis, Tooltip, Legend } from "recharts";
 import RequestParamsForm from "./RequestParamsForm";
-import { DashboardData, FlattenedDataEntry } from "../types/ui";
+import { DashboardData, FlattenedDataEntry, FormattedDataEntry } from "../types/ui";
 import { CalculatedMetricsService } from "../services/calculatedMetricsService";
 import { CalculatedMetricsRequest } from "../types/model";
-import { Button, Modal, Box, SpaceBetween } from "@cloudscape-design/components";
-import { useDataFiltering } from "../hooks/useDataFiltering";
+import { Button, SpaceBetween } from "@cloudscape-design/components";
 import { DashboardFiltersModal } from "./DashboardFiltersModal";
+import {formatDate} from "../utils/date/formatDate"; 
 
 const CalculatedMetricsDashboard: React.FC = () => {
   const [requestData, setRequestData] = useState<DashboardData[]>([]);
-  
+
   // Form state
   const [timeRange, setTimeRange] = useState<string>("");
   const [team, setTeam] = useState<string>("");
@@ -20,7 +19,18 @@ const CalculatedMetricsDashboard: React.FC = () => {
   const [initialDate, setInitialDate] = useState<string>("");
   const [finalDate, setFinalDate] = useState<string>("");
   const [filteredData, setFilteredData] = useState<FlattenedDataEntry[]>([]);
+  const [formattedData, setFormattedData] = useState<FormattedDataEntry[]>([]);
   const [isFiltersModalVisible, setIsFiltersModalVisible] = useState<boolean>(false);
+
+  // Effect to format data for the chart
+  React.useEffect(() => {
+    const formatted: FormattedDataEntry[] = filteredData.map((entry) => ({
+      ...entry,
+      initial_date: formatDate(entry.initial_date),
+      final_date: formatDate(entry.final_date),
+    }));
+    setFormattedData(formatted);
+  }, [filteredData]);
 
   async function handleRequestData() {
     console.log("Form Data:", {
@@ -85,21 +95,14 @@ const CalculatedMetricsDashboard: React.FC = () => {
             team: response.team,
             languages: response.languages,
             period: apiToDashboardPeriodMap[response.period] || response.period,
-            data: response.data.map((item) => ({
-              initial_date: item.initial_date,
-              final_date: item.final_date,
-              net_changed_lines: item.net_changed_lines,
-              net_changed_lines_by_copilot: item.net_changed_lines_by_copilot,
-              percentage_changed_lines_by_copilot: item.percentage_changed_lines_by_copilot,
-              number_of_authors: item.number_of_authors,
-            })),
+            data: response.data.map((item) => ({ ...item })),
           },
         ];
 
         setRequestData(dashboardData);
         console.log("Updated requestData state:", dashboardData);
       } else {
-        setRequestData([])
+        setRequestData([]);
       }
     } catch (error) {
       console.error("Error calling API:", error);
@@ -108,11 +111,11 @@ const CalculatedMetricsDashboard: React.FC = () => {
 
   const handleLoadDemoData = () => {
     setRequestData(mockDashboardData);
-  }
+  };
 
   const handleOpenFiltersModal = () => {
-    setIsFiltersModalVisible(true)
-  }
+    setIsFiltersModalVisible(true);
+  };
 
   return (
     <div
@@ -147,7 +150,7 @@ const CalculatedMetricsDashboard: React.FC = () => {
           </SpaceBetween>
         </SpaceBetween>
         <h2>Calculated Metrics</h2>
-        <BarChart width={800} height={340} data={filteredData}>
+        <BarChart width={800} height={340} data={formattedData}>
           <CartesianGrid strokeDasharray="3 3" />
           <XAxis dataKey="initial_date" />
           <YAxis />

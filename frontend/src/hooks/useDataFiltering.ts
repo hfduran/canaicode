@@ -54,7 +54,7 @@ export const useDataFiltering = (data: DashboardData[], done: () => void): UseDa
             (!filters.numberOfAuthors ||
               Number(filters.numberOfAuthors) === entry.number_of_authors) &&
             (!filters.initialDate ||
-              new Date(entry.initial_date) >= new Date(filters.initialDate)) &&
+              entry.initial_date >= new Date(filters.initialDate)) &&
             (!filters.finalDate || new Date(entry.final_date) <= new Date(filters.finalDate))
         )
         .map((entry) => ({

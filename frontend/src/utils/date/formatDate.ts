@@ -1,7 +1,7 @@
-import { format } from "date-fns";
+import { formatInTimeZone } from "date-fns-tz";
 
 const DATE_STRING_FORMAT = "yyyy-MM-dd";
 
 export function formatDate(input: Date) {
-  return format(input, DATE_STRING_FORMAT);
+  return formatInTimeZone(input, "UTC", DATE_STRING_FORMAT);
 }
