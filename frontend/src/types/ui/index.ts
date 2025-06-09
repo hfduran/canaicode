@@ -14,6 +14,11 @@ export interface FlattenedDataEntry extends DataEntry {
   languages: string[];
 }
 
+export interface FormattedDataEntry extends Omit<FlattenedDataEntry, 'initial_date' | 'final_date'> {
+  initial_date: string;
+  final_date: string;
+}
+
 export interface Filters {
   languages: string[];
   teams: string[];

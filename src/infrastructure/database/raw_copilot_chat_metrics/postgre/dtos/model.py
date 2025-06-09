@@ -1,11 +1,14 @@
 from datetime import datetime, timezone
 
-from sqlalchemy import Column, DateTime, Integer, String
+from sqlalchemy import Column, DateTime, Integer, String, UniqueConstraint
 
 from src.infrastructure.database.connection.database_connection import Base
 
 class RawCopilotChatMetrics(Base):
     __tablename__ = "raw_copilot_chat_metrics"
+    __table_args__ = (
+        UniqueConstraint('team_name', 'date', 'ide', 'copilot_model', name='uq_team_date_ide_model'),
+    )
 
     id = Column(String, primary_key=True, index=True)
     team_name = Column(String, index=True)

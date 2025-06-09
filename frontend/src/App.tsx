@@ -7,21 +7,22 @@ const Home: React.FC = () => {
   return (
     <div style={{ display: "flex" }}>
       <div style={{ flex: 1 }}>
-        <p>Welcome to the Home Page - Column 1</p>
-      </div>
-      <div style={{ flex: 1 }}>
-        <p>Column 2 content here</p>
+        <h1>WELCOME TO CANAICODE</h1>
       </div>
     </div>
   );
 };
 
-const GrossMetrics: React.FC = () => {
+const OnDemandMetrics: React.FC = () => {
   return <Dashboard />;
 };
 
-const CalculatedMetrics: React.FC = () => {
-  return <Dashboard />;
+const Reports: React.FC = () => {
+  return (
+    <div style={{ flex: 1 }}>
+      <p>TO BE DONE</p>
+    </div>
+  );
 };
 
 const Footer: React.FC = () => {
@@ -34,9 +35,6 @@ const Footer: React.FC = () => {
         background: "#eee",
       }}
     >
-      <div>Column 1</div>
-      <div>Column 2</div>
-      <div>Column 3</div>
     </footer>
   );
 };
@@ -57,22 +55,22 @@ const App: React.FC = () => {
               href: "/",
             },
             {
-              type: "button", 
-              text: "Gross Metrics",
-              href: "/gross-metrics",
+              type: "button",
+              text: "On Demand Metrics",
+              href: "/on-demand-metrics",
             },
             {
               type: "button",
-              text: "Calculated Metrics", 
-              href: "/calculated-metrics",
+              text: "Reports",
+              href: "/reports",
             },
           ]}
         />
 
         <Routes>
           <Route path="/" element={<Home />} />
-          <Route path="/gross-metrics" element={<GrossMetrics />} />
-          <Route path="/calculated-metrics" element={<CalculatedMetrics />} />
+          <Route path="/on-demand-metrics" element={<OnDemandMetrics />} />
+          <Route path="/reports" element={<Reports />} />
         </Routes>
 
         <Footer />

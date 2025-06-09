@@ -23,8 +23,8 @@ export interface CalculatedMetricsRequest {
 }
 
 export interface CodeLineMetricsData {
-  initial_date: string;
-  final_date: string;
+  initial_date: Date;
+  final_date: Date;
   net_changed_lines: number;
   net_changed_lines_by_copilot: number;
   percentage_changed_lines_by_copilot: number;

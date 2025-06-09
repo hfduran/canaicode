@@ -1,19 +1,14 @@
 import React, { useState } from "react";
-import Filters from "./Filters";
 import mockDashboardData from "../data/mockData";
 import { BarChart, Bar, CartesianGrid, XAxis, YAxis, Tooltip, Legend } from "recharts";
 import RequestParamsForm from "./RequestParamsForm";
-import { DashboardData, FlattenedDataEntry } from "../types/ui";
-import { CalculatedMetricsService } from "../services/calculatedMetricsService";
-import { CalculatedMetricsRequest } from "../types/model";
-import { Button, Modal, Box, SpaceBetween } from "@cloudscape-design/components";
-import { useDataFiltering } from "../hooks/useDataFiltering";
+import { FlattenedDataEntry, FormattedDataEntry } from "../types/ui";
+import { Button, SpaceBetween } from "@cloudscape-design/components";
 import { DashboardFiltersModal } from "./DashboardFiltersModal";
+import { formatDate } from "../utils/date/formatDate";
+import { useCalculatedMetrics } from "../hooks"; 
 
 const CalculatedMetricsDashboard: React.FC = () => {
-  const [requestData, setRequestData] = useState<DashboardData[]>([]);
-  
-  // Form state
   const [timeRange, setTimeRange] = useState<string>("");
   const [team, setTeam] = useState<string>("");
   const [metric, setMetric] = useState<string>("");
@@ -22,97 +17,37 @@ const CalculatedMetricsDashboard: React.FC = () => {
   const [filteredData, setFilteredData] = useState<FlattenedDataEntry[]>([]);
   const [isFiltersModalVisible, setIsFiltersModalVisible] = useState<boolean>(false);
 
-  async function handleRequestData() {
-    console.log("Form Data:", {
+  const { requestData, isLoading, error, handleRequestData, setMockData } = useCalculatedMetrics();
+
+  const formattedData: FormattedDataEntry[] = filteredData.map((entry) => ({
+    ...entry,
+    initial_date: formatDate(entry.initial_date),
+    final_date: formatDate(entry.final_date),
+  }));
+
+  const isFormValid = timeRange && team && metric && initialDate && finalDate;
+
+  const handleSubmitRequest = async () => {
+    if (!isFormValid) {
+      return;
+    }
+    
+    await handleRequestData({
       timeRange,
       team,
       metric,
       initialDate,
       finalDate,
     });
-
-    try {
-      const periodMap: { [key: string]: "W" | "M" | "Q" | "Y" } = {
-        Week: "W",
-        Month: "M",
-        Semester: "Q",
-        Year: "Y",
-      };
-
-      const productivityMetricMap: { [key: string]: "code_lines" | "commits" } = {
-        Codelines: "code_lines",
-        Commit: "commits",
-      };
-
-      let requestInitialDate: Date;
-      let requestFinalDate: Date;
-
-      if (initialDate && finalDate) {
-        requestInitialDate = new Date(initialDate);
-        requestFinalDate = new Date(finalDate);
-      } else {
-        // Fallback to default date range (last month)
-        requestFinalDate = new Date();
-        requestInitialDate = new Date();
-        requestInitialDate.setMonth(requestFinalDate.getMonth() - 1);
-      }
-
-      const request: CalculatedMetricsRequest = {
-        team_name: team,
-        period: periodMap[timeRange] || "M",
-        productivity_metric: productivityMetricMap[metric] || "code_lines",
-        initial_date: requestInitialDate,
-        final_date: requestFinalDate,
-        languages: [], // Empty for now, could be extended later
-      };
-
-      console.log("Sending request:", request);
-
-      const response = await CalculatedMetricsService.getCalculatedMetrics(request);
-      console.log("API Response:", response);
-
-      if (response) {
-        // Convert API response format to UI format
-        const apiToDashboardPeriodMap: { [key: string]: string } = {
-          W: "week",
-          M: "month",
-          Q: "quarter",
-          Y: "year",
-        };
-
-        const dashboardData: DashboardData[] = [
-          {
-            team: response.team,
-            languages: response.languages,
-            period: apiToDashboardPeriodMap[response.period] || response.period,
-            data: response.data.map((item) => ({
-              initial_date: item.initial_date,
-              final_date: item.final_date,
-              net_changed_lines: item.net_changed_lines,
-              net_changed_lines_by_copilot: item.net_changed_lines_by_copilot,
-              percentage_changed_lines_by_copilot: item.percentage_changed_lines_by_copilot,
-              number_of_authors: item.number_of_authors,
-            })),
-          },
-        ];
-
-        setRequestData(dashboardData);
-        console.log("Updated requestData state:", dashboardData);
-      } else {
-        setRequestData([])
-      }
-    } catch (error) {
-      console.error("Error calling API:", error);
-    }
-  }
+  };
 
   const handleLoadDemoData = () => {
-    setRequestData(mockDashboardData);
-  }
+    setMockData(mockDashboardData);
+  };
 
   const handleOpenFiltersModal = () => {
-    setIsFiltersModalVisible(true)
-  }
+    setIsFiltersModalVisible(true);
+  };
 
   return (
     <div
@@ -135,7 +70,12 @@ const CalculatedMetricsDashboard: React.FC = () => {
             setFinalDate={setFinalDate}
           />
           <SpaceBetween direction="horizontal" size="m">
-            <Button variant="primary" onClick={handleRequestData}>
+            <Button 
+              variant="primary" 
+              onClick={handleSubmitRequest}
+              loading={isLoading}
+              disabled={!isFormValid}
+            >
               Request Data
             </Button>
             <Button variant="normal" onClick={handleOpenFiltersModal}>
@@ -145,9 +85,14 @@ const CalculatedMetricsDashboard: React.FC = () => {
               Load demo data
             </Button>
           </SpaceBetween>
+          {error && (
+            <div style={{ color: 'red', marginTop: '10px' }}>
+              Error: {error}
+            </div>
+          )}
         </SpaceBetween>
         <h2>Calculated Metrics</h2>
-        <BarChart width={800} height={340} data={filteredData}>
+        <BarChart width={800} height={340} data={formattedData}>
           <CartesianGrid strokeDasharray="3 3" />
           <XAxis dataKey="initial_date" />
           <YAxis />
