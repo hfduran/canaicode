@@ -1,12 +1,21 @@
 import React, { useState } from "react";
-import mockDashboardData from "../data/mockData";
 import { BarChart, Bar, CartesianGrid, XAxis, YAxis, Tooltip, Legend } from "recharts";
 import RequestParamsForm from "./RequestParamsForm";
 import { FlattenedDataEntry, FormattedDataEntry } from "../types/ui";
-import { Button, SpaceBetween } from "@cloudscape-design/components";
+import {
+  Button,
+  SpaceBetween,
+  Container,
+  Header,
+  ContentLayout,
+  Box,
+  Alert,
+  Badge,
+  Grid,
+} from "@cloudscape-design/components";
 import { DashboardFiltersModal } from "./DashboardFiltersModal";
 import { formatDate } from "../utils/date/formatDate";
-import { useCalculatedMetrics } from "../hooks"; 
+import { useCalculatedMetrics } from "../hooks";
 
 const CalculatedMetricsDashboard: React.FC = () => {
   const [timeRange, setTimeRange] = useState<string>("");
@@ -17,7 +26,7 @@ const CalculatedMetricsDashboard: React.FC = () => {
   const [filteredData, setFilteredData] = useState<FlattenedDataEntry[]>([]);
   const [isFiltersModalVisible, setIsFiltersModalVisible] = useState<boolean>(false);
 
-  const { requestData, isLoading, error, handleRequestData, setMockData } = useCalculatedMetrics();
+  const { requestData, isLoading, error, handleRequestData } = useCalculatedMetrics();
 
   const formattedData: FormattedDataEntry[] = filteredData.map((entry) => ({
     ...entry,
@@ -31,7 +40,7 @@ const CalculatedMetricsDashboard: React.FC = () => {
     if (!isFormValid) {
       return;
     }
-    
+
     await handleRequestData({
       timeRange,
       team,
@@ -41,82 +50,240 @@ const CalculatedMetricsDashboard: React.FC = () => {
     });
   };
 
-  const handleLoadDemoData = () => {
-    setMockData(mockDashboardData);
-  };
-
   const handleOpenFiltersModal = () => {
     setIsFiltersModalVisible(true);
   };
 
+  // Calculate summary metrics
+  const totalLines = formattedData.reduce((acc, entry) => acc + (entry.net_changed_lines || 0), 0);
+  const totalCopilotLines = formattedData.reduce(
+    (acc, entry) => acc + (entry.net_changed_lines_by_copilot || 0),
+    0
+  );
+  const copilotPercentage =
+    totalLines > 0 ? ((totalCopilotLines / totalLines) * 100).toFixed(1) : "0";
+
+  // Responsive chart dimensions
+  const getChartDimensions = () => {
+    const width = Math.min(window.innerWidth - 100, 800);
+    const height = Math.max(width * 0.5, 340);
+    return { width, height };
+  };
+
+  const [chartDimensions, setChartDimensions] = React.useState(getChartDimensions());
+
+  React.useEffect(() => {
+    const handleResize = () => {
+      setChartDimensions(getChartDimensions());
+    };
+
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
   return (
-    <div
-      className="dashboard-container"
-      style={{ display: "flex", flexDirection: "column", gap: "20px", padding: "30px" }}
+    <ContentLayout
+      header={
+        <Header
+          variant="h1"
+          description="Analyze GitHub Copilot productivity metrics for your development teams"
+        >
+          GitHub Copilot Analytics Dashboard
+        </Header>
+      }
+      defaultPadding={true}
     >
-      <div className="dashboard-main">
-        <h2>Select Language and Team data</h2>
-        <SpaceBetween size="m" direction="vertical">
-          <RequestParamsForm
-            timeRange={timeRange}
-            setTimeRange={setTimeRange}
-            team={team}
-            setTeam={setTeam}
-            metric={metric}
-            setMetric={setMetric}
-            initialDate={initialDate}
-            setInitialDate={setInitialDate}
-            finalDate={finalDate}
-            setFinalDate={setFinalDate}
-          />
-          <SpaceBetween direction="horizontal" size="m">
-            <Button 
-              variant="primary" 
-              onClick={handleSubmitRequest}
-              loading={isLoading}
-              disabled={!isFormValid}
-            >
-              Request Data
-            </Button>
-            <Button variant="normal" onClick={handleOpenFiltersModal}>
-              Open Filters
-            </Button>
-            <Button variant="normal" onClick={handleLoadDemoData}>
-              Load demo data
-            </Button>
+      <SpaceBetween size="l">
+        {/* Configuration Section */}
+        <Container
+          header={
+            <Header variant="h2" description="Configure your analysis parameters">
+              Data Configuration
+            </Header>
+          }
+        >
+          <SpaceBetween size="m">
+            <RequestParamsForm
+              timeRange={timeRange}
+              setTimeRange={setTimeRange}
+              team={team}
+              setTeam={setTeam}
+              metric={metric}
+              setMetric={setMetric}
+              initialDate={initialDate}
+              setInitialDate={setInitialDate}
+              finalDate={finalDate}
+              setFinalDate={setFinalDate}
+            />
+
+            <Box>
+              <Button
+                variant="primary"
+                onClick={handleSubmitRequest}
+                loading={isLoading}
+                disabled={!isFormValid}
+              >
+                {isLoading ? "Loading Data..." : "Generate Analytics"}
+              </Button>
+            </Box>
+
+            {error && (
+              <Alert statusIconAriaLabel="Error" type="error" header="Data Loading Error">
+                {error}
+              </Alert>
+            )}
+
+            {!isFormValid && (
+              <Alert statusIconAriaLabel="Info" type="info" header="Configuration Required">
+                Please fill in all required fields to generate analytics.
+              </Alert>
+            )}
           </SpaceBetween>
-          {error && (
-            <div style={{ color: 'red', marginTop: '10px' }}>
-              Error: {error}
-            </div>
-          )}
-        </SpaceBetween>
-        <h2>Calculated Metrics</h2>
-        <BarChart width={800} height={340} data={formattedData}>
-          <CartesianGrid strokeDasharray="3 3" />
-          <XAxis dataKey="initial_date" />
-          <YAxis />
-          <Tooltip
-            formatter={(value: any, name: string, props: any) => {
-              if (name === "Copilot Added Lines") {
-                const percentage = props.payload.percentage_lines_added_by_copilot;
-                return [`${value} lines (${percentage}%)`, name];
-              }
-              return [`${value} lines`, name];
-            }}
-          />
-          <Legend />
-          <Bar dataKey="net_changed_lines" fill="#8884d8" name="Total Added Lines" />
-          <Bar dataKey="net_changed_lines_by_copilot" fill="#82ca9d" name="Copilot Added Lines" />
-        </BarChart>
+        </Container>
+
+        {/* Summary Cards */}
+        {formattedData.length > 0 && (
+          <Grid gridDefinition={[{ colspan: 4 }, { colspan: 4 }, { colspan: 4 }]}>
+            <Container variant="stacked">
+              <Box textAlign="center" padding="l">
+                <SpaceBetween direction="vertical" size="xs">
+                  <Box variant="h1">{totalLines.toLocaleString()}</Box>
+                  <Box variant="strong">Total Lines Added</Box>
+                  <Box variant="small">Across all analyzed periods</Box>
+                </SpaceBetween>
+              </Box>
+            </Container>
+
+            <Container>
+              <Box textAlign="center" padding="l">
+                <SpaceBetween direction="vertical" size="xs">
+                  <Box variant="h1">{totalCopilotLines.toLocaleString()}</Box>
+                  <Box variant="strong">Copilot Generated Lines</Box>
+                  <Box variant="small">AI-assisted code contributions</Box>
+                </SpaceBetween>
+              </Box>
+            </Container>
+
+            <Container>
+              <Box textAlign="center" padding="l">
+                <SpaceBetween direction="vertical" size="xs">
+                  <Box variant="h1">{copilotPercentage}%</Box>
+                  <Box variant="strong">Copilot Contribution Rate</Box>
+                  <Box variant="small">Percentage of AI-generated code</Box>
+                </SpaceBetween>
+              </Box>
+            </Container>
+          </Grid>
+        )}
+
+        {/* Charts Section */}
+        {formattedData.length > 0 && (
+          <Container
+            header={
+              <Header
+                variant="h2"
+                description="Visual representation of code contribution metrics over time"
+                actions={<Badge color="blue">{formattedData.length} data points</Badge>}
+              >
+                Code Contribution Analytics
+              </Header>
+            }
+          >
+            <Box>
+              <BarChart
+                width={chartDimensions.width}
+                height={chartDimensions.height}
+                data={formattedData}
+                margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
+              >
+                <CartesianGrid strokeDasharray="3 3" stroke="#e9ecef" opacity={0.7} />
+                <XAxis
+                  dataKey="initial_date"
+                  tick={{ fontSize: 12, fill: "#6c757d" }}
+                  stroke="#6c757d"
+                  tickLine={{ stroke: "#6c757d" }}
+                />
+                <YAxis
+                  tick={{ fontSize: 12, fill: "#6c757d" }}
+                  stroke="#6c757d"
+                  tickLine={{ stroke: "#6c757d" }}
+                />
+                <Tooltip
+                  formatter={(value: any, name: string, props: any) => {
+                    if (name === "Copilot Added Lines") {
+                      const percentage = props.payload.percentage_lines_added_by_copilot;
+                      return [`${value} lines (${percentage}%)`, name];
+                    }
+                    return [`${value} lines`, name];
+                  }}
+                  contentStyle={{
+                    backgroundColor: "#ffffff",
+                    border: "1px solid #e9ecef",
+                    borderRadius: "8px",
+                    boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
+                    fontSize: "14px",
+                  }}
+                  labelStyle={{ color: "#232f3e", fontWeight: "bold" }}
+                />
+                <Legend wrapperStyle={{ paddingTop: "20px" }} />
+                <Bar
+                  dataKey="net_changed_lines"
+                  fill="#0073bb"
+                  name="Total Added Lines"
+                  radius={[4, 4, 0, 0]}
+                />
+                <Bar
+                  dataKey="net_changed_lines_by_copilot"
+                  fill="#037f0c"
+                  name="Copilot Added Lines"
+                  radius={[4, 4, 0, 0]}
+                />
+              </BarChart>
+            </Box>
+          </Container>
+        )}
+
+        {/* Loading State */}
+        {isLoading && (
+          <Container>
+            <Box textAlign="center" padding="xxl">
+              <SpaceBetween size="m">
+                <Box variant="h3">🔄 Loading Analytics...</Box>
+                <Box variant="p">
+                  Fetching and processing your GitHub Copilot data. This may take a few moments.
+                </Box>
+              </SpaceBetween>
+            </Box>
+          </Container>
+        )}
+
+        {/* Empty State */}
+        {formattedData.length === 0 && !isLoading && (
+          <Container>
+            <Box textAlign="center" padding="xxl">
+              <SpaceBetween size="m">
+                <Box variant="h2">📊 Ready to Analyze</Box>
+                <Box variant="p">
+                  Configure your parameters above and click "Generate Analytics" to view your GitHub
+                  Copilot productivity metrics.
+                </Box>
+                <Box variant="small">
+                  You'll see detailed charts and insights about code contributions and AI
+                  assistance.
+                </Box>
+              </SpaceBetween>
+            </Box>
+          </Container>
+        )}
+
         <DashboardFiltersModal
           data={requestData}
           setFilteredData={setFilteredData}
           visible={isFiltersModalVisible}
           setVisible={setIsFiltersModalVisible}
         />
-      </div>
-    </div>
+      </SpaceBetween>
+    </ContentLayout>
   );
 };
 
