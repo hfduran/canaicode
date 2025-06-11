@@ -1,5 +1,3 @@
-// Data types for the metrics dashboard
-
 import { CodeLineMetrics, CodeLineMetricsData } from "../model";
 
 export interface DataEntry extends CodeLineMetricsData {}
@@ -17,6 +15,7 @@ export interface FlattenedDataEntry extends DataEntry {
 export interface FormattedDataEntry extends Omit<FlattenedDataEntry, 'initial_date' | 'final_date'> {
   initial_date: string;
   final_date: string;
+  net_changed_lines_without_copilot: number;
 }
 
 export interface Filters {

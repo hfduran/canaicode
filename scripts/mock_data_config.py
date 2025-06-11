@@ -63,7 +63,7 @@ PRODUCTIVITY_MULTIPLIERS: Dict[str, float] = {
 }
 
 COPILOT_ADOPTION_MULTIPLIERS: Dict[str, float] = {
-    "low": 0.5,
-    "medium": 1.0,
-    "high": 1.5
+    "low": 0.3,
+    "medium": 0.65,
+    "high": 0.85
 }

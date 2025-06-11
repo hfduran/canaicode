@@ -1,12 +1,12 @@
 import React from "react";
 import { 
   Select, 
-  Input, 
   DatePicker, 
   FormField, 
   SpaceBetween, 
   ColumnLayout 
 } from "@cloudscape-design/components";
+import { TEAM_OPTIONS } from "../constants/teams";
 
 interface RequestParamsFormProps {
   timeRange: string;
@@ -74,12 +74,13 @@ const RequestParamsForm: React.FC<RequestParamsFormProps> = ({
 
         <FormField 
           label="Developer Team"
-          description="Specify the team name to analyze"
+          description="Select the team to analyze"
         >
-          <Input
-            value={team}
-            onChange={({ detail }) => setTeam(detail.value)}
-            placeholder="e.g., Team Alpha, Team Beta"
+          <Select
+            selectedOption={TEAM_OPTIONS.find(option => option.value === team) || null}
+            onChange={({ detail }) => setTeam(detail.selectedOption?.value || "")}
+            options={TEAM_OPTIONS}
+            placeholder="Select team"
           />
         </FormField>
       </SpaceBetween>

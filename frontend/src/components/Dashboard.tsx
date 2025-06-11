@@ -32,6 +32,7 @@ const CalculatedMetricsDashboard: React.FC = () => {
     ...entry,
     initial_date: formatDate(entry.initial_date),
     final_date: formatDate(entry.final_date),
+    net_changed_lines_without_copilot: entry.net_changed_lines - entry.net_changed_lines_by_copilot,
   }));
 
   const isFormValid = timeRange && team && metric && initialDate && finalDate;
@@ -149,7 +150,7 @@ const CalculatedMetricsDashboard: React.FC = () => {
                 <SpaceBetween direction="vertical" size="xs">
                   <Box variant="h1">{totalLines.toLocaleString()}</Box>
                   <Box variant="strong">Total Lines Added</Box>
-                  <Box variant="small">Across all analyzed periods</Box>
+                  <Box variant="small">Across all analyzed period</Box>
                 </SpaceBetween>
               </Box>
             </Container>
@@ -178,18 +179,18 @@ const CalculatedMetricsDashboard: React.FC = () => {
 
         {/* Charts Section */}
         {formattedData.length > 0 && (
-          <Container
-            header={
-              <Header
-                variant="h2"
-                description="Visual representation of code contribution metrics over time"
-                actions={<Badge color="blue">{formattedData.length} data points</Badge>}
-              >
-                Code Contribution Analytics
-              </Header>
-            }
-          >
-            <Box>
+          <div style={{ display: "flex", justifyContent: "center", alignItems: "stretch", flexGrow: 1 }}>
+            <Container
+              header={
+                <Header
+                  variant="h2"
+                  description="Visual representation of code contribution metrics over time"
+                  actions={<Badge color="blue">{formattedData.length} data points</Badge>}
+                >
+                  Code Contribution Analytics
+                </Header>
+              }
+            >
               <BarChart
                 width={chartDimensions.width}
                 height={chartDimensions.height}
@@ -210,9 +211,13 @@ const CalculatedMetricsDashboard: React.FC = () => {
                 />
                 <Tooltip
                   formatter={(value: any, name: string, props: any) => {
-                    if (name === "Copilot Added Lines") {
-                      const percentage = props.payload.percentage_lines_added_by_copilot;
-                      return [`${value} lines (${percentage}%)`, name];
+                    if (name === "copilot") {
+                      const percentage = props.payload.percentage_changed_lines_by_copilot;
+                      return [`${value} lines (${(percentage * 100).toFixed(1)}%)`, "Copilot Changed Lines"];
+                    }
+                    if (name === "without_copilot") {
+                      const total = props.payload.net_changed_lines;
+                      return [`${total} lines`, "Total Changed Lines"];
                     }
                     return [`${value} lines`, name];
                   }}
@@ -227,20 +232,22 @@ const CalculatedMetricsDashboard: React.FC = () => {
                 />
                 <Legend wrapperStyle={{ paddingTop: "20px" }} />
                 <Bar
-                  dataKey="net_changed_lines"
+                  dataKey="net_changed_lines_without_copilot"
                   fill="#0073bb"
-                  name="Total Added Lines"
+                  name="without_copilot"
+                  stackId={"a"}
                   radius={[4, 4, 0, 0]}
                 />
                 <Bar
                   dataKey="net_changed_lines_by_copilot"
                   fill="#037f0c"
-                  name="Copilot Added Lines"
+                  name="copilot"
+                  stackId={"a"}
                   radius={[4, 4, 0, 0]}
                 />
               </BarChart>
-            </Box>
-          </Container>
+            </Container>
+          </div>
         )}
 
         {/* Loading State */}
