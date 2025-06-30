@@ -8,9 +8,10 @@ from src.config.config import CONFIG
 from src.consumers.gh_copilot.gh_copilot_consumer import GhCopilotConsumer
 from src.consumers.git_repo_consumer import GitRepoConsumer
 from src.domain.entities.commit_metrics import CommitMetrics
-from src.domain.use_cases.dtos.code_line_metrics import CodeLineMetrics
+from src.domain.use_cases.dtos.calculated_metrics import CalculatedMetrics, CopilotMetricsByLanguage
 from src.domain.use_cases.get_calculated_metrics_use_case import GetCalculatedMetricsUseCase
 from src.domain.use_cases.get_commit_metrics_use_case import GetCommitMetricsUseCase
+from src.domain.use_cases.get_copilot_metrics_by_language_use_case import GetCopilotMetricsByLanguageUseCase
 from src.domain.use_cases.get_copilot_metrics_use_case import GetCopilotMetricsUseCase
 from src.infrastructure.database.connection.database_connection import SessionLocal
 from src.infrastructure.database.raw_commit_metrics.postgre.raw_commit_metrics_repository import RawCommitMetricsRepository
@@ -28,7 +29,7 @@ def get_db() -> Any:
         db.close()
 
 
-@router.get("/commit_metrics/{team_name}")
+@router.get("/get_temporary/commit_metrics/{team_name}")
 def get_commit_metrics(
     team_name: str,
     date_string: str = "",
@@ -40,7 +41,7 @@ def get_commit_metrics(
     return response
 
 
-@router.get("/copilot_metrics/{team_name}")
+@router.get("/get_temporary/copilot_metrics/{team_name}")
 def get_copilot_metrics(
     team_name: str,
     date_string: str = "",
@@ -61,7 +62,7 @@ def get_calculated_metrics(
     final_date_string: str = "",
     languages_string: str = "",
     db: Session = Depends(get_db),
-) -> CodeLineMetrics | None:
+) -> CalculatedMetrics | None:
     initial_date = datetime.strptime(initial_date_string, "%Y-%m-%d")
     final_date = datetime.strptime(final_date_string, "%Y-%m-%d")
     languages: List[str] = []
@@ -69,6 +70,15 @@ def get_calculated_metrics(
         languages = languages_string.split(',')
     get_calculated_metrics_use_case = set_get_calculated_metrics_dependencies(db)
     response = get_calculated_metrics_use_case.execute(team_name, period, productivity_metric, initial_date, final_date, languages) # type: ignore
+    return response
+
+
+@router.get("/copilot_metrics/language")
+def get_copilot_metrics_by_language(
+    db: Session = Depends(get_db),
+) -> List[CopilotMetricsByLanguage]:
+    get_copilot_metrics_by_language_use_case = set_get_copilot_metrics_by_language_dependencies(db)
+    response = get_copilot_metrics_by_language_use_case.execute()
     return response
 
 
@@ -100,5 +110,14 @@ def set_get_calculated_metrics_dependencies(
     copilot_code_metrics_repository = RawCopilotCodeMetricsRepository(db)
     return GetCalculatedMetricsUseCase(
         commit_metrics_repository,
+        copilot_code_metrics_repository,
+    )
+
+
+def set_get_copilot_metrics_by_language_dependencies(
+    db: Session,
+) -> GetCopilotMetricsByLanguageUseCase:
+    copilot_code_metrics_repository = RawCopilotCodeMetricsRepository(db)
+    return GetCopilotMetricsByLanguageUseCase(
         copilot_code_metrics_repository,
     )

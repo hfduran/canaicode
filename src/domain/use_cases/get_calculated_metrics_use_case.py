@@ -9,7 +9,7 @@ from src.domain.entities.value_objects.enums.period import Period
 from src.domain.entities.value_objects.enums.productivity_metric import (
     Productivity_metric,
 )
-from src.domain.use_cases.dtos.code_line_metrics import (
+from src.domain.use_cases.dtos.calculated_metrics import (
     CalculatedMetrics,
     CodeLineMetricsData,
     CommitMetricsData,

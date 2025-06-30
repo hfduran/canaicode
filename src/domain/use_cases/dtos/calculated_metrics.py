@@ -28,3 +28,8 @@ class CalculatedMetrics(BaseModel):
     languages: List[str]
     period: Period
     data: List[CodeLineMetricsData | CommitMetricsData]
+
+class CopilotMetricsByLanguage(BaseModel):
+    language: str
+    percentage_code_acceptances: float
+    percentage_lines_accepted: float
