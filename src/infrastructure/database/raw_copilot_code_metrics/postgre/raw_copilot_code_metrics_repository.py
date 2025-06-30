@@ -45,3 +45,17 @@ class RawCopilotCodeMetricsRepository:
         )
 
         return list(copilot_code_metrics)
+    
+    def list(
+        self,
+    ) -> List[CopilotCodeMetrics]:
+        query = self.db.query(RawCopilotCodeMetrics)
+
+        records = query.all()
+
+        copilot_code_metrics = map(
+            lambda record: DatabaseRawCopilotCodeMetricsMapper.to_domain(record),
+            records,
+        )
+
+        return list(copilot_code_metrics)
