@@ -43,11 +43,11 @@ const Filters: React.FC<FiltersProps> = ({
       <FormField label="Languages">
         <Multiselect
           selectedOptions={languageOptions.filter((opt) => 
-            filters.languages.includes(opt.value)
+            filters.programmingLanguages.includes(opt.value)
           )}
           onChange={({ detail }) => {
             const selectedValues = detail.selectedOptions.map(opt => opt.value || '');
-            setFilters({ ...filters, languages: selectedValues });
+            setFilters({ ...filters, programmingLanguages: selectedValues });
           }}
           options={languageOptions}
           placeholder="Choose languages"

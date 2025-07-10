@@ -15,7 +15,7 @@ export class CalculatedMetricsService {
       queryParams.append("productivity_metric", request.productivity_metric);
       queryParams.append("initial_date_string", formatDate(request.initial_date));
       queryParams.append("final_date_string", formatDate(request.final_date));
-      if (request.languages) queryParams.append("languages_string", request.languages.join(","));
+      if (request.programming_languages) queryParams.append("languages_string", request.programming_languages.join(","));
 
       const url = `${API_BASE_URL}/calculated_metrics/${encodeURIComponent(
         request.team_name

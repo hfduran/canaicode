@@ -19,7 +19,7 @@ export interface CalculatedMetricsRequest {
   productivity_metric: "code_lines" | "commits";
   initial_date: Date;
   final_date: Date;
-  languages?: string[];
+  programming_languages?: string[];
 }
 
 export interface CodeLineMetricsData {
@@ -32,8 +32,8 @@ export interface CodeLineMetricsData {
 }
 
 export interface CodeLineMetrics {
+  programming_languages: string[];
   team: string;
-  languages: string[];
   period: "W" | "M" | "Q" | "Y";
   data: CodeLineMetricsData[];
 }

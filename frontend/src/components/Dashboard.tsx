@@ -23,6 +23,7 @@ const CalculatedMetricsDashboard: React.FC = () => {
   const [metric, setMetric] = useState<string>("");
   const [initialDate, setInitialDate] = useState<string>("");
   const [finalDate, setFinalDate] = useState<string>("");
+  const [programmingLanguages, setProgrammingLanguages] = useState<string[]>([]);
   const [filteredData, setFilteredData] = useState<FlattenedDataEntry[]>([]);
   const [isFiltersModalVisible, setIsFiltersModalVisible] = useState<boolean>(false);
 
@@ -35,7 +36,7 @@ const CalculatedMetricsDashboard: React.FC = () => {
     net_changed_lines_without_copilot: entry.net_changed_lines - entry.net_changed_lines_by_copilot,
   }));
 
-  const isFormValid = timeRange && team && metric && initialDate && finalDate;
+  const isFormValid = timeRange && team && metric && initialDate && finalDate; // programmingLanguages is optional
 
   const handleSubmitRequest = async () => {
     if (!isFormValid) {
@@ -48,6 +49,7 @@ const CalculatedMetricsDashboard: React.FC = () => {
       metric,
       initialDate,
       finalDate,
+      programmingLanguages,
     });
   };
 
@@ -115,6 +117,8 @@ const CalculatedMetricsDashboard: React.FC = () => {
               setInitialDate={setInitialDate}
               finalDate={finalDate}
               setFinalDate={setFinalDate}
+              programmingLanguages={programmingLanguages}
+              setProgrammingLanguages={setProgrammingLanguages}
             />
 
             <Box>

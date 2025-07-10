@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { DashboardData, Filters as FiltersType, FlattenedDataEntry } from "../types/ui";
 
 export const DEFAULT_FILTERS: FiltersType = {
-  languages: [],
+  programmingLanguages: [],
   teams: [],
   initialDate: "",
   finalDate: "",
@@ -32,16 +32,17 @@ export const useDataFiltering = (data: DashboardData[], done: () => void): UseDa
 
   // Update available options when requestData changes
   useEffect(() => {
-    setAvailableLanguages(new Set(data.flatMap((item) => item.languages)));
+    setAvailableLanguages(new Set(data.flatMap((item) => item.programming_languages)));
     setAvailableTeams(new Set(data.map((item) => item.team)));
   }, [data]);
 
   // Filter and flatten data when filters or requestData changes
   useEffect(() => {
     const filtered = data.filter((item) => {
+      const selectedProgrammingLanguages = filters.programmingLanguages ?? [];
+
       return (
-        (filters.languages.length === 0 ||
-          filters.languages.some((lang) => item.languages.includes(lang))) &&
+        (selectedProgrammingLanguages.length === 0 || selectedProgrammingLanguages.some((lang) => item.programming_languages.includes(lang))) &&
         (filters.teams.length === 0 || filters.teams.includes(item.team)) &&
         (filters.period === "" || filters.period === item.period)
       );
@@ -61,7 +62,7 @@ export const useDataFiltering = (data: DashboardData[], done: () => void): UseDa
           ...entry,
           team: item.team,
           period: item.period,
-          languages: item.languages,
+          programming_languages: item.programming_languages,
         }))
     );
 
