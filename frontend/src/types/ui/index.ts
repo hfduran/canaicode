@@ -9,7 +9,7 @@ export interface DashboardData extends Omit<CodeLineMetrics, 'period'> {
 export interface FlattenedDataEntry extends DataEntry {
   team: string;
   period: string;
-  languages: string[];
+  programming_languages: string[];
 }
 
 export interface FormattedDataEntry extends Omit<FlattenedDataEntry, 'initial_date' | 'final_date'> {
@@ -19,7 +19,7 @@ export interface FormattedDataEntry extends Omit<FlattenedDataEntry, 'initial_da
 }
 
 export interface Filters {
-  languages: string[];
+  programmingLanguages: string[];
   teams: string[];
   initialDate: string;
   finalDate: string;

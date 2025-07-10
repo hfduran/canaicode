@@ -9,6 +9,7 @@ interface UseCalculatedMetricsParams {
   metric: string;
   initialDate: string;
   finalDate: string;
+  programmingLanguages: string[];
 }
 
 export const useCalculatedMetrics = () => {
@@ -17,11 +18,11 @@ export const useCalculatedMetrics = () => {
   const [error, setError] = useState<string | null>(null);
 
   const handleRequestData = async (params: UseCalculatedMetricsParams) => {
-    const { timeRange, team, metric, initialDate, finalDate } = params;
+    const { timeRange, team, metric, initialDate, finalDate, programmingLanguages } = params;
     
     // Validate that all required parameters are provided
     if (!timeRange || !team || !metric || !initialDate || !finalDate) {
-      setError('All fields are required');
+      setError('All fields except Programming Languages are required');
       return;
     }
     
@@ -31,6 +32,7 @@ export const useCalculatedMetrics = () => {
       metric,
       initialDate,
       finalDate,
+      programmingLanguages,
     });
     
     setIsLoading(true);
@@ -61,7 +63,7 @@ export const useCalculatedMetrics = () => {
         productivity_metric: productivityMetricMap[metric] || "code_lines",
         initial_date: requestInitialDate,
         final_date: requestFinalDate,
-        languages: [], // Empty for now, could be extended later
+        programming_languages: programmingLanguages,
       };
 
       console.log("Sending request:", request);
@@ -81,7 +83,7 @@ export const useCalculatedMetrics = () => {
         const dashboardData: DashboardData[] = [
           {
             team: response.team,
-            languages: response.languages,
+            programming_languages: response.programming_languages,
             period: apiToDashboardPeriodMap[response.period] || response.period,
             data: response.data.map((item) => ({ ...item })),
           },

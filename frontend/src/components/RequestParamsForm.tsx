@@ -1,12 +1,14 @@
 import React from "react";
 import { 
   Select, 
+  Multiselect,
   DatePicker, 
   FormField, 
   SpaceBetween, 
   ColumnLayout 
 } from "@cloudscape-design/components";
 import { TEAM_OPTIONS } from "../constants/teams";
+import { PROGRAMMING_LANGUAGES_OPTIONS } from "../constants/programming_languages";
 
 interface RequestParamsFormProps {
   timeRange: string;
@@ -19,6 +21,8 @@ interface RequestParamsFormProps {
   setInitialDate: (value: string) => void;
   finalDate: string;
   setFinalDate: (value: string) => void;
+  programmingLanguages: string[];
+  setProgrammingLanguages: (value: string[]) => void;
 }
 
 const RequestParamsForm: React.FC<RequestParamsFormProps> = ({
@@ -31,7 +35,9 @@ const RequestParamsForm: React.FC<RequestParamsFormProps> = ({
   initialDate,
   setInitialDate,
   finalDate,
-  setFinalDate
+  setFinalDate,
+  programmingLanguages,
+  setProgrammingLanguages,
 }) => {
   const TIME_OPTIONS = [
     { label: "Week", value: "Week" },
@@ -81,6 +87,18 @@ const RequestParamsForm: React.FC<RequestParamsFormProps> = ({
             onChange={({ detail }) => setTeam(detail.selectedOption?.value || "")}
             options={TEAM_OPTIONS}
             placeholder="Select team"
+          />
+        </FormField>
+
+        <FormField
+          label="Programming Languages (Optional)"
+          description="Select the programming languages to analyze"
+        >
+          <Multiselect
+            selectedOptions={PROGRAMMING_LANGUAGES_OPTIONS.filter(option => programmingLanguages.includes(option.value))}
+            onChange={({ detail }) => setProgrammingLanguages(detail.selectedOptions.map(option => option.value).filter((value): value is string => typeof value === "string"))}
+            options={PROGRAMMING_LANGUAGES_OPTIONS}
+            placeholder="Select programming languages"
           />
         </FormField>
       </SpaceBetween>
