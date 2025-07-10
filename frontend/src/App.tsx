@@ -2,6 +2,7 @@ import React from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import TopNavigation from "@cloudscape-design/components/top-navigation";
 import Dashboard from "./components/Dashboard";
+import LanguageAnalytics from "./pages/LanguageAnalytics";
 
 const Home: React.FC = () => {
   return (
@@ -64,6 +65,11 @@ const App: React.FC = () => {
               text: "Reports",
               href: "/reports",
             },
+            {
+              type: "button",
+              text: "Language Analytics",
+              href: "/language-analytics",
+            },
           ]}
         />
 
@@ -71,6 +77,7 @@ const App: React.FC = () => {
           <Route path="/" element={<Home />} />
           <Route path="/on-demand-metrics" element={<OnDemandMetrics />} />
           <Route path="/reports" element={<Reports />} />
+          <Route path="/language-analytics" element={<LanguageAnalytics />} />
         </Routes>
 
         <Footer />

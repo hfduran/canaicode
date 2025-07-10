@@ -1,0 +1,221 @@
+import React, { useEffect, useState } from "react";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
+import {
+  Container,
+  Header,
+  ContentLayout,
+  SpaceBetween,
+  Alert,
+  Spinner,
+  Box,
+  Badge,
+  Select,
+} from "@cloudscape-design/components";
+import { useLanguageMetrics } from "../hooks/useLanguageMetrics";
+import { CopilotMetricsByLanguage } from "../types/model";
+
+const LanguageAnalytics: React.FC = () => {
+  const { languageData, isLoading, error, fetchLanguageMetrics } = useLanguageMetrics();
+  const [selectedMetric, setSelectedMetric] = useState<string>("both");
+
+  const metricOptions = [
+    { label: "Accepted Suggestions and Accepted Lines", value: "both" },
+    { label: "Accepted Suggestions Only", value: "suggestions" },
+    { label: "Accepted Lines Only", value: "lines" },
+  ];
+
+  useEffect(() => {
+    fetchLanguageMetrics();
+  }, [fetchLanguageMetrics]);
+
+  // Chart data interface
+  interface ChartDataEntry {
+    language: string;
+    percentage_accepted_suggestions: number;
+    percentage_accepted_lines: number;
+  }
+
+  // Format data for the chart
+  const chartData: ChartDataEntry[] = languageData.map((item: CopilotMetricsByLanguage) => ({
+    language: item.language,
+    percentage_accepted_suggestions: parseFloat(item.percentage_code_acceptances.toFixed(1)),
+    percentage_accepted_lines: parseFloat(item.percentage_lines_accepted.toFixed(1)),
+  }));
+
+  // Calculate summary statistics
+  const totalLanguages = languageData.length;
+  const avgAcceptanceRate = totalLanguages > 0 
+    ? (languageData.reduce((sum: number, item: CopilotMetricsByLanguage) => sum + item.percentage_code_acceptances, 0) / totalLanguages).toFixed(1)
+    : "0";
+
+  const highestAcceptanceLanguage = languageData.reduce((max: CopilotMetricsByLanguage, item: CopilotMetricsByLanguage) => 
+    item.percentage_code_acceptances > max.percentage_code_acceptances ? item : max, 
+    languageData[0] || { language: "N/A", percentage_code_acceptances: 0, percentage_lines_accepted: 0 }
+  );
+
+  const CustomTooltip = ({ active, payload, label }: any) => {
+    if (active && payload && payload.length) {
+      return (
+        <div
+          style={{
+            backgroundColor: "#ffffff",
+            border: "1px solid #e9ecef",
+            borderRadius: "8px",
+            boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
+            fontSize: "14px",
+            padding: "12px",
+          }}
+        >
+          <p style={{ color: "#232f3e", fontWeight: "bold", margin: "0 0 8px 0" }}>
+            {`Language: ${label}`}
+          </p>
+          {payload.map((entry: any, index: number) => (
+            <p key={index} style={{ color: entry.color, margin: "4px 0" }}>
+              {`${entry.name}: ${entry.value}%`}
+            </p>
+          ))}
+        </div>
+      );
+    }
+    return null;
+  };
+
+  return (
+    <ContentLayout
+      header={
+        <Header
+          variant="h1"
+          description="Analyze GitHub Copilot acceptance rates by programming language"
+        >
+          Language Analytics Dashboard
+        </Header>
+      }
+      defaultPadding={true}
+    >
+      <SpaceBetween size="l">
+        {/* Summary Cards */}
+        <Container>
+          <SpaceBetween size="m">
+            <Box variant="h3">Summary Statistics</Box>
+            <div style={{ display: "flex", gap: "20px", flexWrap: "wrap" }}>
+              <div>
+                <Badge color="blue">Total Languages</Badge>
+                <Box variant="h2" color="text-body-secondary">
+                  {totalLanguages}
+                </Box>
+              </div>
+              <div>
+                <Badge color="green">Average Acceptance Rate</Badge>
+                <Box variant="h2" color="text-body-secondary">
+                  {avgAcceptanceRate}%
+                </Box>
+              </div>
+              <div>
+                <Badge color="red">Top Performing Language</Badge>
+                <Box variant="h2" color="text-body-secondary">
+                  {highestAcceptanceLanguage.language}
+                </Box>
+              </div>
+            </div>
+          </SpaceBetween>
+        </Container>
+
+        {/* Chart Section */}
+        <Container
+          header={
+            <Header
+              variant="h2"
+              description="Percentage of accepted GitHub Copilot suggestions by programming language"
+              actions={
+                <Select
+                  selectedOption={{ label: metricOptions.find(opt => opt.value === selectedMetric)?.label || "Both Metrics", value: selectedMetric }}
+                  onChange={({ detail }) => setSelectedMetric(detail.selectedOption.value || "both")}
+                  options={metricOptions}
+                  placeholder="Select metric to display"
+                />
+              }
+            >
+              Acceptance Rates by Language
+            </Header>
+          }
+        >
+          {isLoading && (
+            <Box textAlign="center" padding="xl">
+              <Spinner size="large" />
+              <Box variant="p" color="text-body-secondary">
+                Loading language analytics...
+              </Box>
+            </Box>
+          )}
+
+          {error && (
+            <Alert
+              statusIconAriaLabel="Error"
+              type="error"
+              header="Failed to load language analytics"
+            >
+              {error}
+            </Alert>
+          )}
+
+          {!isLoading && !error && chartData.length > 0 && (
+            <div style={{ width: "100%", height: "500px" }}>
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart
+                  data={chartData}
+                  margin={{
+                    top: 20,
+                    right: 30,
+                    left: 20,
+                    bottom: 80,
+                  }}
+                >
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis 
+                    dataKey="language" 
+                    angle={-45}
+                    textAnchor="end"
+                    height={100}
+                    fontSize={12}
+                  />
+                  <YAxis 
+                    label={{ value: 'Percentage (%)', angle: -90, position: 'insideLeft' }}
+                  />
+                  <Tooltip content={<CustomTooltip />} />
+                  <Legend />
+                  {(selectedMetric === "both" || selectedMetric === "suggestions") && (
+                    <Bar 
+                      dataKey="percentage_accepted_suggestions" 
+                      fill="#8884d8" 
+                      name="Code Suggestions Accepted (%)"
+                    />
+                  )}
+                  {(selectedMetric === "both" || selectedMetric === "lines") && (
+                    <Bar 
+                      dataKey="percentage_accepted_lines" 
+                      fill="#82ca9d" 
+                      name="Lines Accepted (%)"
+                    />
+                  )}
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          )}
+
+          {!isLoading && !error && chartData.length === 0 && (
+            <Box textAlign="center" padding="xl">
+              <Box variant="h3" color="text-body-secondary">
+                No language data available
+              </Box>
+              <Box variant="p" color="text-body-secondary">
+                There are no language analytics to display at the moment.
+              </Box>
+            </Box>
+          )}
+        </Container>
+      </SpaceBetween>
+    </ContentLayout>
+  );
+};
+
+export default LanguageAnalytics;
