@@ -39,3 +39,9 @@ export interface CodeLineMetrics {
 }
 
 export type CalculatedMetricsResponse = CodeLineMetrics | null;
+
+export interface CopilotMetricsByLanguage {
+  language: string;
+  percentage_code_acceptances: number;
+  percentage_lines_accepted: number;
+}
