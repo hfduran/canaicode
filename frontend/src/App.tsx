@@ -3,14 +3,11 @@ import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import TopNavigation from "@cloudscape-design/components/top-navigation";
 import Dashboard from "./components/Dashboard";
 import LanguageAnalytics from "./pages/LanguageAnalytics";
+import HomePage from "./HomePage";
 
 const Home: React.FC = () => {
   return (
-    <div style={{ display: "flex" }}>
-      <div style={{ flex: 1 }}>
-        <h1>WELCOME TO CANAICODE</h1>
-      </div>
-    </div>
+    <HomePage />
   );
 };
 
@@ -36,6 +33,9 @@ const Footer: React.FC = () => {
         background: "#eee",
       }}
     >
+      <span style={{fontWeight: "bold", color: "#6c757d"}}>
+        2025
+      </span>
     </footer>
   );
 };
