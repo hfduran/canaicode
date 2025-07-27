@@ -31,5 +31,9 @@ class CalculatedMetrics(BaseModel):
 
 class CopilotMetricsByLanguage(BaseModel):
     language: str
+    code_acceptances: int
+    code_suggestions: int
+    lines_accepted: int
+    lines_suggested: int
     percentage_code_acceptances: float
     percentage_lines_accepted: float
