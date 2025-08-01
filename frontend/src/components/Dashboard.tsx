@@ -16,6 +16,7 @@ import {
 import { DashboardFiltersModal } from "./DashboardFiltersModal";
 import { formatDate } from "../utils/date/formatDate";
 import { useCalculatedMetrics } from "../hooks";
+import { pearsonCorrCalculator } from "../tools/pearsonCorrelationCalculator";
 
 const CalculatedMetricsDashboard: React.FC = () => {
   const [timeRange, setTimeRange] = useState<string>("");
@@ -35,6 +36,8 @@ const CalculatedMetricsDashboard: React.FC = () => {
     final_date: formatDate(entry.final_date),
     net_changed_lines_without_copilot: entry.net_changed_lines - entry.net_changed_lines_by_copilot,
   }));
+
+  const pearsonCorr = pearsonCorrCalculator(formattedData);
 
   const isFormValid = timeRange && team && metric && initialDate && finalDate; // programmingLanguages is optional
 
@@ -181,76 +184,103 @@ const CalculatedMetricsDashboard: React.FC = () => {
           </Grid>
         )}
 
-        {/* Charts Section */}
+        {/* Data showing Section */}
         {formattedData.length > 0 && (
           <div style={{ display: "flex", justifyContent: "center", alignItems: "stretch", flexGrow: 1 }}>
-            <Container
-              header={
-                <Header
-                  variant="h2"
-                  description="Visual representation of code contribution metrics over time"
-                  actions={<Badge color="blue">{formattedData.length} data points</Badge>}
-                >
-                  Code Contribution Analytics
-                </Header>
-              }
-            >
-              <BarChart
-                width={chartDimensions.width}
-                height={chartDimensions.height}
-                data={formattedData}
-                margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
+            <Grid gridDefinition={[{ colspan: 8 }, { colspan: 4 }]}>
+              {/* Bar Charts Section */}
+              <Container
+                header={
+                  <Header
+                    variant="h2"
+                    description="Visual representation of code contribution metrics over time"
+                    actions={<Badge color="blue">{formattedData.length} data points</Badge>}
+                  >
+                    Code Contribution Analytics
+                  </Header>
+                }
               >
-                <CartesianGrid strokeDasharray="3 3" stroke="#e9ecef" opacity={0.7} />
-                <XAxis
-                  dataKey="initial_date"
-                  tick={{ fontSize: 12, fill: "#6c757d" }}
-                  stroke="#6c757d"
-                  tickLine={{ stroke: "#6c757d" }}
-                />
-                <YAxis
-                  tick={{ fontSize: 12, fill: "#6c757d" }}
-                  stroke="#6c757d"
-                  tickLine={{ stroke: "#6c757d" }}
-                />
-                <Tooltip
-                  formatter={(value: any, name: string, props: any) => {
-                    if (name === "copilot") {
-                      const percentage = props.payload.percentage_changed_lines_by_copilot;
-                      return [`${value} lines (${(percentage * 100).toFixed(1)}%)`, "Copilot Changed Lines"];
-                    }
-                    if (name === "without_copilot") {
-                      const total = props.payload.net_changed_lines;
-                      return [`${total} lines`, "Total Changed Lines"];
-                    }
-                    return [`${value} lines`, name];
-                  }}
-                  contentStyle={{
-                    backgroundColor: "#ffffff",
-                    border: "1px solid #e9ecef",
-                    borderRadius: "8px",
-                    boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
-                    fontSize: "14px",
-                  }}
-                  labelStyle={{ color: "#232f3e", fontWeight: "bold" }}
-                />
-                <Legend wrapperStyle={{ paddingTop: "20px" }} />
-                <Bar
-                  dataKey="net_changed_lines_without_copilot"
-                  fill="#0073bb"
-                  name="without_copilot"
-                  stackId={"a"}
-                  radius={[4, 4, 0, 0]}
-                />
-                <Bar
-                  dataKey="net_changed_lines_by_copilot"
-                  fill="#037f0c"
-                  name="copilot"
-                  stackId={"a"}
-                  radius={[4, 4, 0, 0]}
-                />
-              </BarChart>
-            </Container>
+                <BarChart
+                  width={chartDimensions.width}
+                  height={chartDimensions.height}
+                  data={formattedData}
+                  margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
+                >
+                  <CartesianGrid strokeDasharray="3 3" stroke="#e9ecef" opacity={0.7} />
+                  <XAxis
+                    dataKey="initial_date"
+                    tick={{ fontSize: 12, fill: "#6c757d" }}
+                    stroke="#6c757d"
+                    tickLine={{ stroke: "#6c757d" }}
+                  />
+                  <YAxis
+                    tick={{ fontSize: 12, fill: "#6c757d" }}
+                    stroke="#6c757d"
+                    tickLine={{ stroke: "#6c757d" }}
+                  />
+                  <Tooltip
+                    formatter={(value: any, name: string, props: any) => {
+                      if (name === "copilot") {
+                        const percentage = props.payload.percentage_changed_lines_by_copilot;
+                        return [`${value} lines (${(percentage * 100).toFixed(1)}%)`, "Copilot Changed Lines"];
+                      }
+                      if (name === "without_copilot") {
+                        const total = props.payload.net_changed_lines;
+                        return [`${total} lines`, "Total Changed Lines"];
+                      }
+                      return [`${value} lines`, name];
+                    }}
+                    contentStyle={{
+                      backgroundColor: "#ffffff",
+                      border: "1px solid #e9ecef",
+                      borderRadius: "8px",
+                      boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
+                      fontSize: "14px",
+                    }}
+                    labelStyle={{ color: "#232f3e", fontWeight: "bold" }}
+                  />
+                  <Legend wrapperStyle={{ paddingTop: "20px" }} />
+                  <Bar
+                    dataKey="net_changed_lines_without_copilot"
+                    fill="#0073bb"
+                    name="without_copilot"
+                    stackId={"a"}
+                    radius={[4, 4, 0, 0]}
+                  />
+                  <Bar
+                    dataKey="net_changed_lines_by_copilot"
+                    fill="#037f0c"
+                    name="copilot"
+                    stackId={"a"}
+                    radius={[4, 4, 0, 0]}
+                  />
+                </BarChart>
+              </Container>
+
+              {/* New Correlation Section */}
+              <Container
+                header={
+                  <Header
+                    variant="h2"
+                    description="Statistical relationship between metrics"
+                  >
+                    Pearson Correlation Analysis
+                  </Header>
+                }
+              >
+                <div style={{ padding: '20px', textAlign: 'center' }}>
+                  <p style={{ fontSize: '1.0em', color: '#6c757d', textAlign: 'left' }}>
+                    Pearson Correlation between "Total Changed Lines" and "Copilot Changed Lines":
+                  </p>
+                  <h3 style={{ fontSize: '2.5em', fontWeight: 'bold', color: '#0073bb', margin: '15px 0' }}>
+                    {pearsonCorr !== null ? `${(pearsonCorr * 100).toFixed(1)}%` : 'N/A'}
+                  </h3>
+                  <p style={{ fontSize: '0.7em', color: '#6c757d', textAlign: 'left' }}>
+                    (A value closer to 100% indicates a strong positive linear relationship)
+                  </p>
+                </div>
+              </Container>
+            </Grid>
           </div>
         )}
 
