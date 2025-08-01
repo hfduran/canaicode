@@ -8,12 +8,13 @@ from src.config.config import CONFIG
 from src.consumers.gh_copilot.gh_copilot_consumer import GhCopilotConsumer
 from src.consumers.git_repo_consumer import GitRepoConsumer
 from src.domain.entities.commit_metrics import CommitMetrics
-from src.domain.use_cases.dtos.calculated_metrics import CalculatedMetrics, CopilotMetricsByLanguage, CopilotMetricsByPeriod
+from src.domain.use_cases.dtos.calculated_metrics import CalculatedMetrics, CopilotMetricsByLanguage, CopilotMetricsByPeriod, CopilotUsersMetrics
 from src.domain.use_cases.get_calculated_metrics_use_case import GetCalculatedMetricsUseCase
 from src.domain.use_cases.get_commit_metrics_use_case import GetCommitMetricsUseCase
 from src.domain.use_cases.get_copilot_metrics_by_language_use_case import GetCopilotMetricsByLanguageUseCase
-from src.domain.use_cases.get_copilot_metrics_by_time_use_case import GetCopilotMetricsByPeriodUseCase
+from src.domain.use_cases.get_copilot_metrics_by_period_use_case import GetCopilotMetricsByPeriodUseCase
 from src.domain.use_cases.get_copilot_metrics_use_case import GetCopilotMetricsUseCase
+from src.domain.use_cases.get_copilot_users_metrics_use_case import GetCopilotUsersMetricsUseCase
 from src.infrastructure.database.connection.database_connection import SessionLocal
 from src.infrastructure.database.raw_commit_metrics.postgre.raw_commit_metrics_repository import RawCommitMetricsRepository
 from src.infrastructure.database.raw_copilot_chat_metrics.postgre.raw_copilot_chat_metrics_repository import RawCopilotChatMetricsRepository
@@ -93,6 +94,15 @@ def get_copilot_metrics_by_period(
     return response
 
 
+@router.get("/copilot_metrics/users")
+def get_copilot_metrics_by_users(
+    db: Session = Depends(get_db),
+) -> List[CopilotUsersMetrics]:
+    get_copilot_users_metrics_use_case = set_get_copilot_users_metrics_dependencies(db)
+    response = get_copilot_users_metrics_use_case.execute()
+    return response
+
+
 def set_get_commit_metrics_dependencies(
     db: Session,
 ) -> GetCommitMetricsUseCase:
@@ -140,4 +150,15 @@ def set_get_copilot_metrics_by_period_dependencies(
     copilot_code_metrics_repository = RawCopilotCodeMetricsRepository(db)
     return GetCopilotMetricsByPeriodUseCase(
         copilot_code_metrics_repository,
+    )
+
+
+def set_get_copilot_users_metrics_dependencies(
+    db: Session,
+) -> GetCopilotUsersMetricsUseCase:
+    copilot_code_metrics_repository = RawCopilotCodeMetricsRepository(db)
+    copilot_chat_metrics_repository = RawCopilotChatMetricsRepository(db)
+    return GetCopilotUsersMetricsUseCase(
+        copilot_code_metrics_repository,
+        copilot_chat_metrics_repository,
     )

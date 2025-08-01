@@ -45,3 +45,8 @@ class CopilotMetricsByPeriod(BaseModel):
     total_code_acceptances: int
     percentage_lines_accepted: float
     total_lines_accepted: int
+
+class CopilotUsersMetrics(BaseModel):
+    date: datetime
+    total_code_assistant_users: int
+    total_chat_users: int
