@@ -37,3 +37,11 @@ class CopilotMetricsByLanguage(BaseModel):
     lines_suggested: int
     percentage_code_acceptances: float
     percentage_lines_accepted: float
+
+class CopilotMetricsByPeriod(BaseModel):
+    period_initial_date: datetime
+    period_final_date: datetime
+    percentage_code_acceptances: float
+    total_code_acceptances: int
+    percentage_lines_accepted: float
+    total_lines_accepted: int

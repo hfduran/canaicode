@@ -8,10 +8,11 @@ from src.config.config import CONFIG
 from src.consumers.gh_copilot.gh_copilot_consumer import GhCopilotConsumer
 from src.consumers.git_repo_consumer import GitRepoConsumer
 from src.domain.entities.commit_metrics import CommitMetrics
-from src.domain.use_cases.dtos.calculated_metrics import CalculatedMetrics, CopilotMetricsByLanguage
+from src.domain.use_cases.dtos.calculated_metrics import CalculatedMetrics, CopilotMetricsByLanguage, CopilotMetricsByPeriod
 from src.domain.use_cases.get_calculated_metrics_use_case import GetCalculatedMetricsUseCase
 from src.domain.use_cases.get_commit_metrics_use_case import GetCommitMetricsUseCase
 from src.domain.use_cases.get_copilot_metrics_by_language_use_case import GetCopilotMetricsByLanguageUseCase
+from src.domain.use_cases.get_copilot_metrics_by_time_use_case import GetCopilotMetricsByPeriodUseCase
 from src.domain.use_cases.get_copilot_metrics_use_case import GetCopilotMetricsUseCase
 from src.infrastructure.database.connection.database_connection import SessionLocal
 from src.infrastructure.database.raw_commit_metrics.postgre.raw_commit_metrics_repository import RawCommitMetricsRepository
@@ -82,6 +83,16 @@ def get_copilot_metrics_by_language(
     return response
 
 
+@router.get("/copilot_metrics/period")
+def get_copilot_metrics_by_period(
+    period: str = "",
+    db: Session = Depends(get_db),
+) -> List[CopilotMetricsByPeriod]:
+    get_copilot_metrics_by_period_use_case = set_get_copilot_metrics_by_period_dependencies(db)
+    response = get_copilot_metrics_by_period_use_case.execute(period) # type: ignore
+    return response
+
+
 def set_get_commit_metrics_dependencies(
     db: Session,
 ) -> GetCommitMetricsUseCase:
@@ -119,5 +130,14 @@ def set_get_copilot_metrics_by_language_dependencies(
 ) -> GetCopilotMetricsByLanguageUseCase:
     copilot_code_metrics_repository = RawCopilotCodeMetricsRepository(db)
     return GetCopilotMetricsByLanguageUseCase(
+        copilot_code_metrics_repository,
+    )
+
+
+def set_get_copilot_metrics_by_period_dependencies(
+    db: Session,
+) -> GetCopilotMetricsByPeriodUseCase:
+    copilot_code_metrics_repository = RawCopilotCodeMetricsRepository(db)
+    return GetCopilotMetricsByPeriodUseCase(
         copilot_code_metrics_repository,
     )
