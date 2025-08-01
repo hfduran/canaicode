@@ -1,6 +1,8 @@
+from typing import List
 from sqlalchemy.orm import Session
 
 from src.domain.entities.copilot_chat_metrics import CopilotChatMetrics
+from src.infrastructure.database.raw_copilot_chat_metrics.postgre.dtos.model import RawCopilotChatMetrics
 from src.infrastructure.database.raw_copilot_chat_metrics.postgre.mappers.database_raw_copilot_chat_metrics import DatabaseRawCopilotChatMetricsMapper
 
 class RawCopilotChatMetricsRepository:
@@ -14,3 +16,17 @@ class RawCopilotChatMetricsRepository:
 
         self.db.add(record_to_save)
         self.db.commit()
+
+    def list(
+        self,
+    ) -> List[CopilotChatMetrics]:
+        query = self.db.query(RawCopilotChatMetrics)
+
+        records = query.all()
+
+        copilot_chat_metrics = map(
+            lambda record: DatabaseRawCopilotChatMetricsMapper.to_domain(record),
+            records,
+        )
+
+        return list(copilot_chat_metrics)
