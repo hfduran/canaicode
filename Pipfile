@@ -21,6 +21,7 @@ uvicorn = "*"
 sqlalchemy = "*"
 psycopg2-binary = "*"
 pandas = "*"
+python-multipart = "*"
 
 [dev-packages]
 pytest = "*"
