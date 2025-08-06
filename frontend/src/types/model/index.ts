@@ -49,3 +49,9 @@ export interface CopilotMetricsByLanguage {
   percentage_code_acceptances: number;
   percentage_lines_accepted: number;
 }
+
+export interface CopilotUsersMetrics {
+  date: Date;
+  total_code_assistant_users: number;
+  total_chat_users: number;
+}
