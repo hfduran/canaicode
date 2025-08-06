@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import TopNavigation from "@cloudscape-design/components/top-navigation";
 import Dashboard from "./components/Dashboard";
 import LanguageAnalytics from "./pages/LanguageAnalytics";
+import CopilotAnalytics from "./pages/CopilotAnalytics";
 import HomePage from "./HomePage";
 
 const Home: React.FC = () => {
@@ -43,42 +44,52 @@ const Footer: React.FC = () => {
 const App: React.FC = () => {
   return (
     <Router>
-      <div>
-        <TopNavigation
-          identity={{
-            href: "/",
-            title: "Canaicode Dashboard",
-          }}
-          utilities={[
-            {
-              type: "button",
-              text: "Home",
+      <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column" }}>
+        <div style={{ position: "sticky", top: 0, zIndex: 1000 }}>
+          <TopNavigation
+            identity={{
               href: "/",
-            },
-            {
-              type: "button",
-              text: "On Demand Metrics",
-              href: "/on-demand-metrics",
-            },
-            {
-              type: "button",
-              text: "Reports",
-              href: "/reports",
-            },
-            {
-              type: "button",
-              text: "Language Analytics",
-              href: "/language-analytics",
-            },
-          ]}
-        />
+              title: "Canaicode Dashboard",
+            }}
+            utilities={[
+              {
+                type: "button",
+                text: "Home",
+                href: "/",
+              },
+              {
+                type: "button",
+                text: "On Demand Metrics",
+                href: "/on-demand-metrics",
+              },
+              {
+                type: "button",
+                text: "Reports",
+                href: "/reports",
+              },
+              {
+                type: "button",
+                text: "Language Analytics",
+                href: "/language-analytics",
+              },
+              {
+                type: "button",
+                text: "Copilot Analytics",
+                href: "/copilot-analytics",
+              },
+            ]}
+          />
+        </div>
 
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/on-demand-metrics" element={<OnDemandMetrics />} />
-          <Route path="/reports" element={<Reports />} />
-          <Route path="/language-analytics" element={<LanguageAnalytics />} />
-        </Routes>
+        <div style={{ flex: 1 }}>
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/on-demand-metrics" element={<OnDemandMetrics />} />
+            <Route path="/reports" element={<Reports />} />
+            <Route path="/language-analytics" element={<LanguageAnalytics />} />
+            <Route path="/copilot-analytics" element={<CopilotAnalytics />} />
+          </Routes>
+        </div>
 
         <Footer />
       </div>
