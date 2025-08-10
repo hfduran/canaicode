@@ -1,7 +1,9 @@
 import os
+import tempfile
+import shutil
 import pandas as pd
 from datetime import date, datetime, time, timedelta
-from typing import List
+from typing import List, Dict
 from git import Repo
 from pydantic import BaseModel
 
@@ -19,24 +21,12 @@ class CommitMetrics(BaseModel):
 class GitRepoConsumer:
     __DEFAULT_LANG = "Other"
     __EXT_TO_LANG = {
-        ".py": "Python",
-        ".ts": "TypeScript",
-        ".js": "JavaScript",
-        ".tsx": "TypeScript",
-        ".jsx": "JavaScript",
-        ".java": "Java",
-        ".rb": "Ruby",
-        ".go": "Go",
-        ".rs": "Rust",
-        ".cpp": "C++",
-        ".c": "C",
-        ".cs": "C#",
-        ".php": "PHP",
-        ".html": "HTML",
-        ".css": "CSS",
-        ".json": "JSON",
-        ".txt": "Plain Text",
-        ".md": "Markdown",
+        ".py": "Python", ".ts": "TypeScript", ".js": "JavaScript",
+        ".tsx": "TypeScript", ".jsx": "JavaScript", ".java": "Java",
+        ".rb": "Ruby", ".go": "Go", ".rs": "Rust", ".cpp": "C++",
+        ".c": "C", ".cs": "C#", ".php": "PHP", ".html": "HTML",
+        ".css": "CSS", ".json": "JSON", ".txt": "Plain Text",
+        ".md": "Markdown"
     }
     __NULL_TREE = "4b825dc642cb6eb9a060e54bf8d69288fbee4904"
 
@@ -44,14 +34,12 @@ class GitRepoConsumer:
         self.repo_path = repo_path
         self.repo = Repo(self.repo_path)
 
-    def get_commits_by_date(
-        self, date: date
-    ) -> List[CommitMetrics]:
+    def get_commits_by_date(self, date: date) -> List[CommitMetrics]:
         result: List[CommitMetrics] = []
 
         for commit in self.repo.iter_commits():
             commit_date = datetime.fromtimestamp(commit.committed_date).date()
-            if not (commit_date == date):
+            if commit_date != date:
                 continue
 
             if not commit.parents:
@@ -93,18 +81,41 @@ class GitRepoConsumer:
         return self.__EXT_TO_LANG.get(ext, self.__DEFAULT_LANG)
 
 
-
 def parse_date(input_str: str) -> date:
     try:
         return datetime.strptime(input_str, "%Y-%m-%d").date()
     except ValueError:
-        raise ValueError("Data inválida. Use o formato YYYY-MM-DD.")
+        raise ValueError("Invalid date. Use the format YYYY-MM-DD.")
+
+
+def process_repository(repo_url: str, start_date: date, end_date: date) -> List[CommitMetrics]:
+    temp_dir = tempfile.mkdtemp()
+    repo_name = os.path.splitext(os.path.basename(repo_url.rstrip("/")))[0]
+    repo_path = os.path.join(temp_dir, repo_name)
+
+    try:
+        print(f"Clonando {repo_url}...")
+        Repo.clone_from(repo_url, repo_path)
+
+        consumer = GitRepoConsumer(repo_path)
+        all_commits: List[CommitMetrics] = []
+
+        current_date = start_date
+        while current_date <= end_date:
+            print(f"Fetching commits from {repo_name} on {current_date}...")
+            commits = consumer.get_commits_by_date(current_date)
+            all_commits.extend(commits)
+            current_date += timedelta(days=1)
+
+        return all_commits
+    finally:
+        shutil.rmtree(temp_dir, ignore_errors=True)
 
 
 def main() -> None:
-    repo_path = input("Digite o caminho do repositório Git: ").strip()
-    start_date_str = input("Digite a data inicial (YYYY-MM-DD): ").strip()
-    end_date_str = input("Digite a data final (YYYY-MM-DD): ").strip()
+    urls_file = input("Enter the path to the .txt file with repository URLs: ").strip()
+    start_date_str = input("Enter the start date (YYYY-MM-DD): ").strip()
+    end_date_str = input("Enter the end date (YYYY-MM-DD): ").strip()
 
     try:
         start_date = parse_date(start_date_str)
@@ -114,30 +125,34 @@ def main() -> None:
         return
 
     if start_date > end_date:
-        print("Erro: data inicial é posterior à data final.")
+        print("Error: Start date is later than end date.")
         return
 
-    if not os.path.isdir(repo_path):
-        print("Erro: caminho do repositório inválido.")
+    if not os.path.isfile(urls_file):
+        print("Error: Invalid file path.")
         return
 
-    consumer = GitRepoConsumer(repo_path)
-    all_commits: List[CommitMetrics] = []
+    repo_data: Dict[str, List[CommitMetrics]] = {}
+    with open(urls_file, "r", encoding="utf-8") as f:
+        repo_urls = [line.strip() for line in f if line.strip()]
 
-    current_date = start_date
-    while current_date <= end_date:
-        print(f"Buscando commits em {current_date}...")
-        commits = consumer.get_commits_by_date(current_date)
-        all_commits.extend(commits)
-        current_date += timedelta(days=1)
+    for repo_url in repo_urls:
+        commits = process_repository(repo_url, start_date, end_date)
+        if commits:
+            repo_name = commits[0].repository
+            repo_data[repo_name] = commits
 
-    if not all_commits:
-        print("Nenhum commit encontrado no intervalo de datas.")
+    if not repo_data:
+        print("No commits found in the date range.")
         return
 
-    df = pd.DataFrame([c.model_dump() for c in all_commits]) 
-    df.to_csv(f"commits_{start_date}_a_{end_date}.csv", index=False)
-    print(f"Exportação finalizada com sucesso em: commits_{start_date}_a_{end_date}.csv")
+    output_file = f"commits_{start_date}_to_{end_date}.xlsx"
+    with pd.ExcelWriter(output_file, engine="xlsxwriter") as writer:
+        for repo_name, commits in repo_data.items():
+            df = pd.DataFrame([c.model_dump() for c in commits])
+            df.to_excel(writer, sheet_name=repo_name[:31], index=False)
+
+    print(f"Export completed successfully: {output_file}")
 
 
 if __name__ == "__main__":

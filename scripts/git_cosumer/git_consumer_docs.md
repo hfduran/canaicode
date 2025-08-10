@@ -1,6 +1,6 @@
-# 📊 Exportador de Commits Git para CSV (via Python)
+# 📊 Exportador de Commits Git para Excel com múltiplas abas (via Python)
 
-Este script em Python extrai commits de um repositório Git local, filtrando por um intervalo de datas fornecido pelo usuário, e exporta os dados em formato CSV usando `pandas`.
+Este script em Python extrai commits de múltiplos repositórios Git informados via URLs, filtrando por um intervalo de datas fornecido pelo usuário. Para cada repositório, o script clona o projeto temporariamente, coleta os commits, apaga o repositório clonado e gera um arquivo Excel `.xlsx` com uma aba para cada repositório contendo os commits correspondentes.
 
 ---
 
@@ -9,7 +9,7 @@ Este script em Python extrai commits de um repositório Git local, filtrando por
 Antes de executar o script, certifique-se de que seu sistema possui:
 
 - **Python 3.10 ou superior**
-- **Git** instalado
+- **Git** instalado e acessível pelo terminal
 - **pip** (gerenciador de pacotes do Python)
 
 ---
@@ -21,11 +21,12 @@ O script depende das seguintes bibliotecas Python:
 - [`GitPython`](https://pypi.org/project/GitPython/)
 - [`pandas`](https://pypi.org/project/pandas/)
 - [`pydantic`](https://pypi.org/project/pydantic/)
+- [`xlsxwriter`](https://pypi.org/project/XlsxWriter/) — para gerar o arquivo Excel
 
-Para instalá-las, execute:
+Para instalá-las, execute no terminal:
 
 ```bash
-pip install gitpython pandas pydantic
+pip install gitpython pandas pydantic xlsxwriter
 ```
 
 ---
@@ -34,7 +35,13 @@ pip install gitpython pandas pydantic
 
 1. Crie um arquivo chamado `git_consumer.py`.
 2. Cole o código Python completo fornecido neste script.
-3. Garanta que você tenha um repositório Git clonado em seu computador.
+3. Crie um arquivo .txt com as URLs dos repositórios Git que deseja analisar, uma URL por linha. Exemplo de conteúdo:
+
+```txt
+https://github.com/user/repo1.git
+https://github.com/user/repo2.git
+https://github.com/user/repo3.git
+```
 
 ---
 
@@ -58,8 +65,8 @@ python git_consumer.py
 
 Durante a execução, o script pedirá:
 
-- **Caminho do repositório Git local**  
-  Exemplo: `C:\Users\SeuUsuario\projetos\meu-repositorio`
+- **Caminho do arquivo `.txt` contendo URLs dos repositórios Git**  
+  Exemplo: `C:\Users\SeuUsuario\repositorios.txt`
 
 - **Data inicial** no formato `YYYY-MM-DD`  
   Exemplo: `2024-07-01`
@@ -71,19 +78,25 @@ Durante a execução, o script pedirá:
 
 ## 📄 Saída Gerada
 
-Se houver commits no intervalo especificado, será criado um arquivo chamado:
+Se houver commits no intervalo especificado, será criado um arquivo Excel `.xlsx` chamado:
 
 ```
-commits_{data_inicial}_a_{data_final}.csv
+commits_{data_inicial}_to_{data_final}.xlsx
 ```
 
 Exemplo:
 
 ```
-commits_2024-07-01_a_2024-07-05.csv
+commits_2024-07-01_to_2024-07-05.xlsx
 ```
 
-### Colunas do CSV:
+### Estrutura do Excel:
+
+- Cada aba representa um repositório analisado.
+
+- O nome da aba é o nome do repositório (limite de 31 caracteres devido ao Excel).
+
+- As colunas em cada aba são:
 
 | hash | repository | date | author | language | added_lines | removed_lines |
 | ---- | ---------- | ---- | ------ | -------- | ----------- | ------------- |
@@ -94,23 +107,23 @@ Cada linha representa um arquivo modificado em um commit.
 
 ## 🧪 Teste Rápido
 
-Você pode testar o script clonando um repositório de código aberto:
+Você pode criar um arquivo `.txt` com uma URL pública para testar, por exemplo:
 
-```bash
-git clone https://github.com/git/git.git
-cd git
+```txt
+https://github.com/git/git.git
 ```
 
-Use o caminho dessa pasta como entrada no script.
+E usar uma data inicial e final dentro do histórico do repositório para ver a extração funcionar.
 
 ---
 
 ## ❗ Possíveis Erros e Soluções
 
-| Erro                                              | Causa Provável                                 | Solução                                       |
-| ------------------------------------------------- | ---------------------------------------------- | --------------------------------------------- |
-| `Erro: caminho do repositório inválido.`          | Caminho informado não contém um `.git` válido. | Verifique se é uma pasta com repositório Git. |
-| `Data inválida.`                                  | Data fora do formato `YYYY-MM-DD`.             | Corrija a entrada da data.                    |
-| `Nenhum commit encontrado no intervalo de datas.` | O intervalo escolhido não contém atividade.    | Tente um período diferente.                   |
+| Erro                                           | Causa Provável                                | Solução                                                                          |
+| ---------------------------------------------- | --------------------------------------------- | -------------------------------------------------------------------------------- |
+| `Error: Invalid file path.`                    | O arquivo `.txt` com URLs não foi encontrado. | Verifique se o caminho e nome do arquivo estão corretos.                         |
+| `Invalid date. Use the format YYYY-MM-DD.`     | Data informada com formato incorreto.         | Corrija a data para o formato `YYYY-MM-DD`.                                      |
+| `Error: Start date is later than end date.`    | Data inicial maior que a final.               | Corrija o intervalo de datas informado.                                          |
+| Nenhum commit encontrado no intervalo de datas | O intervalo de datas não contém commits.      | Tente outro intervalo ou confirme que o repositório tem atividade nesse período. |
 
 ---
