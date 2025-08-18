@@ -221,13 +221,21 @@ const CalculatedMetricsDashboard: React.FC = () => {
                     />
                     <Tooltip
                       formatter={(value: any, name: string, props: any) => {
-                        if (name === "copilot") {
-                          const percentage = props.payload.percentage_changed_lines_by_copilot;
-                          return [`${value} lines (${(percentage * 100).toFixed(1)}%)`, "Copilot Changed Lines"];
+                        const total = props.payload.net_changed_lines;
+                        let percent = 0;
+                        if (name === "Copilot Changed Lines") {
+                          percent = total > 0 ? (value / total) * 100 : 0;
+                          return [
+                            `${value} lines (${percent.toFixed(1)}% of total)`,
+                            "Copilot Changed Lines",
+                          ];
                         }
-                        if (name === "without_copilot") {
-                          const total = props.payload.net_changed_lines;
-                          return [`${total} lines`, "Total Changed Lines"];
+                        if (name === "Changed Lines without Copilot") {
+                          percent = total > 0 ? (value / total) * 100 : 0;
+                          return [
+                            `${value} lines (${percent.toFixed(1)}% of total)`,
+                            "Changed Lines without Copilot",
+                          ];
                         }
                         return [`${value} lines`, name];
                       }}
@@ -244,21 +252,31 @@ const CalculatedMetricsDashboard: React.FC = () => {
                     <Bar
                       dataKey="net_changed_lines_without_copilot"
                       fill="#0073bb"
-                      name="without_copilot"
-                      stackId={"a"}
+                      name="Changed Lines without Copilot"
                       radius={[4, 4, 0, 0]}
+                      stackId="a"
                     />
                     <Bar
                       dataKey="net_changed_lines_by_copilot"
                       fill="#037f0c"
-                      name="copilot"
-                      stackId={"a"}
+                      name="Copilot Changed Lines"
                       radius={[4, 4, 0, 0]}
+                      stackId="a"
                     />
                   </BarChart>
+                    <Box margin={{ top: "xs" }}>
+                      <Box
+                        variant="small"
+                        color="text-body-secondary"
+                        textAlign="left"
+                      >
+                        <span style={{ fontStyle: "italic", fontSize: "0.85em" }}>
+                          P.S. Copilot changed lines reflect taken suggestions from Copilot – it is possible for these numbers to be inflated, for instance, if a method is rewritten multiple times over a long period of time.
+                        </span>
+                      </Box>
+                    </Box>
                 </Container>
 
-                {/* New Correlation Section */}
                 <Container
                   header={
                     <Header
@@ -269,17 +287,75 @@ const CalculatedMetricsDashboard: React.FC = () => {
                     </Header>
                   }
                 >
-                  <div style={{ padding: '20px', textAlign: 'center' }}>
-                    <p style={{ fontSize: '1.0em', color: '#6c757d', textAlign: 'left' }}>
-                      Pearson Correlation between "Total Changed Lines" and "Copilot Changed Lines":
-                    </p>
-                    <h3 style={{ fontSize: '2.5em', fontWeight: 'bold', color: '#0073bb', margin: '15px 0' }}>
-                      {pearsonCorr !== null ? `${(pearsonCorr * 100).toFixed(1)}%` : 'N/A'}
-                    </h3>
-                    <p style={{ fontSize: '0.7em', color: '#6c757d', textAlign: 'left' }}>
-                      (A value closer to 100% indicates a strong positive linear relationship)
-                    </p>
-                  </div>
+                  {!isNaN(pearsonCorr) && (
+                    <div style={{ padding: '20px', textAlign: 'center' }}>
+                      <p style={{ fontSize: '1.0em', color: '#6c757d', textAlign: 'left' }}>
+                        Pearson Correlation between
+                        <br />- <i>Total Changed Lines</i>
+                        <br />- <i>Copilot Changed Lines</i>
+                      </p>
+
+                      {/* Visual Bar and Number Section */}
+                      <div style={{ position: 'relative', width: '100%', margin: '15px 0' }}>
+                        {/* Bar container */}
+                        <div style={{
+                          height: '10px',
+                          width: '100%',
+                          backgroundColor: '#e9ecef',
+                          borderRadius: '5px'
+                        }} />
+
+                        {/* Filled bar */}
+                        {pearsonCorr !== null && (
+                          <>
+                            <div style={{
+                              position: 'absolute',
+                              top: 0,
+                              left: 0,
+                              height: '100%',
+                              width: `${Math.max(0, Math.min(1, pearsonCorr)) * 100}%`,
+                              backgroundColor: '#0073bb',
+                              borderRadius: '5px',
+                            }} />
+
+                            {/* Number on the bar */}
+                            <span style={{
+                              position: 'absolute',
+                              top: '-25px',
+                              left: `${Math.max(0, Math.min(1, pearsonCorr)) * 100}%`,
+                              transform: 'translateX(-50%)',
+                              fontSize: '1.2em',
+                              fontWeight: 'bold',
+                              color: '#0073bb',
+                            }}>
+                              {pearsonCorr.toFixed(2)}
+                            </span>
+                          </>
+                        )}
+                      </div>
+
+                      {/* Legend */}
+                      <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '10px', fontSize: '0.8em', color: '#0073bb' }}>
+                        <p style={{ margin: 0 }}>
+                          Weaker correlation
+                        </p>
+                        <p style={{ margin: 0 }}>
+                          Stronger correlation
+                        </p>
+                      </div>
+
+                      <p style={{ fontSize: '0.7em', color: '#6c757d', textAlign: 'left', marginTop: '20px' }}>
+                        (A value closer to 1 indicates a strong positive linear relationship)
+                      </p>
+                    </div>
+                  )}
+                  {isNaN(pearsonCorr) && (
+                    <div style={{ padding: '20px', textAlign: 'center' }}>
+                      <p style={{ fontSize: '1.0em', color: '#6c757d' }}>
+                        Sorry! No Pearson Correlation for commit metrics.
+                      </p>
+                    </div>
+                  )}
                 </Container>
               </Grid>
             </div>
