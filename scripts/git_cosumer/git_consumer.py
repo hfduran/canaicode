@@ -1,3 +1,4 @@
+import argparse
 import os
 import tempfile
 import shutil
@@ -37,7 +38,7 @@ class GitRepoConsumer:
     def get_commits_by_date(self, date: date) -> List[CommitMetrics]:
         result: List[CommitMetrics] = []
 
-        for commit in self.repo.iter_commits():
+        for commit in self.repo.iter_commits("--all"):
             commit_date = datetime.fromtimestamp(commit.committed_date).date()
             if commit_date != date:
                 continue
@@ -94,7 +95,7 @@ def process_repository(repo_url: str, start_date: date, end_date: date) -> List[
     repo_path = os.path.join(temp_dir, repo_name)
 
     try:
-        print(f"Clonando {repo_url}...")
+        print(f"Cloning {repo_url}...")
         Repo.clone_from(repo_url, repo_path)
 
         consumer = GitRepoConsumer(repo_path)
@@ -113,13 +114,15 @@ def process_repository(repo_url: str, start_date: date, end_date: date) -> List[
 
 
 def main() -> None:
-    urls_file = input("Enter the path to the .txt file with repository URLs: ").strip()
-    start_date_str = input("Enter the start date (YYYY-MM-DD): ").strip()
-    end_date_str = input("Enter the end date (YYYY-MM-DD): ").strip()
+    parser = argparse.ArgumentParser(description="Git commits extractor")
+    parser.add_argument("urls_file", help="Path to the .txt file with repository URLs")
+    parser.add_argument("start_date", help="Start date (YYYY-MM-DD)")
+    parser.add_argument("end_date", help="End date (YYYY-MM-DD)")
+    args = parser.parse_args()
 
     try:
-        start_date = parse_date(start_date_str)
-        end_date = parse_date(end_date_str)
+        start_date = parse_date(args.start_date)
+        end_date = parse_date(args.end_date)
     except ValueError as e:
         print(e)
         return
@@ -128,12 +131,12 @@ def main() -> None:
         print("Error: Start date is later than end date.")
         return
 
-    if not os.path.isfile(urls_file):
+    if not os.path.isfile(args.urls_file):
         print("Error: Invalid file path.")
         return
 
     repo_data: Dict[str, List[CommitMetrics]] = {}
-    with open(urls_file, "r", encoding="utf-8") as f:
+    with open(args.urls_file, "r", encoding="utf-8") as f:
         repo_urls = [line.strip() for line in f if line.strip()]
 
     for repo_url in repo_urls:
