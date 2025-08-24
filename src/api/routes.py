@@ -91,10 +91,18 @@ def get_calculated_metrics(
 
 @router.get("/copilot_metrics/language")
 def get_copilot_metrics_by_language(
+    initial_date_string: str = "",
+    final_date_string: str = "",
     db: Session = Depends(get_db),
 ) -> List[CopilotMetricsByLanguage]:
+    initial_date = None
+    final_date = None
+    if(initial_date_string):
+        initial_date = datetime.strptime(initial_date_string, "%Y-%m-%d")
+    if(final_date_string):
+        final_date = datetime.strptime(final_date_string, "%Y-%m-%d")
     get_copilot_metrics_by_language_use_case = set_get_copilot_metrics_by_language_dependencies(db)
-    response = get_copilot_metrics_by_language_use_case.execute()
+    response = get_copilot_metrics_by_language_use_case.execute(initial_date, final_date)
     return response
 
 
