@@ -55,3 +55,12 @@ export interface CopilotUsersMetrics {
   total_code_assistant_users: number;
   total_chat_users: number;
 }
+
+export interface CopilotMetricsByPeriod {
+  period_initial_date: string;
+  period_final_date: string;
+  percentage_code_acceptances: number;
+  total_code_acceptances: number;
+  percentage_lines_accepted: number;
+  total_lines_accepted: number;
+}
