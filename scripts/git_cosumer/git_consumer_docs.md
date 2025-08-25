@@ -53,26 +53,31 @@ No terminal, navegue até a pasta onde está o script:
 cd caminho/para/o/script
 ```
 
-E execute:
+E execute passando os parâmetros diretamente:
 
 ```bash
-python git_consumer.py
+python git_consumer.py repos.txt 2024-01-01 2025-08-18
 ```
+
+Onde:
+
+- `repos.txt` → caminho para o arquivo com as URLs dos repositórios
+
+- `2024-01-01` → data inicial
+
+- `2025-08-18` → data final
 
 ---
 
-## 💬 Entradas do Usuário
+## 💬 Argumentos da Linha de Comando
 
-Durante a execução, o script pedirá:
+O script agora aceita argumentos diretamente:
 
-- **Caminho do arquivo `.txt` contendo URLs dos repositórios Git**  
-  Exemplo: `C:\Users\SeuUsuario\repositorios.txt`
-
-- **Data inicial** no formato `YYYY-MM-DD`  
-  Exemplo: `2024-07-01`
-
-- **Data final** no formato `YYYY-MM-DD`  
-  Exemplo: `2024-07-05`
+| Argumento    | Obrigatório | Descrição                                                       |
+| ------------ | ----------- | --------------------------------------------------------------- |
+| `urls_file`  | ✅          | Caminho para o arquivo `.txt` contendo as URLs dos repositórios |
+| `start_date` | ✅          | Data inicial no formato `YYYY-MM-DD`                            |
+| `end_date`   | ✅          | Data final no formato `YYYY-MM-DD`                              |
 
 ---
 

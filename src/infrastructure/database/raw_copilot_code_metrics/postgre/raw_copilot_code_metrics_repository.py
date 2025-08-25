@@ -48,8 +48,16 @@ class RawCopilotCodeMetricsRepository:
     
     def list(
         self,
+        initial_date: Optional[datetime] = None,
+        final_date: Optional[datetime] = None,
     ) -> List[CopilotCodeMetrics]:
         query = self.db.query(RawCopilotCodeMetrics)
+
+        if initial_date:
+            query = query.filter(RawCopilotCodeMetrics.date >= initial_date)
+
+        if final_date:
+            query = query.filter(RawCopilotCodeMetrics.date <= final_date)
 
         records = query.all()
 
