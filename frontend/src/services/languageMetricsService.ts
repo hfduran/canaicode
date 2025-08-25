@@ -36,7 +36,7 @@ export class LanguageMetricsService {
       queryParams.append("initial_date_string", formatDate(initial_date));
       queryParams.append("final_date_string", formatDate(final_date));
 
-      const url = `${API_BASE_URL}/copilot_metrics/language/period?${queryParams.toString()}`;
+      const url = `${API_BASE_URL}/copilot_metrics/language?${queryParams.toString()}`;
 
       const response = await axios.get<CopilotMetricsByLanguage[]>(url, {
         headers: {
