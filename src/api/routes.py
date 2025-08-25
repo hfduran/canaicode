@@ -105,7 +105,6 @@ def get_copilot_metrics_by_language(
     response = get_copilot_metrics_by_language_use_case.execute(initial_date, final_date)
     return response
 
-
 @router.get("/copilot_metrics/period")
 def get_copilot_metrics_by_period(
     period: str = "",
