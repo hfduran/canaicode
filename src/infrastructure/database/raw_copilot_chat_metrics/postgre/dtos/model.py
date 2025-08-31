@@ -20,3 +20,4 @@ class RawCopilotChatMetrics(Base):
     copy_events = Column(Integer)
     insertion_events = Column(Integer)
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+    user_id = Column(String)

@@ -10,4 +10,5 @@ class CopilotMetrics(Entity):
     date: datetime
     IDE: str
     copilot_model: str
+    user_id: str
     created_at: Optional[datetime] = None

@@ -21,6 +21,7 @@ class DatabaseRawCopilotCodeMetricsMapper:
             lines_accepted=copilot_code_metrics.lines_accepted,
             lines_suggested=copilot_code_metrics.lines_suggested,
             created_at=copilot_code_metrics.created_at,
+            user_id=copilot_code_metrics.user_id
         )
 
     @staticmethod
@@ -40,4 +41,5 @@ class DatabaseRawCopilotCodeMetricsMapper:
             code_suggestions=cast(int, db_schema.code_suggestions),
             lines_accepted=cast(int, db_schema.lines_accepted),
             lines_suggested=cast(int, db_schema.lines_suggested),
+            user_id=cast(str, db_schema.user_id)
         )

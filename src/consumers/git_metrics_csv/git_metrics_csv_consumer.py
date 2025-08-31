@@ -8,7 +8,7 @@ from src.domain.entities.value_objects.repository import Repository
 
 
 class GitCommitMetricsCsvConsumer:
-  def execute(self, file_content: TextIO) -> List[CommitMetrics]:
+  def execute(self, file_content: TextIO, user_id: str) -> List[CommitMetrics]:
     metrics: List[CommitMetrics] = []
 
     reader = csv.DictReader(file_content)
@@ -21,7 +21,8 @@ class GitCommitMetricsCsvConsumer:
             author=Author(name=row["author"], teams=[]),
             language=row["language"],
             added_lines=int(row["added_lines"]),
-            removed_lines=int(row["removed_lines"])
+            removed_lines=int(row["removed_lines"]),
+            user_id=user_id
         )
         metrics.append(commit)
 

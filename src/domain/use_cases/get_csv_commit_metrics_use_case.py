@@ -14,8 +14,8 @@ class GetCsvCommitMetricsUseCase:
         self.commit_metrics_repository = commit_metrics_repository
         self.git_commit_metrics_csv_consumer = git_commit_metrics_csv_consumer
 
-    def execute(self, file_content: TextIO) -> List[CommitMetrics]:
-        commits_metrics = self.git_commit_metrics_csv_consumer.execute(file_content)
+    def execute(self, file_content: TextIO, user_id: str) -> List[CommitMetrics]:
+        commits_metrics = self.git_commit_metrics_csv_consumer.execute(file_content, user_id)
 
         for commit_metrics in commits_metrics:
             self.commit_metrics_repository.create(commit_metrics)

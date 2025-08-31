@@ -14,4 +14,5 @@ class CommitMetrics(Entity):
     language: str
     added_lines: int
     removed_lines: int
+    user_id: str
     created_at: Optional[datetime] = None

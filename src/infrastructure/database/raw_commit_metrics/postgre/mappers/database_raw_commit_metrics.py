@@ -23,6 +23,7 @@ class DatabaseRawCommitMetricsMapper:
             added_lines=commit_metrics.added_lines,
             removed_lines=commit_metrics.removed_lines,
             created_at=commit_metrics.created_at,
+            user_id=commit_metrics.user_id
         )
 
     @staticmethod
@@ -47,4 +48,5 @@ class DatabaseRawCommitMetricsMapper:
             added_lines=cast(int, db_schema.added_lines),
             removed_lines=cast(int, db_schema.removed_lines),
             created_at=cast(datetime, db_schema.created_at),
+            user_id=cast(str, db_schema.user_id)
         )

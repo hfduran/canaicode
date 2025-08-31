@@ -1,4 +1,3 @@
-from datetime import date
 from typing import Dict, List
 
 from src.consumers.gh_copilot.gh_copilot_consumer import GhCopilotConsumer
@@ -18,10 +17,10 @@ class GetCopilotMetricsUseCase:
         self.github_copilot_consumer = github_copilot_consumer
 
     def execute(
-        self, date: date, team_name: str
+        self, file_content: bytes, user_id: str
     ) -> Dict[str, List[CopilotCodeMetrics | CopilotChatMetrics]]:
-        copilot_metrics = self.github_copilot_consumer.get_metrics_by_date(
-            date, team_name
+        copilot_metrics = self.github_copilot_consumer.get_metrics(
+            file_content, user_id
         )
 
         for copilot_code_metrics in copilot_metrics["code"]:
