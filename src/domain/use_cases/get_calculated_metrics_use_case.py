@@ -127,10 +127,12 @@ class GetCalculatedMetricsUseCase:
             copilot_code_metrics_df,
         ) in grouped_copilot_code_metrics:
             index = next(
-                i
-                for i, data in enumerate(response.data)
-                if data.final_date == copilot_period_final_date
+                (i for i, data in enumerate(response.data)
+                if data.final_date == copilot_period_final_date),
+                None
             )
+            if index is None:
+                continue
             total_added_lines_by_copilot = MetricsCalculator.calculate_gross_use_of_AI_lines(
                 copilot_code_metrics_df["metrics"].to_list()  # type: ignore
             )
@@ -196,10 +198,12 @@ class GetCalculatedMetricsUseCase:
             copilot_code_metrics_df,
         ) in grouped_copilot_code_metrics:
             index = next(
-                i
-                for i, data in enumerate(response.data)
-                if data.final_date == copilot_period_final_date
+                (i for i, data in enumerate(response.data)
+                if data.final_date == copilot_period_final_date),
+                None
             )
+            if index is None:
+                continue
             response.data[index].percentage_copilot_suggestions_accepted = MetricsCalculator.calculate_relative_use_of_AI( # type: ignore
                 copilot_code_metrics_df["metrics"].to_list()  # type: ignore
             )

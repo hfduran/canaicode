@@ -36,7 +36,7 @@ class GetCopilotUsersMetricsUseCase:
             total_chat_users=0
         ))
 
-    raw_copilot_chat_metrics = self.copilot_chat_metrics_repository.list()
+    raw_copilot_chat_metrics = self.copilot_chat_metrics_repository.listByUserId(user_id)
 
     grouped_chat_metrics: DefaultDict[datetime, Dict[str, int]] = DefaultDict(lambda: {
       "total_users": 0,

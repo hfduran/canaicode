@@ -18,7 +18,6 @@ class GetXlsxCommitMetricsUseCase:
     def execute(self, file_content: BytesIO, user_id: str) -> List[CommitMetrics]:
         commits_metrics = self.git_commit_metrics_xlsx_consumer.execute(file_content, user_id)
 
-        for commit_metrics in commits_metrics:
-            self.commit_metrics_repository.create(commit_metrics)
+        self.commit_metrics_repository.create_many(commits_metrics)
 
         return commits_metrics

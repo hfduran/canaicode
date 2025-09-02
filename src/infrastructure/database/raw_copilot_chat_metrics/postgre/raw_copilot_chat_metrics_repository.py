@@ -17,12 +17,13 @@ class RawCopilotChatMetricsRepository:
         self.db.add(record_to_save)
         self.db.commit()
 
-    def list(
+    def listByUserId(
         self,
+        user_id: str
     ) -> List[CopilotChatMetrics]:
         query = self.db.query(RawCopilotChatMetrics)
 
-        records = query.all()
+        records = query.filter(RawCopilotChatMetrics.user_id == user_id).all()
 
         copilot_chat_metrics = map(
             lambda record: DatabaseRawCopilotChatMetricsMapper.to_domain(record),
