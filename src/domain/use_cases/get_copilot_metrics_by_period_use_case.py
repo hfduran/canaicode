@@ -13,8 +13,8 @@ class GetCopilotMetricsByPeriodUseCase:
     ) -> None:
         self.copilot_code_metrics_repository = copilot_code_metrics_repository
 
-  def execute(self, period: Period) -> List[CopilotMetricsByPeriod]:
-      raw_copilot_code_metrics = self.copilot_code_metrics_repository.list()
+  def execute(self, user_id: str, period: Period) -> List[CopilotMetricsByPeriod]:
+      raw_copilot_code_metrics = self.copilot_code_metrics_repository.listByUserId(user_id)
 
       if (not raw_copilot_code_metrics):
         return []

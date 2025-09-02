@@ -11,8 +11,8 @@ class GetCopilotMetricsByLanguageUseCase:
     ) -> None:
         self.copilot_code_metrics_repository = copilot_code_metrics_repository
 
-  def execute(self, initial_date: Optional[datetime] = None, final_date: Optional[datetime] = None) -> List[CopilotMetricsByLanguage]:
-    raw_copilot_code_metrics = self.copilot_code_metrics_repository.list(initial_date, final_date)
+  def execute(self, user_id: str, initial_date: Optional[datetime] = None, final_date: Optional[datetime] = None) -> List[CopilotMetricsByLanguage]:
+    raw_copilot_code_metrics = self.copilot_code_metrics_repository.listByUserId(user_id, initial_date, final_date)
 
     if (not raw_copilot_code_metrics):
       return []

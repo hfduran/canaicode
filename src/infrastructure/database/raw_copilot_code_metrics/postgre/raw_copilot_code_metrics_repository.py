@@ -19,9 +19,9 @@ class RawCopilotCodeMetricsRepository:
         self.db.add(record_to_save)
         self.db.commit()
 
-    def listByTeam(
+    def listByUserId(
         self,
-        team: str,
+        user_id: str,
         initial_date: Optional[datetime] = None,
         final_date: Optional[datetime] = None,
         languages: Optional[List[str]] = None,
@@ -37,29 +37,7 @@ class RawCopilotCodeMetricsRepository:
         if languages:
             query = query.filter(RawCopilotCodeMetrics.language.in_(languages))
 
-        records = query.filter(RawCopilotCodeMetrics.team_name == team).all()
-
-        copilot_code_metrics = map(
-            lambda record: DatabaseRawCopilotCodeMetricsMapper.to_domain(record),
-            records,
-        )
-
-        return list(copilot_code_metrics)
-    
-    def list(
-        self,
-        initial_date: Optional[datetime] = None,
-        final_date: Optional[datetime] = None,
-    ) -> List[CopilotCodeMetrics]:
-        query = self.db.query(RawCopilotCodeMetrics)
-
-        if initial_date:
-            query = query.filter(RawCopilotCodeMetrics.date >= initial_date)
-
-        if final_date:
-            query = query.filter(RawCopilotCodeMetrics.date <= final_date)
-
-        records = query.all()
+        records = query.filter(RawCopilotCodeMetrics.user_id == user_id).all()
 
         copilot_code_metrics = map(
             lambda record: DatabaseRawCopilotCodeMetricsMapper.to_domain(record),

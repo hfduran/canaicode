@@ -10,7 +10,7 @@ from sqlalchemy.orm import Session
 
 from src.config.config import CONFIG
 from src.consumers.gh_copilot.gh_copilot_consumer import GhCopilotConsumer
-from src.consumers.git_metrics_csv.git_metrics_csv_consumer import GitCommitMetricsCsvConsumer
+from src.consumers.git_metrics_xlsx.git_metrics_xlsx_consumer import GitCommitMetricsXlsxConsumer
 from src.consumers.git_repo_consumer import GitRepoConsumer
 from src.domain.entities.commit_metrics import CommitMetrics
 from src.domain.entities.user import User
@@ -23,7 +23,7 @@ from src.domain.use_cases.get_copilot_metrics_by_language_use_case import GetCop
 from src.domain.use_cases.get_copilot_metrics_by_period_use_case import GetCopilotMetricsByPeriodUseCase
 from src.domain.use_cases.get_copilot_metrics_use_case import GetCopilotMetricsUseCase
 from src.domain.use_cases.get_copilot_users_metrics_use_case import GetCopilotUsersMetricsUseCase
-from src.domain.use_cases.get_csv_commit_metrics_use_case import GetCsvCommitMetricsUseCase
+from src.domain.use_cases.get_csv_commit_metrics_use_case import GetXlsxCommitMetricsUseCase
 from src.domain.use_cases.validate_user_use_case import ValidateUserUseCase
 from src.infrastructure.database.connection.database_connection import SessionLocal
 from src.infrastructure.database.raw_commit_metrics.postgre.raw_commit_metrics_repository import RawCommitMetricsRepository
@@ -91,45 +91,50 @@ async def get_copilot_metrics(
 
 
 @router.post("/commit_metrics/upload")
-def get_commit_metrics_csv(
+async def get_commit_metrics_xlsx(
     file: UploadFile = File(...),
     user_id: str = Body(..., embed=True),
     token: str = Depends(oauth2_scheme),
     db: Session = Depends(get_db),
 ) -> List[CommitMetrics]:
     validate_token(token)
-    file_content = io.TextIOWrapper(file.file, encoding="utf-8")
-    get_csv_commit_metrics_use_case = set_get_csv_commit_metrics_dependencies(db)
-    response = get_csv_commit_metrics_use_case.execute(file_content, user_id)
+    file_content = io.BytesIO(await file.read())
+    get_xlsx_commit_metrics_use_case = set_get_xlsx_commit_metrics_dependencies(db)
+    response = get_xlsx_commit_metrics_use_case.execute(file_content, user_id)
     return response
 
 
-@router.get("/calculated_metrics/{team_name}")
+@router.get("/calculated_metrics/{user_id}")
 def get_calculated_metrics(
-    team_name: str,
+    user_id: str,
     period: str = "",
     productivity_metric: str = "",
     initial_date_string: str = "",
     final_date_string: str = "",
     languages_string: str = "",
+    token: str = Depends(oauth2_scheme),
     db: Session = Depends(get_db),
 ) -> CalculatedMetrics | None:
+    validate_token(token)
     initial_date = datetime.strptime(initial_date_string, "%Y-%m-%d")
     final_date = datetime.strptime(final_date_string, "%Y-%m-%d")
     languages: List[str] = []
     if(languages_string):
         languages = languages_string.split(',')
     get_calculated_metrics_use_case = set_get_calculated_metrics_dependencies(db)
-    response = get_calculated_metrics_use_case.execute(team_name, period, productivity_metric, initial_date, final_date, languages) # type: ignore
+    response = get_calculated_metrics_use_case.execute(user_id, period, productivity_metric, initial_date, final_date, languages) # type: ignore
     return response
 
 
-@router.get("/copilot_metrics/language")
+@router.get("/copilot_metrics/language/{user_id}")
 def get_copilot_metrics_by_language(
+    user_id: str,
     initial_date_string: str = "",
     final_date_string: str = "",
+    token: str = Depends(oauth2_scheme),
     db: Session = Depends(get_db),
 ) -> List[CopilotMetricsByLanguage]:
+    validate_token(token)
     initial_date = None
     final_date = None
     if(initial_date_string):
@@ -137,25 +142,31 @@ def get_copilot_metrics_by_language(
     if(final_date_string):
         final_date = datetime.strptime(final_date_string, "%Y-%m-%d")
     get_copilot_metrics_by_language_use_case = set_get_copilot_metrics_by_language_dependencies(db)
-    response = get_copilot_metrics_by_language_use_case.execute(initial_date, final_date)
+    response = get_copilot_metrics_by_language_use_case.execute(user_id, initial_date, final_date)
     return response
 
-@router.get("/copilot_metrics/period")
+@router.get("/copilot_metrics/period/{user_id}")
 def get_copilot_metrics_by_period(
+    user_id: str,
     period: str = "",
+    token: str = Depends(oauth2_scheme),
     db: Session = Depends(get_db),
 ) -> List[CopilotMetricsByPeriod]:
+    validate_token(token)
     get_copilot_metrics_by_period_use_case = set_get_copilot_metrics_by_period_dependencies(db)
-    response = get_copilot_metrics_by_period_use_case.execute(period) # type: ignore
+    response = get_copilot_metrics_by_period_use_case.execute(user_id, period) # type: ignore
     return response
 
 
-@router.get("/copilot_metrics/users")
+@router.get("/copilot_metrics/users/{user_id}")
 def get_copilot_metrics_by_users(
+    user_id: str,
+    token: str = Depends(oauth2_scheme),
     db: Session = Depends(get_db),
 ) -> List[CopilotUsersMetrics]:
+    validate_token(token)
     get_copilot_users_metrics_use_case = set_get_copilot_users_metrics_dependencies(db)
-    response = get_copilot_users_metrics_use_case.execute()
+    response = get_copilot_users_metrics_use_case.execute(user_id)
     return response
 
 
@@ -201,12 +212,12 @@ def set_get_copilot_metrics_dependencies(
     )
 
 
-def set_get_csv_commit_metrics_dependencies(
+def set_get_xlsx_commit_metrics_dependencies(
     db: Session,
-) -> GetCsvCommitMetricsUseCase:
+) -> GetXlsxCommitMetricsUseCase:
     commit_metrics_repository = RawCommitMetricsRepository(db)
-    git_commit_metrics_csv_consumer = GitCommitMetricsCsvConsumer()
-    return GetCsvCommitMetricsUseCase(commit_metrics_repository, git_commit_metrics_csv_consumer)
+    git_commit_metrics_xlsx_consumer = GitCommitMetricsXlsxConsumer()
+    return GetXlsxCommitMetricsUseCase(commit_metrics_repository, git_commit_metrics_xlsx_consumer)
 
 
 def set_get_calculated_metrics_dependencies(

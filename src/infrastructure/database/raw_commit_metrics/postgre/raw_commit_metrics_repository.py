@@ -18,9 +18,9 @@ class RawCommitMetricsRepository:
         self.db.add(record_to_save)
         self.db.commit()
 
-    def listByTeam(
+    def listByUserId(
         self,
-        team: str,
+        user_id: str,
         initial_date: Optional[datetime] = None,
         final_date: Optional[datetime] = None,
         languages: Optional[List[str]] = None,
@@ -36,7 +36,7 @@ class RawCommitMetricsRepository:
         if languages:
             query = query.filter(RawCommitMetrics.language.in_(languages))
 
-        records = query.filter(RawCommitMetrics.repository_team == team).all()
+        records = query.filter(RawCommitMetrics.user_id == user_id).all()
 
         commit_metrics = map(
             lambda record: DatabaseRawCommitMetricsMapper.to_domain(record), records

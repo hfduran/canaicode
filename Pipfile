@@ -24,6 +24,7 @@ fastapi = "*"
 uvicorn = {extras = ["standard"], version = "*"}
 python-jose = {extras = ["cryptography"], version = "*"}
 passlib = {extras = ["bcrypt"], version = "*"}
+openpyxl = "*"
 
 [dev-packages]
 pytest = "*"

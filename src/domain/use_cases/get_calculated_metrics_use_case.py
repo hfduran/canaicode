@@ -30,27 +30,27 @@ class GetCalculatedMetricsUseCase:
 
     def execute(
         self,
-        team: str,
+        user_id: str,
         period: Period,
         productivity_metric: Productivity_metric,
         initial_date: Optional[datetime] = None,
         final_date: Optional[datetime] = None,
         languages: Optional[List[str]] = None,
     ) -> CalculatedMetrics:
-        raw_commit_metrics = self.commit_metrics_repository.listByTeam(
-            team, initial_date, final_date, languages
+        raw_commit_metrics = self.commit_metrics_repository.listByUserId(
+            user_id, initial_date, final_date, languages
         )
 
         if not raw_commit_metrics:
             return CalculatedMetrics(
-                team=team,
+                user_id=user_id,
                 languages=[],
                 period=period,
                 data=[],
             )
 
-        raw_copilot_code_metrics = self.copilot_code_metrics_repository.listByTeam(
-            team, initial_date, final_date, languages
+        raw_copilot_code_metrics = self.copilot_code_metrics_repository.listByUserId(
+            user_id, initial_date, final_date, languages
         )
 
         productivity_metric_map = {
@@ -88,7 +88,7 @@ class GetCalculatedMetricsUseCase:
         )
 
         response = CalculatedMetrics(
-            team=raw_commit_metrics[0].repository.team,
+            user_id=raw_commit_metrics[0].user_id,
             languages=[],
             period=period,
             data=[],
@@ -166,7 +166,7 @@ class GetCalculatedMetricsUseCase:
         )
 
         response = CalculatedMetrics(
-            team=raw_commit_metrics[0].repository.team,
+            user_id=raw_commit_metrics[0].user_id,
             languages=[],
             period=period,
             data=[],
