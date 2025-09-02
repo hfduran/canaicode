@@ -15,8 +15,8 @@ class GetCommitMetricsUseCase:
         self.commit_metrics_repository = commit_metrics_repository
         self.git_repo_consumer = git_repo_consumer
 
-    def execute(self, date: date, team_name: str) -> List[CommitMetrics]:
-        commits_metrics = self.git_repo_consumer.get_commits_by_date(date, team_name)
+    def execute(self, date: date, team_name: str, user_id: str) -> List[CommitMetrics]:
+        commits_metrics = self.git_repo_consumer.get_commits_by_date(date, team_name, user_id)
 
         for commit_metrics in commits_metrics:
             self.commit_metrics_repository.create(commit_metrics)

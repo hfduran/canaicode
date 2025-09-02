@@ -14,8 +14,8 @@ class GetCopilotUsersMetricsUseCase:
         self.copilot_code_metrics_repository = copilot_code_metrics_repository
         self.copilot_chat_metrics_repository = copilot_chat_metrics_repository
 
-  def execute(self) -> List[CopilotUsersMetrics]:
-    raw_copilot_code_metrics = self.copilot_code_metrics_repository.list()
+  def execute(self, user_id: str) -> List[CopilotUsersMetrics]:
+    raw_copilot_code_metrics = self.copilot_code_metrics_repository.listByUserId(user_id)
 
     if (not raw_copilot_code_metrics):
       return []

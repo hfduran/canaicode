@@ -20,6 +20,7 @@ class RawCommitMetrics(Base):
     added_lines = Column(Integer)
     removed_lines = Column(Integer)
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+    user_id = Column(String, index=True)
 
     __table_args__ = (
         UniqueConstraint('hash', 'repository_name', 'language', name='unique_commit_per_repo_lang'),

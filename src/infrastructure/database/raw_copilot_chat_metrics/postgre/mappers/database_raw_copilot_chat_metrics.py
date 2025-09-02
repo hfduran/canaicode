@@ -19,6 +19,7 @@ class DatabaseRawCopilotChatMetricsMapper:
             copy_events=copilot_chat_metrics.copy_events,
             insertion_events=copilot_chat_metrics.insertion_events,
             created_at=copilot_chat_metrics.created_at,
+            user_id=copilot_chat_metrics.user_id
         )
     
     @staticmethod
@@ -36,4 +37,5 @@ class DatabaseRawCopilotChatMetricsMapper:
             total_chats=cast(int, db_schema.total_chats),
             copy_events=cast(int, db_schema.copy_events),
             insertion_events=cast(int, db_schema.insertion_events),
+            user_id=cast(str, db_schema.user_id)
         )

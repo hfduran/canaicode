@@ -24,7 +24,7 @@ class CommitMetricsData(BaseModel):
 
 
 class CalculatedMetrics(BaseModel):
-    team: str
+    user_id: str
     languages: List[str]
     period: Period
     data: List[CodeLineMetricsData | CommitMetricsData]
