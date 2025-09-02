@@ -13,10 +13,10 @@ from src.consumers.gh_copilot.gh_copilot_consumer import GhCopilotConsumer
 from src.consumers.git_metrics_xlsx.git_metrics_xlsx_consumer import GitCommitMetricsXlsxConsumer
 from src.consumers.git_repo_consumer import GitRepoConsumer
 from src.domain.entities.commit_metrics import CommitMetrics
-from src.domain.entities.user import User
 from src.domain.use_cases.create_user_use_case import CreateUserUseCase
 from src.domain.use_cases.dtos.calculated_metrics import CalculatedMetrics, CopilotMetricsByLanguage, CopilotMetricsByPeriod, CopilotUsersMetrics
 from src.domain.use_cases.dtos.token import Token
+from src.domain.use_cases.dtos.user_response import UserResponse
 from src.domain.use_cases.get_calculated_metrics_use_case import GetCalculatedMetricsUseCase
 from src.domain.use_cases.get_commit_metrics_use_case import GetCommitMetricsUseCase
 from src.domain.use_cases.get_copilot_metrics_by_language_use_case import GetCopilotMetricsByLanguageUseCase
@@ -45,12 +45,12 @@ def get_db() -> Any:
         db.close()
 
 
-@router.post("/register", response_model=User)
+@router.post("/register", response_model=UserResponse)
 def register(
     username: str = Body(..., embed=True),
     password: str = Body(..., embed=True),
     db: Session = Depends(get_db)
-)-> User:
+)-> UserResponse:
     create_user_use_case = set_create_user_dependencies(db)
     response = create_user_use_case.execute(username, password)
     return response

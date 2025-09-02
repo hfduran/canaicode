@@ -16,11 +16,10 @@ class GitCommitMetricsXlsxConsumer:
     for _, df in sheets.items():
       for _, row in df.iterrows():
         raw_date = row["date"]
-        print(raw_date)
         if isinstance(raw_date, str):
             date = datetime.fromisoformat(raw_date)
         else:
-            date = pd.to_datetime(raw_date).to_pydatetime() # type: ignore
+            date = raw_date
         commit = CommitMetrics(
             id=str(uuid.uuid4()),
             hash=row["hash"],
