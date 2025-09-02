@@ -18,6 +18,15 @@ class RawCommitMetricsRepository:
         self.db.add(record_to_save)
         self.db.commit()
 
+    def create_many(self, commit_metrics_list: List[CommitMetrics]) -> None:
+        records_to_save = [
+            DatabaseRawCommitMetricsMapper.to_database(cm)
+            for cm in commit_metrics_list
+        ]
+
+        self.db.add_all(records_to_save)
+        self.db.commit()
+
     def listByUserId(
         self,
         user_id: str,
