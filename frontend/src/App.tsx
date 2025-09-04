@@ -2,6 +2,7 @@ import React from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import TopNavigation from "@cloudscape-design/components/top-navigation";
 import Dashboard from "./components/Dashboard";
+import UploadMetrics from "./pages/UploadMetrics";
 import LanguageAnalytics from "./pages/LanguageAnalytics";
 import CopilotAnalytics from "./pages/CopilotAnalytics";
 import HomePage from "./HomePage";
@@ -59,6 +60,11 @@ const App: React.FC = () => {
               },
               {
                 type: "button",
+                text: "Upload Metrics",
+                href: "/upload-metrics",
+              },
+              {
+                type: "button",
                 text: "On Demand Metrics",
                 href: "/on-demand-metrics",
               },
@@ -84,6 +90,7 @@ const App: React.FC = () => {
         <div style={{ flex: 1 }}>
           <Routes>
             <Route path="/" element={<Home />} />
+            <Route path="/upload-metrics" element={<UploadMetrics />} />
             <Route path="/on-demand-metrics" element={<OnDemandMetrics />} />
             <Route path="/reports" element={<Reports />} />
             <Route path="/language-analytics" element={<LanguageAnalytics />} />
