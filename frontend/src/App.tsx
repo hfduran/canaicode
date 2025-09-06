@@ -6,11 +6,21 @@ import UploadMetrics from "./pages/UploadMetrics";
 import LanguageAnalytics from "./pages/LanguageAnalytics";
 import CopilotAnalytics from "./pages/CopilotAnalytics";
 import HomePage from "./HomePage";
+import UserLogin from "./pages/UserLogin";
+import UserRegister from "./pages/UserRegister";
 
 const Home: React.FC = () => {
   return (
     <HomePage />
   );
+};
+
+const UserLoginPage: React.FC = () => {
+  return <UserLogin />;
+};
+
+const UserRegisterPage: React.FC = () => {
+  return <UserRegister />;
 };
 
 const OnDemandMetrics: React.FC = () => {
@@ -60,6 +70,16 @@ const App: React.FC = () => {
               },
               {
                 type: "button",
+                text: "Login",
+                href: "/user-login",
+              },
+              {
+                type: "button",
+                text: "Register",
+                href: "/user-register",
+              },
+              {
+                type: "button",
                 text: "Upload Metrics",
                 href: "/upload-metrics",
               },
@@ -90,6 +110,8 @@ const App: React.FC = () => {
         <div style={{ flex: 1 }}>
           <Routes>
             <Route path="/" element={<Home />} />
+            <Route path="/user-login" element={<UserLoginPage />} />
+            <Route path="/user-register" element={<UserRegisterPage />} />
             <Route path="/upload-metrics" element={<UploadMetrics />} />
             <Route path="/on-demand-metrics" element={<OnDemandMetrics />} />
             <Route path="/reports" element={<Reports />} />
