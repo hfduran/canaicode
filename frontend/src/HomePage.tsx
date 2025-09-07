@@ -50,7 +50,19 @@ const HomePage: React.FC = () => {
           </p>
         </Container>
       </Grid>
-
+      <div style={{ marginTop: "20px", marginBottom: "40px" }}>
+        <Container
+          header={
+            <Header variant="h2">
+              <span style={{ color: "#037f0c" }}>How to use?</span>
+            </Header>
+          }
+        >
+          <p style={{ color: "#6c757d" }}>
+              After you register and log in, go to the <strong>Upload Metrics</strong> tab. There you can upload your Copilot and Commit Metrics. You'll find examples of file structures and a Python script to get your commit metrics data.
+            </p>
+        </Container>
+      </div>
       <Header variant="h3">
         <span style={{ color: "#0073bb" }}>Team</span>
       </Header>
@@ -59,7 +71,6 @@ const HomePage: React.FC = () => {
         <br />
         <strong>Advisors:</strong> Levy and João
       </p>
-
     </div>
   );
 };

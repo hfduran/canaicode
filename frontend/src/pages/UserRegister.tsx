@@ -33,10 +33,10 @@ const UserRegister: React.FC = () => {
         setSuccessMsg("Registration successful! Redirecting...");
         setTimeout(() => navigate("/user-login"), 1200);
       } else {
-        setErrorMsg("Registration failed. Try a different username.");
+        setErrorMsg("Registration failed.");
       }
     } catch (error: any) {
-      setErrorMsg("Registration failed. Try a different username.");
+      setErrorMsg("Registration failed.");
     } finally {
       setIsLoading(false);
     }
