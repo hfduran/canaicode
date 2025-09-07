@@ -14,6 +14,7 @@ import UploadMetricsService from "../services/uploadMetricsService";
 
 const COPILOT_EXAMPLE_PATH = "/static/examples/Copilot_example.json"; // create json example
 const COMMIT_EXAMPLE_PATH = "/static/examples/Commits_example.xlsx";
+const COMMIT_SCRIPT_PATH = "/static/examples/commit_script.py";
 
 const UploadMetrics: React.FC = () => {
   const [copilotUserId, setCopilotUserId] = useState("");
@@ -78,13 +79,22 @@ const UploadMetrics: React.FC = () => {
   };
 
   const handleDownloadCommitExample = () => {
-        const link = document.createElement('a');
-        link.href = COMMIT_EXAMPLE_PATH;
-        link.download = "Commits_example.xlsx";
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-    };
+    const link = document.createElement('a');
+    link.href = COMMIT_EXAMPLE_PATH;
+    link.download = "Commits_example.xlsx";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const handleDownloadCommitScript = () => {
+    const link = document.createElement('a');
+    link.href = COMMIT_SCRIPT_PATH;
+    link.download = "commit_script.py";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
 
   return (
     <ContentLayout
@@ -188,6 +198,14 @@ const UploadMetrics: React.FC = () => {
                   onClick={handleDownloadCommitExample}
                 >
                   Download Commit Metrics XLSX Example
+                </Button>
+                <br />
+                <Button
+                  variant="link"
+                  iconName="download"
+                  onClick={handleDownloadCommitScript}
+                >
+                  Download Commit Script for XLSX Generation
                 </Button>
               </Box>
             </SpaceBetween>
