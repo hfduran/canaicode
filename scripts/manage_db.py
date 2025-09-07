@@ -29,20 +29,23 @@ def show_database_status() -> None:
     from src.infrastructure.database.raw_commit_metrics.postgre.dtos.model import RawCommitMetrics
     from src.infrastructure.database.raw_copilot_code_metrics.postgre.dtos.model import RawCopilotCodeMetrics
     from src.infrastructure.database.raw_copilot_chat_metrics.postgre.dtos.model import RawCopilotChatMetrics
-    
+    from src.infrastructure.database.users.postgre.dtos.model import UserDbSchema
+
     logger.info("Checking database status...")
     db = SessionLocal()
     try:
         commit_count = db.query(RawCommitMetrics).count()
         code_count = db.query(RawCopilotCodeMetrics).count()
         chat_count = db.query(RawCopilotChatMetrics).count()
-        
+        users_count = db.query(UserDbSchema).count()
+
         logger.info("Database status:")
         logger.info(f"  - Commit metrics: {commit_count} records")
         logger.info(f"  - Copilot code metrics: {code_count} records")
         logger.info(f"  - Copilot chat metrics: {chat_count} records")
-        logger.info(f"  - Total records: {commit_count + code_count + chat_count}")
-        
+        logger.info(f"  - Users: {users_count} records")
+        logger.info(f"  - Total records: {commit_count + code_count + chat_count + users_count}")
+
     except Exception as e:
         logger.error(f"Error checking database status: {e}")
         raise
@@ -56,13 +59,15 @@ def clear_all_data() -> None:
     from src.infrastructure.database.raw_commit_metrics.postgre.dtos.model import RawCommitMetrics
     from src.infrastructure.database.raw_copilot_code_metrics.postgre.dtos.model import RawCopilotCodeMetrics
     from src.infrastructure.database.raw_copilot_chat_metrics.postgre.dtos.model import RawCopilotChatMetrics
-    
+    from src.infrastructure.database.users.postgre.dtos.model import UserDbSchema
+
     logger.info("Clearing all data from database...")
     db = SessionLocal()
     try:
         db.query(RawCopilotChatMetrics).delete()
         db.query(RawCopilotCodeMetrics).delete()
         db.query(RawCommitMetrics).delete()
+        db.query(UserDbSchema).delete()
         db.commit()
         logger.info("All data cleared successfully!")
     except Exception as e:

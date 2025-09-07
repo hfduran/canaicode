@@ -28,3 +28,42 @@ class UsersRepository:
             return None
 
         return DatabaseUsersMapper.to_domain(record)
+
+    def find_by_id(
+        self,
+        user_id: str
+    ) -> User | None:
+        query = self.db.query(UserDbSchema)
+
+        record = query.filter(UserDbSchema.id == user_id).first()
+
+        if(not record):
+            return None
+
+        return DatabaseUsersMapper.to_domain(record)
+
+    def find_by_email(
+        self,
+        email: str
+    ) -> User | None:
+        query = self.db.query(UserDbSchema)
+
+        record = query.filter(UserDbSchema.email == email).first()
+
+        if(not record):
+            return None
+
+        return DatabaseUsersMapper.to_domain(record)
+
+    def find_by_cpf_cnpj(
+        self,
+        cpf_cnpj: str
+    ) -> User | None:
+        query = self.db.query(UserDbSchema)
+
+        record = query.filter(UserDbSchema.cpf_cnpj == cpf_cnpj).first()
+
+        if(not record):
+            return None
+
+        return DatabaseUsersMapper.to_domain(record)

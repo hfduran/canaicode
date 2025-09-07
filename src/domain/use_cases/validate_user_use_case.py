@@ -9,7 +9,7 @@ from passlib.context import CryptContext
 
 SECRET_KEY = os.getenv("SECRET_KEY")
 ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES")
+ACCESS_TOKEN_EXPIRE_MINUTES = os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES") or 60
 
 class ValidateUserUseCase:
     def __init__(
@@ -24,7 +24,7 @@ class ValidateUserUseCase:
         if not user or not self.verify_password(password, user.hashed_password):
             raise HTTPException(status_code=401, detail="Invalid credentials")
         
-        access_token = self.create_access_token({"sub": user.username}) # type: ignore
+        access_token = self.create_access_token({"sub": user.username, "user_id": user.id}) # type: ignore
         return Token(user_id=user.id, access_token=access_token, token_type="bearer") # type: ignore
     
 

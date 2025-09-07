@@ -4,7 +4,7 @@ verify_ssl = true
 name = "pypi"
 
 [scripts]
-main = "python src/main.py"
+main = "uvicorn src.main:app --reload"
 format = "ruff format"
 type-check="mypy"
 test = "pytest"

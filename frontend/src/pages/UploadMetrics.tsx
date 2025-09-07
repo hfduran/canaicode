@@ -5,21 +5,18 @@ import {
   ContentLayout,
   SpaceBetween,
   FormField,
-  Input,
   Button,
   Box,
   FileUpload,
 } from "@cloudscape-design/components";
 import UploadMetricsService from "../services/uploadMetricsService";
 
-const COPILOT_EXAMPLE_PATH = "/static/examples/Copilot_example.json"; // create json example
+const COPILOT_EXAMPLE_PATH = "/static/examples/Copilot_example.json";
 const COMMIT_EXAMPLE_PATH = "/static/examples/Commits_example.xlsx";
 const COMMIT_SCRIPT_PATH = "/static/examples/commit_script.py";
 
 const UploadMetrics: React.FC = () => {
-  const [copilotUserId, setCopilotUserId] = useState("");
   const [copilotFile, setCopilotFile] = useState<File | null>(null);
-  const [commitUserId, setCommitUserId] = useState("");
   const [commitFile, setCommitFile] = useState<File | null>(null);
   const [copilotLoading, setCopilotLoading] = useState(false);
   const [commitLoading, setCommitLoading] = useState(false);
@@ -28,9 +25,6 @@ const UploadMetrics: React.FC = () => {
   const [copilotError, setCopilotError] = useState<string | null>(null);
   const [commitError, setCommitError] = useState<string | null>(null);
 
-  // Assume token is available globally (e.g., from context or localStorage)
-  const token = localStorage.getItem("token") ?? "";
-
   const handleCopilotUpload = async (e: React.FormEvent) => {
     e.preventDefault();
     setCopilotLoading(true);
@@ -38,12 +32,12 @@ const UploadMetrics: React.FC = () => {
     setCopilotError(null);
 
     try {
-      if (!copilotUserId || !copilotFile) {
-        setCopilotError("Please provide user ID and select a JSON file.");
+      if (!copilotFile) {
+        setCopilotError("Please select a JSON file.");
         setCopilotLoading(false);
         return;
       }
-      await UploadMetricsService.uploadCopilotMetrics(copilotUserId, copilotFile, token);
+      await UploadMetricsService.uploadCopilotMetrics(copilotFile);
       setCopilotSuccess("Copilot metrics uploaded successfully!");
     } catch (error: any) {
       setCopilotError("Failed to upload copilot metrics.");
@@ -59,12 +53,12 @@ const UploadMetrics: React.FC = () => {
     setCommitError(null);
 
     try {
-      if (!commitUserId || !commitFile) {
-        setCommitError("Please provide user ID and select an XLSX file.");
+      if (!commitFile) {
+        setCommitError("Please select an XLSX file.");
         setCommitLoading(false);
         return;
       }
-      await UploadMetricsService.uploadCommitMetrics(commitUserId, commitFile, token);
+      await UploadMetricsService.uploadCommitMetrics(commitFile);
       setCommitSuccess("Commit metrics uploaded successfully!");
     } catch (error: any) {
       setCommitError("Failed to upload commit metrics.");
@@ -116,13 +110,6 @@ const UploadMetrics: React.FC = () => {
           >
             <form onSubmit={handleCopilotUpload}>
               <SpaceBetween size="m">
-              <FormField label="User ID" description="Enter your user ID">
-                <Input
-                  value={copilotUserId}
-                  onChange={({ detail }) => setCopilotUserId(detail.value)}
-                  placeholder="User ID"
-                />
-              </FormField>
               <FormField label="Copilot Metrics File" description="Drop a JSON file here">
                 <FileUpload
                   accept=".json"
@@ -137,7 +124,7 @@ const UploadMetrics: React.FC = () => {
               <Button
                 variant="primary"
                 loading={copilotLoading}
-                disabled={!copilotUserId || !copilotFile}
+                disabled={!copilotFile}
               >
                 Upload Copilot Metrics
               </Button>
@@ -164,13 +151,6 @@ const UploadMetrics: React.FC = () => {
           >
             <form onSubmit={handleCommitUpload}>
               <SpaceBetween size="m">
-              <FormField label="User ID" description="Enter your user ID">
-                <Input
-                  value={commitUserId}
-                  onChange={({ detail }) => setCommitUserId(detail.value)}
-                  placeholder="User ID"
-                />
-              </FormField>
               <FormField label="Commit Metrics File" description="Drop an XLSX file here">
                 <FileUpload
                   accept=".xlsx"
@@ -185,7 +165,7 @@ const UploadMetrics: React.FC = () => {
               <Button
                 variant="primary"
                 loading={commitLoading}
-                disabled={!commitUserId || !commitFile}
+                disabled={!commitFile}
               >
                 Upload Commit Metrics
               </Button>

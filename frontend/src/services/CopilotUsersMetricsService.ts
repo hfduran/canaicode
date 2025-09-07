@@ -1,16 +1,25 @@
 import { CopilotUsersMetrics } from "../types/model/index";
 import axios from "axios";
+import { getToken, getUserId } from "../utils/auth";
 
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || "http://localhost:8000";
 
 export class CopilotUsersMetricsService {
   static async getCopilotUsersMetrics(): Promise<CopilotUsersMetrics[]> {
     try {
-      const url = `${API_BASE_URL}/copilot_metrics/users`;
+      const token = getToken();
+      const userId = getUserId();
+      
+      if (!token || !userId) {
+        throw new Error("Authentication required");
+      }
+
+      const url = `${API_BASE_URL}/copilot_metrics/users/${encodeURIComponent(userId)}`;
 
       const response = await axios.get<CopilotUsersMetrics[]>(url, {
         headers: {
           "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`,
         },
       });
 

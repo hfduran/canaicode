@@ -7,6 +7,7 @@ from src.infrastructure.database.connection.database_connection import Base, eng
 from src.infrastructure.database.raw_copilot_code_metrics.postgre.dtos.model import RawCopilotCodeMetrics  # noqa: F401
 from src.infrastructure.database.raw_copilot_chat_metrics.postgre.dtos.model import RawCopilotChatMetrics  # noqa: F401
 from src.infrastructure.database.raw_commit_metrics.postgre.dtos.model import RawCommitMetrics  # noqa: F401
+from src.infrastructure.database.users.postgre.dtos.model import UserDbSchema  # noqa: F401
 
 logger = logging.getLogger(__name__)
 

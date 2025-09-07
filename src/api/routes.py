@@ -7,6 +7,7 @@ from jose import JWTError, jwt
 from fastapi import APIRouter, Body, Depends, File, HTTPException, UploadFile
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
+from pydantic import BaseModel
 
 from src.config.config import CONFIG
 from src.consumers.gh_copilot.gh_copilot_consumer import GhCopilotConsumer
@@ -34,6 +35,15 @@ from src.infrastructure.database.users.postgre.users_repository import UsersRepo
 SECRET_KEY = os.getenv("SECRET_KEY")
 ALGORITHM = "HS256"
 
+class RegisterRequest(BaseModel):
+    username: str
+    password: str
+    full_name: str
+    enterprise_name: str = ""
+    email: str
+    cellphone: str
+    cpf_cnpj: str
+
 router = APIRouter()
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
 
@@ -47,12 +57,19 @@ def get_db() -> Any:
 
 @router.post("/register", response_model=UserResponse)
 def register(
-    username: str = Body(..., embed=True),
-    password: str = Body(..., embed=True),
+    request: RegisterRequest,
     db: Session = Depends(get_db)
 )-> UserResponse:
     create_user_use_case = set_create_user_dependencies(db)
-    response = create_user_use_case.execute(username, password)
+    response = create_user_use_case.execute(
+        request.username,
+        request.password,
+        request.full_name,
+        request.enterprise_name,
+        request.email,
+        request.cellphone,
+        request.cpf_cnpj
+    )
     return response
 
 
@@ -83,7 +100,7 @@ async def get_copilot_metrics(
     token: str = Depends(oauth2_scheme),
     db: Session = Depends(get_db),
 ) -> Dict[str, List[Any]]:
-    validate_token(token)
+    verify_user_access(token, user_id)
     file_content = await file.read()
     get_copilot_metrics_use_case = set_get_copilot_metrics_dependencies(db)
     response = get_copilot_metrics_use_case.execute(file_content, user_id)
@@ -97,7 +114,7 @@ async def get_commit_metrics_xlsx(
     token: str = Depends(oauth2_scheme),
     db: Session = Depends(get_db),
 ) -> List[CommitMetrics]:
-    validate_token(token)
+    verify_user_access(token, user_id)
     file_content = io.BytesIO(await file.read())
     get_xlsx_commit_metrics_use_case = set_get_xlsx_commit_metrics_dependencies(db)
     response = get_xlsx_commit_metrics_use_case.execute(file_content, user_id)
@@ -115,7 +132,7 @@ def get_calculated_metrics(
     token: str = Depends(oauth2_scheme),
     db: Session = Depends(get_db),
 ) -> CalculatedMetrics | None:
-    validate_token(token)
+    verify_user_access(token, user_id)
     initial_date = datetime.strptime(initial_date_string, "%Y-%m-%d")
     final_date = datetime.strptime(final_date_string, "%Y-%m-%d")
     languages: List[str] = []
@@ -134,7 +151,7 @@ def get_copilot_metrics_by_language(
     token: str = Depends(oauth2_scheme),
     db: Session = Depends(get_db),
 ) -> List[CopilotMetricsByLanguage]:
-    validate_token(token)
+    verify_user_access(token, user_id)
     initial_date = None
     final_date = None
     if(initial_date_string):
@@ -152,7 +169,7 @@ def get_copilot_metrics_by_period(
     token: str = Depends(oauth2_scheme),
     db: Session = Depends(get_db),
 ) -> List[CopilotMetricsByPeriod]:
-    validate_token(token)
+    verify_user_access(token, user_id)
     get_copilot_metrics_by_period_use_case = set_get_copilot_metrics_by_period_dependencies(db)
     response = get_copilot_metrics_by_period_use_case.execute(user_id, period) # type: ignore
     return response
@@ -164,17 +181,29 @@ def get_copilot_metrics_by_users(
     token: str = Depends(oauth2_scheme),
     db: Session = Depends(get_db),
 ) -> List[CopilotUsersMetrics]:
-    validate_token(token)
+    verify_user_access(token, user_id)
     get_copilot_users_metrics_use_case = set_get_copilot_users_metrics_dependencies(db)
     response = get_copilot_users_metrics_use_case.execute(user_id)
     return response
 
 
-def validate_token(token: str) -> str | None:
+def validate_token(token: str) -> Dict[str, Any]:
     try:
-        return jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM]) # type: ignore
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        return payload
     except JWTError:
         raise HTTPException(status_code=401, detail="Token invalid or expired")
+
+
+def verify_user_access(token: str, requested_user_id: str) -> None:
+    payload = validate_token(token)
+    token_user_id = payload.get("user_id")
+    
+    if not token_user_id:
+        raise HTTPException(status_code=401, detail="Invalid token: missing user information")
+    
+    if token_user_id != requested_user_id:
+        raise HTTPException(status_code=403, detail="Access denied: cannot access other user's data")
 
 
 def set_create_user_dependencies(

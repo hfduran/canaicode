@@ -1,6 +1,7 @@
 import { CalculatedMetricsRequest, CalculatedMetricsResponse } from "../types/model/index";
 import axios from "axios";
 import { formatDate } from "../utils/date/formatDate";
+import { getToken, getUserId } from "../utils/auth";
 
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || "http://localhost:8000";
 
@@ -9,6 +10,13 @@ export class CalculatedMetricsService {
     request: CalculatedMetricsRequest
   ): Promise<CalculatedMetricsResponse> {
     try {
+      const token = getToken();
+      const userId = getUserId();
+      
+      if (!token || !userId) {
+        throw new Error("Authentication required");
+      }
+
       const queryParams = new URLSearchParams();
 
       queryParams.append("period", request.period);
@@ -18,12 +26,13 @@ export class CalculatedMetricsService {
       if (request.programming_languages) queryParams.append("languages_string", request.programming_languages.join(","));
 
       const url = `${API_BASE_URL}/calculated_metrics/${encodeURIComponent(
-        request.team_name
+        userId
       )}?${queryParams.toString()}`;
 
       const response = await axios.get<CalculatedMetricsResponse>(url, {
         headers: {
           "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`,
         },
       });
 
