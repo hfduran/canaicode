@@ -25,6 +25,8 @@ uvicorn = {extras = ["standard"], version = "*"}
 python-jose = {extras = ["cryptography"], version = "*"}
 passlib = {extras = ["bcrypt"], version = "*"}
 openpyxl = "*"
+pytest = "*"
+pytest-cov = "*"
 
 [dev-packages]
 pytest = "*"
