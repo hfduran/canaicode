@@ -87,7 +87,7 @@ class MetricsCalculator:
             columns={"id": "repository_id", "team": "team"}
         )
 
-        df_commits["repository_id"] = df_commits["repository"].apply(lambda x: x.id)  # type: ignore
+        df_commits["repository_id"] = df_commits["repository"].apply(lambda x: x["id"] if isinstance(x, dict) else x.id)  # type: ignore
 
         df_commits = df_commits.merge(  # type: ignore
             df_repos[["repository_id", "team"]],  # type: ignore
@@ -116,7 +116,7 @@ class MetricsCalculator:
             )
 
         df: pd.DataFrame = pd.DataFrame([m.model_dump() for m in metrics])
-        df["team_id"] = df["team"].apply(lambda t: t["id"] if t else None)  # type: ignore
+        df["team_id"] = df["team"].apply(lambda t: t["id"] if t and isinstance(t, dict) else (t.id if t else None))  # type: ignore
 
         result: pd.DataFrame = (
             df.groupby(group_by)["lines_accepted"]  # type: ignore
@@ -137,7 +137,7 @@ class MetricsCalculator:
 
         df: pd.DataFrame = pd.DataFrame([m.model_dump() for m in metrics])
 
-        df["team_id"] = df["team"].apply(lambda t: t["id"] if t else None)  # type: ignore
+        df["team_id"] = df["team"].apply(lambda t: t["id"] if t and isinstance(t, dict) else (t.id if t else None))  # type: ignore
 
         grouped: pd.DataFrame = (
             df.groupby(group_by)  # type: ignore
