@@ -14,6 +14,7 @@ from src.consumers.gh_copilot.gh_copilot_consumer import GhCopilotConsumer
 from src.consumers.git_metrics_xlsx.git_metrics_xlsx_consumer import GitCommitMetricsXlsxConsumer
 from src.consumers.git_repo_consumer import GitRepoConsumer
 from src.domain.entities.commit_metrics import CommitMetrics
+from src.domain.use_cases.create_github_app_use_case import CreateGitHubAppUseCase
 from src.domain.use_cases.create_user_use_case import CreateUserUseCase
 from src.domain.use_cases.dtos.calculated_metrics import CalculatedMetrics, CopilotMetricsByLanguage, CopilotMetricsByPeriod, CopilotUsersMetrics
 from src.domain.use_cases.dtos.token import Token
@@ -27,6 +28,7 @@ from src.domain.use_cases.get_copilot_users_metrics_use_case import GetCopilotUs
 from src.domain.use_cases.get_csv_commit_metrics_use_case import GetXlsxCommitMetricsUseCase
 from src.domain.use_cases.validate_user_use_case import ValidateUserUseCase
 from src.infrastructure.database.connection.database_connection import SessionLocal
+from src.infrastructure.database.github_apps.postgre.github_apps_repository import GitHubAppsRepository
 from src.infrastructure.database.raw_commit_metrics.postgre.raw_commit_metrics_repository import RawCommitMetricsRepository
 from src.infrastructure.database.raw_copilot_chat_metrics.postgre.raw_copilot_chat_metrics_repository import RawCopilotChatMetricsRepository
 from src.infrastructure.database.raw_copilot_code_metrics.postgre.raw_copilot_code_metrics_repository import RawCopilotCodeMetricsRepository
@@ -34,6 +36,7 @@ from src.infrastructure.database.users.postgre.users_repository import UsersRepo
 
 SECRET_KEY = os.getenv("SECRET_KEY")
 ALGORITHM = "HS256"
+FERNET_KEY = os.getenv("FERNET_KEY")
 
 class RegisterRequest(BaseModel):
     username: str
@@ -186,11 +189,25 @@ def get_copilot_metrics_by_users(
     response = get_copilot_users_metrics_use_case.execute(user_id)
     return response
 
+@router.post("/github_app")
+def create_github_app(
+    user_id: str = Body(..., embed=True),
+    organization_name: str = Body(..., embed=True),
+    app_id: str = Body(..., embed=True),
+    installation_id: str = Body(..., embed=True),
+    private_key: str = Body(..., embed=True),
+    token: str = Depends(oauth2_scheme),
+    db: Session = Depends(get_db),
+) -> None:
+    verify_user_access(token, user_id)
+    create_github_app_use_case = set_create_github_app_dependencies(db)
+    create_github_app_use_case.execute(user_id, organization_name, app_id, installation_id, private_key)
+
 
 def validate_token(token: str) -> Dict[str, Any]:
     try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        return payload
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM]) # type: ignore
+        return payload # type: ignore
     except JWTError:
         raise HTTPException(status_code=401, detail="Token invalid or expired")
 
@@ -287,3 +304,9 @@ def set_get_copilot_users_metrics_dependencies(
         copilot_code_metrics_repository,
         copilot_chat_metrics_repository,
     )
+
+def set_create_github_app_dependencies(
+    db: Session
+) -> CreateGitHubAppUseCase:
+    github_apps_repository = GitHubAppsRepository(db)
+    return CreateGitHubAppUseCase(github_apps_repository, encryption_key=FERNET_KEY) # type: ignore
