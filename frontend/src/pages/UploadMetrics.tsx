@@ -13,7 +13,7 @@ import UploadMetricsService from "../services/uploadMetricsService";
 
 const COPILOT_EXAMPLE_PATH = "/static/examples/Copilot_example.json";
 const COMMIT_EXAMPLE_PATH = "/static/examples/Commits_example.xlsx";
-const COMMIT_SCRIPT_PATH = "/static/examples/commit_script.py";
+const COMMIT_SCRIPT_PATH = "/static/examples/git_consumer.zip";
 
 const UploadMetrics: React.FC = () => {
   const [copilotFile, setCopilotFile] = useState<File | null>(null);
@@ -84,7 +84,7 @@ const UploadMetrics: React.FC = () => {
   const handleDownloadCommitScript = () => {
     const link = document.createElement('a');
     link.href = COMMIT_SCRIPT_PATH;
-    link.download = "commit_script.py";
+    link.download = "git_consumer.zip";
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
