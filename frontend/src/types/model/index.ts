@@ -64,3 +64,20 @@ export interface CopilotMetricsByPeriod {
   percentage_lines_accepted: number;
   total_lines_accepted: number;
 }
+
+export interface ApiKey {
+  id: string;
+  key_prefix: string;
+  key_name: string;
+  created_at: string;
+  last_used_at: string | null;
+  expires_at: string | null;
+}
+
+export interface ApiKeyCreateResponse {
+  id: string;
+  key: string;
+  key_name: string;
+  created_at: string;
+  expires_at: string | null;
+}

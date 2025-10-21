@@ -9,6 +9,7 @@ import HomePage from "./HomePage";
 import UserLogin from "./pages/UserLogin";
 import UserRegister from "./pages/UserRegister";
 import GitHubApp from "./pages/GitHubApp";
+import ApiKeys from "./pages/ApiKeys";
 import ProtectedRoute from "./components/ProtectedRoute";
 import { isAuthenticated, logout } from "./utils/auth";
 
@@ -107,6 +108,11 @@ const AppContent: React.FC = () => {
         },
         {
           type: "button" as const,
+          text: "API Keys",
+          href: "/api-keys",
+        },
+        {
+          type: "button" as const,
           text: "On Demand Metrics",
           href: "/on-demand-metrics",
         },
@@ -167,6 +173,7 @@ const AppContent: React.FC = () => {
           <Route path="/user-register" element={<UserRegisterPage />} />
           <Route path="/upload-metrics" element={<ProtectedRoute><UploadMetrics /></ProtectedRoute>} />
           <Route path="/github-app" element={<ProtectedRoute><GitHubAppPage /></ProtectedRoute>} />
+          <Route path="/api-keys" element={<ProtectedRoute><ApiKeys /></ProtectedRoute>} />
           <Route path="/on-demand-metrics" element={<ProtectedRoute><OnDemandMetrics /></ProtectedRoute>} />
           <Route path="/reports" element={<ProtectedRoute><Reports /></ProtectedRoute>} />
           <Route path="/language-analytics" element={<ProtectedRoute><LanguageAnalytics /></ProtectedRoute>} />
