@@ -114,10 +114,13 @@ async def get_copilot_metrics(
 async def get_commit_metrics_xlsx(
     file: UploadFile = File(...),
     user_id: str = Body(..., embed=True),
-    token: str = Depends(oauth2_scheme),
+    authenticated_user_id: str = Depends(get_user_id_dual_auth),
     db: Session = Depends(get_db),
 ) -> List[CommitMetrics]:
-    verify_user_access(token, user_id)
+    # Verify the authenticated user matches the requested user_id
+    if authenticated_user_id != user_id:
+        raise HTTPException(status_code=403, detail="Access denied: cannot access other user's data")
+
     file_content = io.BytesIO(await file.read())
     get_xlsx_commit_metrics_use_case = set_get_xlsx_commit_metrics_dependencies(db)
     response = get_xlsx_commit_metrics_use_case.execute(file_content, user_id)
