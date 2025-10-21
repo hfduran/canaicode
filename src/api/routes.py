@@ -2,12 +2,13 @@ from datetime import datetime
 import io
 from typing import Any, Dict, List
 
-from fastapi import APIRouter, Body, Depends, File, UploadFile
+from fastapi import APIRouter, Body, Depends, File, HTTPException, UploadFile
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
 
 from src.auth.verify_user_access import verify_user_access
+from src.auth.dual_auth import get_user_id_dual_auth
 from src.dependencies.dependency_setters import set_create_user_dependencies
 from src.dependencies.dependency_setters import set_validate_user_dependencies
 from src.dependencies.dependency_setters import set_get_commit_metrics_dependencies
@@ -18,10 +19,14 @@ from src.dependencies.dependency_setters import set_get_copilot_metrics_by_langu
 from src.dependencies.dependency_setters import set_get_copilot_metrics_by_period_dependencies
 from src.dependencies.dependency_setters import set_get_copilot_users_metrics_dependencies
 from src.dependencies.dependency_setters import set_create_github_app_dependencies
+from src.dependencies.dependency_setters import set_create_api_key_dependencies
+from src.dependencies.dependency_setters import set_list_api_keys_dependencies
+from src.dependencies.dependency_setters import set_revoke_api_key_dependencies
 from src.domain.entities.commit_metrics import CommitMetrics
 from src.domain.use_cases.dtos.calculated_metrics import CalculatedMetrics, CopilotMetricsByLanguage, CopilotMetricsByPeriod, CopilotUsersMetrics
 from src.domain.use_cases.dtos.token import Token
 from src.domain.use_cases.dtos.user_response import UserResponse
+from src.domain.use_cases.dtos.api_key_response import ApiKeyResponse, ApiKeyListItem
 from src.infrastructure.database.connection.database_connection import SessionLocal
 
 
@@ -33,6 +38,12 @@ class RegisterRequest(BaseModel):
     email: str
     cellphone: str
     cpf_cnpj: str
+
+
+class CreateApiKeyRequest(BaseModel):
+    user_id: str
+    key_name: str
+    expires_at: str = ""  # Optional: ISO format datetime string
 
 router = APIRouter()
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
@@ -87,10 +98,12 @@ def get_commit_metrics(
 async def get_copilot_metrics(
     file: UploadFile = File(...),
     user_id: str = Body(..., embed=True),
-    token: str = Depends(oauth2_scheme),
+    authenticated_user_id: str = Depends(get_user_id_dual_auth),
     db: Session = Depends(get_db),
 ) -> Dict[str, List[Any]]:
-    verify_user_access(token, user_id)
+    if authenticated_user_id != user_id:
+        raise HTTPException(status_code=403, detail="Access denied: cannot access other user's data")
+
     file_content = await file.read()
     get_copilot_metrics_use_case = set_get_copilot_metrics_dependencies(db)
     response = get_copilot_metrics_use_case.execute(file_content, user_id)
@@ -189,3 +202,69 @@ def create_github_app(
     verify_user_access(token, user_id)
     create_github_app_use_case = set_create_github_app_dependencies(db)
     create_github_app_use_case.execute(user_id, organization_name, app_id, installation_id, private_key)
+
+
+@router.post("/api_keys", response_model=ApiKeyResponse)
+def create_api_key(
+    request: CreateApiKeyRequest,
+    token: str = Depends(oauth2_scheme),
+    db: Session = Depends(get_db),
+) -> ApiKeyResponse:
+    verify_user_access(token, request.user_id)
+
+    # Parse expiration date if provided
+    expires_at = None
+    if request.expires_at:
+        expires_at = datetime.strptime(request.expires_at, "%Y-%m-%d")
+
+    create_api_key_use_case = set_create_api_key_dependencies(db)
+    full_key, api_key_entity = create_api_key_use_case.execute(
+        request.user_id,
+        request.key_name,
+        expires_at
+    )
+
+    return ApiKeyResponse(
+        id=api_key_entity.id,  # type: ignore
+        key=full_key,
+        key_name=api_key_entity.key_name,
+        created_at=api_key_entity.created_at,  # type: ignore
+        expires_at=api_key_entity.expires_at,
+    )
+
+
+@router.get("/api_keys/{user_id}", response_model=List[ApiKeyListItem])
+def list_api_keys(
+    user_id: str,
+    token: str = Depends(oauth2_scheme),
+    db: Session = Depends(get_db),
+) -> List[ApiKeyListItem]:
+    verify_user_access(token, user_id)
+    list_api_keys_use_case = set_list_api_keys_dependencies(db)
+    api_keys = list_api_keys_use_case.execute(user_id)
+
+    # Convert to list items with masked keys
+    return [
+        ApiKeyListItem(
+            id=key.id,  # type: ignore
+            key_prefix=f"{key.key_prefix}...{key.key_prefix[-3:]}",  # Show first 15 and last 3 chars
+            key_name=key.key_name,
+            created_at=key.created_at,  # type: ignore
+            last_used_at=key.last_used_at,
+            expires_at=key.expires_at,
+        )
+        for key in api_keys
+    ]
+
+
+@router.delete("/api_keys/{key_id}")
+def revoke_api_key(
+    key_id: str,
+    user_id: str = Body(..., embed=True),
+    token: str = Depends(oauth2_scheme),
+    db: Session = Depends(get_db),
+) -> Dict[str, str]:
+    verify_user_access(token, user_id)
+    revoke_api_key_use_case = set_revoke_api_key_dependencies(db)
+    revoke_api_key_use_case.execute(user_id, key_id)
+    return {"message": "API key revoked successfully"}

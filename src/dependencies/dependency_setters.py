@@ -13,6 +13,11 @@ from src.domain.use_cases.get_copilot_metrics_use_case import GetCopilotMetricsU
 from src.domain.use_cases.get_copilot_users_metrics_use_case import GetCopilotUsersMetricsUseCase
 from src.domain.use_cases.get_csv_commit_metrics_use_case import GetXlsxCommitMetricsUseCase
 from src.domain.use_cases.validate_user_use_case import ValidateUserUseCase
+from src.domain.use_cases.validate_api_key_use_case import ValidateApiKeyUseCase
+from src.domain.use_cases.create_api_key_use_case import CreateApiKeyUseCase
+from src.domain.use_cases.list_api_keys_use_case import ListApiKeysUseCase
+from src.domain.use_cases.revoke_api_key_use_case import RevokeApiKeyUseCase
+from src.infrastructure.database.api_keys.postgre.api_keys_repository import ApiKeysRepository
 from src.infrastructure.database.github_apps.postgre.github_apps_repository import GitHubAppsRepository
 from src.infrastructure.database.raw_commit_metrics.postgre.raw_commit_metrics_repository import RawCommitMetricsRepository
 from src.infrastructure.database.raw_copilot_chat_metrics.postgre.raw_copilot_chat_metrics_repository import RawCopilotChatMetricsRepository
@@ -112,3 +117,31 @@ def set_create_github_app_dependencies(
 ) -> CreateGitHubAppUseCase:
     github_apps_repository = GitHubAppsRepository(db)
     return CreateGitHubAppUseCase(github_apps_repository, encryption_key=FERNET_KEY) # type: ignore
+
+
+def set_validate_api_key_dependencies(
+    db: Session,
+) -> ValidateApiKeyUseCase:
+    api_keys_repository = ApiKeysRepository(db)
+    return ValidateApiKeyUseCase(api_keys_repository)
+
+
+def set_create_api_key_dependencies(
+    db: Session,
+) -> CreateApiKeyUseCase:
+    api_keys_repository = ApiKeysRepository(db)
+    return CreateApiKeyUseCase(api_keys_repository)
+
+
+def set_list_api_keys_dependencies(
+    db: Session,
+) -> ListApiKeysUseCase:
+    api_keys_repository = ApiKeysRepository(db)
+    return ListApiKeysUseCase(api_keys_repository)
+
+
+def set_revoke_api_key_dependencies(
+    db: Session,
+) -> RevokeApiKeyUseCase:
+    api_keys_repository = ApiKeysRepository(db)
+    return RevokeApiKeyUseCase(api_keys_repository)
