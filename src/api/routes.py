@@ -1,42 +1,34 @@
 from datetime import datetime
 import io
-import os
 from typing import Any, Dict, List
-from jose import JWTError, jwt
 
 from fastapi import APIRouter, Body, Depends, File, HTTPException, UploadFile
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
 
-from src.config.config import CONFIG
-from src.consumers.gh_copilot.gh_copilot_consumer import GhCopilotConsumer
-from src.consumers.git_metrics_xlsx.git_metrics_xlsx_consumer import GitCommitMetricsXlsxConsumer
-from src.consumers.git_repo_consumer import GitRepoConsumer
+from src.auth.verify_user_access import verify_user_access
+from src.auth.dual_auth import get_user_id_dual_auth
+from src.dependencies.dependency_setters import set_create_user_dependencies
+from src.dependencies.dependency_setters import set_validate_user_dependencies
+from src.dependencies.dependency_setters import set_get_commit_metrics_dependencies
+from src.dependencies.dependency_setters import set_get_copilot_metrics_dependencies
+from src.dependencies.dependency_setters import set_get_xlsx_commit_metrics_dependencies
+from src.dependencies.dependency_setters import set_get_calculated_metrics_dependencies
+from src.dependencies.dependency_setters import set_get_copilot_metrics_by_language_dependencies
+from src.dependencies.dependency_setters import set_get_copilot_metrics_by_period_dependencies
+from src.dependencies.dependency_setters import set_get_copilot_users_metrics_dependencies
+from src.dependencies.dependency_setters import set_create_github_app_dependencies
+from src.dependencies.dependency_setters import set_create_api_key_dependencies
+from src.dependencies.dependency_setters import set_list_api_keys_dependencies
+from src.dependencies.dependency_setters import set_revoke_api_key_dependencies
 from src.domain.entities.commit_metrics import CommitMetrics
-from src.domain.use_cases.create_github_app_use_case import CreateGitHubAppUseCase
-from src.domain.use_cases.create_user_use_case import CreateUserUseCase
 from src.domain.use_cases.dtos.calculated_metrics import CalculatedMetrics, CopilotMetricsByLanguage, CopilotMetricsByPeriod, CopilotUsersMetrics
 from src.domain.use_cases.dtos.token import Token
 from src.domain.use_cases.dtos.user_response import UserResponse
-from src.domain.use_cases.get_calculated_metrics_use_case import GetCalculatedMetricsUseCase
-from src.domain.use_cases.get_commit_metrics_use_case import GetCommitMetricsUseCase
-from src.domain.use_cases.get_copilot_metrics_by_language_use_case import GetCopilotMetricsByLanguageUseCase
-from src.domain.use_cases.get_copilot_metrics_by_period_use_case import GetCopilotMetricsByPeriodUseCase
-from src.domain.use_cases.get_copilot_metrics_use_case import GetCopilotMetricsUseCase
-from src.domain.use_cases.get_copilot_users_metrics_use_case import GetCopilotUsersMetricsUseCase
-from src.domain.use_cases.get_csv_commit_metrics_use_case import GetXlsxCommitMetricsUseCase
-from src.domain.use_cases.validate_user_use_case import ValidateUserUseCase
+from src.domain.use_cases.dtos.api_key_response import ApiKeyResponse, ApiKeyListItem
 from src.infrastructure.database.connection.database_connection import SessionLocal
-from src.infrastructure.database.github_apps.postgre.github_apps_repository import GitHubAppsRepository
-from src.infrastructure.database.raw_commit_metrics.postgre.raw_commit_metrics_repository import RawCommitMetricsRepository
-from src.infrastructure.database.raw_copilot_chat_metrics.postgre.raw_copilot_chat_metrics_repository import RawCopilotChatMetricsRepository
-from src.infrastructure.database.raw_copilot_code_metrics.postgre.raw_copilot_code_metrics_repository import RawCopilotCodeMetricsRepository
-from src.infrastructure.database.users.postgre.users_repository import UsersRepository
 
-SECRET_KEY = os.getenv("SECRET_KEY")
-ALGORITHM = "HS256"
-FERNET_KEY = os.getenv("FERNET_KEY")
 
 class RegisterRequest(BaseModel):
     username: str
@@ -46,6 +38,12 @@ class RegisterRequest(BaseModel):
     email: str
     cellphone: str
     cpf_cnpj: str
+
+
+class CreateApiKeyRequest(BaseModel):
+    user_id: str
+    key_name: str
+    expires_at: str = ""  # Optional: ISO format datetime string
 
 router = APIRouter()
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
@@ -100,10 +98,12 @@ def get_commit_metrics(
 async def get_copilot_metrics(
     file: UploadFile = File(...),
     user_id: str = Body(..., embed=True),
-    token: str = Depends(oauth2_scheme),
+    authenticated_user_id: str = Depends(get_user_id_dual_auth),
     db: Session = Depends(get_db),
 ) -> Dict[str, List[Any]]:
-    verify_user_access(token, user_id)
+    if authenticated_user_id != user_id:
+        raise HTTPException(status_code=403, detail="Access denied: cannot access other user's data")
+
     file_content = await file.read()
     get_copilot_metrics_use_case = set_get_copilot_metrics_dependencies(db)
     response = get_copilot_metrics_use_case.execute(file_content, user_id)
@@ -114,10 +114,13 @@ async def get_copilot_metrics(
 async def get_commit_metrics_xlsx(
     file: UploadFile = File(...),
     user_id: str = Body(..., embed=True),
-    token: str = Depends(oauth2_scheme),
+    authenticated_user_id: str = Depends(get_user_id_dual_auth),
     db: Session = Depends(get_db),
 ) -> List[CommitMetrics]:
-    verify_user_access(token, user_id)
+    # Verify the authenticated user matches the requested user_id
+    if authenticated_user_id != user_id:
+        raise HTTPException(status_code=403, detail="Access denied: cannot access other user's data")
+
     file_content = io.BytesIO(await file.read())
     get_xlsx_commit_metrics_use_case = set_get_xlsx_commit_metrics_dependencies(db)
     response = get_xlsx_commit_metrics_use_case.execute(file_content, user_id)
@@ -204,109 +207,67 @@ def create_github_app(
     create_github_app_use_case.execute(user_id, organization_name, app_id, installation_id, private_key)
 
 
-def validate_token(token: str) -> Dict[str, Any]:
-    try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM]) # type: ignore
-        return payload # type: ignore
-    except JWTError:
-        raise HTTPException(status_code=401, detail="Token invalid or expired")
+@router.post("/api_keys", response_model=ApiKeyResponse)
+def create_api_key(
+    request: CreateApiKeyRequest,
+    token: str = Depends(oauth2_scheme),
+    db: Session = Depends(get_db),
+) -> ApiKeyResponse:
+    verify_user_access(token, request.user_id)
 
+    # Parse expiration date if provided
+    expires_at = None
+    if request.expires_at:
+        expires_at = datetime.strptime(request.expires_at, "%Y-%m-%d")
 
-def verify_user_access(token: str, requested_user_id: str) -> None:
-    payload = validate_token(token)
-    token_user_id = payload.get("user_id")
-    
-    if not token_user_id:
-        raise HTTPException(status_code=401, detail="Invalid token: missing user information")
-    
-    if token_user_id != requested_user_id:
-        raise HTTPException(status_code=403, detail="Access denied: cannot access other user's data")
+    create_api_key_use_case = set_create_api_key_dependencies(db)
+    full_key, api_key_entity = create_api_key_use_case.execute(
+        request.user_id,
+        request.key_name,
+        expires_at
+    )
 
-
-def set_create_user_dependencies(
-    db: Session,
-) -> CreateUserUseCase:
-    users_repository = UsersRepository(db)
-    return CreateUserUseCase(users_repository)
-
-
-def set_validate_user_dependencies(
-    db: Session,
-) -> ValidateUserUseCase:
-    users_repository = UsersRepository(db)
-    return ValidateUserUseCase(users_repository)
-
-
-def set_get_commit_metrics_dependencies(
-    db: Session,
-) -> GetCommitMetricsUseCase:
-    commit_metrics_repository = RawCommitMetricsRepository(db)
-    git_repo_consumer = GitRepoConsumer(CONFIG.repo_path)
-    return GetCommitMetricsUseCase(commit_metrics_repository, git_repo_consumer)
-
-
-def set_get_copilot_metrics_dependencies(
-    db: Session,
-) -> GetCopilotMetricsUseCase:
-    copilot_code_metrics_repository = RawCopilotCodeMetricsRepository(db)
-    copilot_chat_metrics_repository = RawCopilotChatMetricsRepository(db)
-    github_copilot_consumer = GhCopilotConsumer()
-    return GetCopilotMetricsUseCase(
-        copilot_code_metrics_repository,
-        copilot_chat_metrics_repository,
-        github_copilot_consumer,
+    return ApiKeyResponse(
+        id=api_key_entity.id,  # type: ignore
+        key=full_key,
+        key_name=api_key_entity.key_name,
+        created_at=api_key_entity.created_at,  # type: ignore
+        expires_at=api_key_entity.expires_at,
     )
 
 
-def set_get_xlsx_commit_metrics_dependencies(
-    db: Session,
-) -> GetXlsxCommitMetricsUseCase:
-    commit_metrics_repository = RawCommitMetricsRepository(db)
-    git_commit_metrics_xlsx_consumer = GitCommitMetricsXlsxConsumer()
-    return GetXlsxCommitMetricsUseCase(commit_metrics_repository, git_commit_metrics_xlsx_consumer)
+@router.get("/api_keys/{user_id}", response_model=List[ApiKeyListItem])
+def list_api_keys(
+    user_id: str,
+    token: str = Depends(oauth2_scheme),
+    db: Session = Depends(get_db),
+) -> List[ApiKeyListItem]:
+    verify_user_access(token, user_id)
+    list_api_keys_use_case = set_list_api_keys_dependencies(db)
+    api_keys = list_api_keys_use_case.execute(user_id)
+
+    # Convert to list items with masked keys
+    return [
+        ApiKeyListItem(
+            id=key.id,  # type: ignore
+            key_prefix=f"{key.key_prefix}...{key.key_prefix[-3:]}",  # Show first 15 and last 3 chars
+            key_name=key.key_name,
+            created_at=key.created_at,  # type: ignore
+            last_used_at=key.last_used_at,
+            expires_at=key.expires_at,
+        )
+        for key in api_keys
+    ]
 
 
-def set_get_calculated_metrics_dependencies(
-    db: Session,
-) -> GetCalculatedMetricsUseCase:
-    commit_metrics_repository = RawCommitMetricsRepository(db)
-    copilot_code_metrics_repository = RawCopilotCodeMetricsRepository(db)
-    return GetCalculatedMetricsUseCase(
-        commit_metrics_repository,
-        copilot_code_metrics_repository,
-    )
-
-
-def set_get_copilot_metrics_by_language_dependencies(
-    db: Session,
-) -> GetCopilotMetricsByLanguageUseCase:
-    copilot_code_metrics_repository = RawCopilotCodeMetricsRepository(db)
-    return GetCopilotMetricsByLanguageUseCase(
-        copilot_code_metrics_repository,
-    )
-
-
-def set_get_copilot_metrics_by_period_dependencies(
-    db: Session,
-) -> GetCopilotMetricsByPeriodUseCase:
-    copilot_code_metrics_repository = RawCopilotCodeMetricsRepository(db)
-    return GetCopilotMetricsByPeriodUseCase(
-        copilot_code_metrics_repository,
-    )
-
-
-def set_get_copilot_users_metrics_dependencies(
-    db: Session,
-) -> GetCopilotUsersMetricsUseCase:
-    copilot_code_metrics_repository = RawCopilotCodeMetricsRepository(db)
-    copilot_chat_metrics_repository = RawCopilotChatMetricsRepository(db)
-    return GetCopilotUsersMetricsUseCase(
-        copilot_code_metrics_repository,
-        copilot_chat_metrics_repository,
-    )
-
-def set_create_github_app_dependencies(
-    db: Session
-) -> CreateGitHubAppUseCase:
-    github_apps_repository = GitHubAppsRepository(db)
-    return CreateGitHubAppUseCase(github_apps_repository, encryption_key=FERNET_KEY) # type: ignore
+@router.delete("/api_keys/{key_id}")
+def revoke_api_key(
+    key_id: str,
+    user_id: str = Body(..., embed=True),
+    token: str = Depends(oauth2_scheme),
+    db: Session = Depends(get_db),
+) -> Dict[str, str]:
+    verify_user_access(token, user_id)
+    revoke_api_key_use_case = set_revoke_api_key_dependencies(db)
+    revoke_api_key_use_case.execute(user_id, key_id)
+    return {"message": "API key revoked successfully"}
