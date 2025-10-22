@@ -12,7 +12,12 @@ export const getUserId = (): string | null => {
   return localStorage.getItem("user_id");
 };
 
+export const getUsername = (): string | null => {
+  return localStorage.getItem("username");
+};
+
 export const logout = (): void => {
   localStorage.removeItem("token");
   localStorage.removeItem("user_id");
+  localStorage.removeItem("username");
 };

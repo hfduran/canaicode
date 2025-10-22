@@ -33,6 +33,7 @@ const UserLogin: React.FC = () => {
       if (data && data.access_token && data.user_id) {
         localStorage.setItem("token", data.access_token);
         localStorage.setItem("user_id", data.user_id);
+        localStorage.setItem("username", username);
         // Trigger storage event to update navigation state
         window.dispatchEvent(new Event("storage"));
         setSuccessMsg("Login successful! Redirecting...");
