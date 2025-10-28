@@ -10,10 +10,8 @@ from src.domain.entities.value_objects.team import Team
 
 class GhCopilotConsumer:
     def get_metrics(
-        self, file_content: bytes, user_id: str
+        self, data: dict, user_id: str
     ) -> Dict[str, List[CopilotCodeMetrics | CopilotChatMetrics]]:
-        data = json.loads(file_content)
-
         result: Dict[str, List[CopilotCodeMetrics | CopilotChatMetrics]] = {
             "code": [],
             "chat": [],
