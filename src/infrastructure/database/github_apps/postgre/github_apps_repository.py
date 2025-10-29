@@ -1,4 +1,5 @@
 from sqlalchemy.orm import Session
+from typing import List
 
 from src.domain.entities.github_app import GitHubApp
 from src.infrastructure.database.github_apps.postgre.dtos.model import GitHubAppDbSchema
@@ -29,3 +30,17 @@ class GitHubAppsRepository:
           return None
 
       return DatabaseGitHubAppsMapper.to_domain(record)
+
+
+    def list(
+      self,
+    ) -> List[GitHubApp]:
+      query = self.db.query(GitHubAppDbSchema)
+
+      record = query.list_all()
+
+      github_apps = map(
+            lambda record: DatabaseGitHubAppsMapper.to_domain(record), records
+        )
+
+        return list(github_apps)

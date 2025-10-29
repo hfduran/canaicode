@@ -105,8 +105,9 @@ async def get_copilot_metrics(
         raise HTTPException(status_code=403, detail="Access denied: cannot access other user's data")
 
     file_content = await file.read()
+    data = json.loads(file_content)
     get_copilot_metrics_use_case = set_get_copilot_metrics_dependencies(db)
-    response = get_copilot_metrics_use_case.execute(file_content, user_id)
+    response = get_copilot_metrics_use_case.execute(data, user_id)
     return response
 
 
