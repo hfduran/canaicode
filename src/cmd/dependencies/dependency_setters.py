@@ -5,6 +5,7 @@ from src.consumers.git_metrics_xlsx.git_metrics_xlsx_consumer import GitCommitMe
 from src.consumers.git_repo_consumer import GitRepoConsumer
 from src.domain.use_cases.create_github_app_use_case import CreateGitHubAppUseCase
 from src.domain.use_cases.create_user_use_case import CreateUserUseCase
+from src.domain.use_cases.fetch_copilot_metrics_use_case import FetchCopilotMetricsUseCase
 from src.domain.use_cases.get_calculated_metrics_use_case import GetCalculatedMetricsUseCase
 from src.domain.use_cases.get_commit_metrics_use_case import GetCommitMetricsUseCase
 from src.domain.use_cases.get_copilot_metrics_by_language_use_case import GetCopilotMetricsByLanguageUseCase
@@ -145,3 +146,10 @@ def set_revoke_api_key_dependencies(
 ) -> RevokeApiKeyUseCase:
     api_keys_repository = ApiKeysRepository(db)
     return RevokeApiKeyUseCase(api_keys_repository)
+
+def set_fetch_copilot_metrics_dependencies(
+    db: Session
+) -> FetchCopilotMetricsUseCase:
+    github_apps_repository = GitHubAppsRepository(db)
+    get_copilot_metrics_use_case = set_get_copilot_metrics_dependencies(db)
+    return FetchCopilotMetricsUseCase(github_apps_repository, get_copilot_metrics_use_case, encryption_key=FERNET_KEY) # type: ignore

@@ -1,4 +1,4 @@
-from typing import Dict, List
+from typing import Dict, List, Any
 
 from src.consumers.gh_copilot.gh_copilot_consumer import GhCopilotConsumer
 from src.domain.entities.copilot_chat_metrics import CopilotChatMetrics
@@ -18,7 +18,7 @@ class GetCopilotMetricsUseCase:
         self.github_copilot_consumer = github_copilot_consumer
 
     def execute(
-        self, data: dict, user_id: str
+        self, data: Dict[Any, Any], user_id: str
     ) -> Dict[str, List[CopilotCodeMetrics | CopilotChatMetrics]]:
         copilot_metrics = self.github_copilot_consumer.get_metrics(
             data, user_id

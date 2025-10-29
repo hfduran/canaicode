@@ -1,6 +1,5 @@
-import json
 import uuid
-from typing import Dict, List
+from typing import Dict, List, Any
 
 from src.consumers.gh_copilot.gh_copilot_models import CopilotMetricsEntry
 from src.domain.entities.copilot_chat_metrics import CopilotChatMetrics
@@ -10,7 +9,7 @@ from src.domain.entities.value_objects.team import Team
 
 class GhCopilotConsumer:
     def get_metrics(
-        self, data: dict, user_id: str
+        self, data: Dict[Any, Any], user_id: str
     ) -> Dict[str, List[CopilotCodeMetrics | CopilotChatMetrics]]:
         result: Dict[str, List[CopilotCodeMetrics | CopilotChatMetrics]] = {
             "code": [],

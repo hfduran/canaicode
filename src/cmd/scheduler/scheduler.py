@@ -1,25 +1,30 @@
-import os
-from apscheduler.schedulers.blocking import BlockingScheduler
-from repositories.github_apps_repository import GitHubAppsRepository
-from use_cases.fetch_copilot_metrics_use_case import FetchCopilotMetricsUseCase
+from apscheduler.schedulers.blocking import BlockingScheduler # type: ignore
 
-FERNET_KEY = os.getenv("FERNET_KEY")
+from src.cmd.dependencies.dependency_setters import set_fetch_copilot_metrics_dependencies
+from src.infrastructure.database.connection.database_connection import SessionLocal # type: ignore
+
 scheduler = BlockingScheduler()
 
-repository = GitHubAppsRepository()
-use_case = FetchCopilotMetricsUseCase(
-    github_apps_repository=repository,
-    encryption_key=FERNET_KEY,
-)
 
-@scheduler.scheduled_job('interval', days=1)
-def fetch_metrics_job():
-    print("Starting GitHub Copilot metrics collection")
+
+@scheduler.scheduled_job('interval', days=1) # type: ignore
+def fetch_metrics_job() -> None:
+    print("Starting daily GitHub Copilot metrics collection")
+    db = SessionLocal()
+
+    fetch_copilot_metrics_use_case = set_fetch_copilot_metrics_dependencies(db)
+
     try:
-        use_case.execute()
-        print("Metrics collection completed successfully")
+        fetch_copilot_metrics_use_case.execute()
+        print("Daily metrics collection completed successfully")
+
     except Exception as e:
-        print(f"Error during metrics collection: {e}")
+        print(f"Error during daily metrics collection: {e}")
+
+    finally:
+        db.close()
+        print("Database session closed.")
 
 if __name__ == "__main__":
-    scheduler.start()
+    print("Scheduler started. Waiting for next daily execution")
+    scheduler.start() # type: ignore

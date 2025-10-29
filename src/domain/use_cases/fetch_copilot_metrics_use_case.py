@@ -1,14 +1,10 @@
-import os
 import time
 import requests
-import jwt
+from typing import Any, Dict
+from jose import jwt
 from cryptography.fernet import Fernet
-from src.domain.entities.github_app import GitHubApp
-from src.domain.entities.copilot_chat_metrics import CopilotChatMetrics
-from src.domain.entities.copilot_code_metrics import CopilotCodeMetrics
+from src.domain.use_cases.get_copilot_metrics_use_case import GetCopilotMetricsUseCase
 from src.infrastructure.database.github_apps.postgre.github_apps_repository import GitHubAppsRepository
-from src.infrastructure.database.raw_copilot_chat_metrics.postgre.raw_copilot_chat_metrics_repository import RawCopilotChatMetricsRepository
-from src.infrastructure.database.raw_copilot_code_metrics.postgre.raw_copilot_code_metrics_repository import RawCopilotCodeMetricsRepository
 
 class FetchCopilotMetricsUseCase:
     def __init__(
@@ -40,9 +36,9 @@ class FetchCopilotMetricsUseCase:
         installation_id: str,
         organization_name: str,
         private_key: str
-    ) -> dict:
+    ) -> Any:
         now = int(time.time())
-        payload = {
+        payload: Dict[str, str | int] = {
             "iat": now,
             "exp": now + (10 * 60),  # JWT valid for 10 minutes
             "iss": app_id,
