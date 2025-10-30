@@ -1,24 +1,23 @@
-import logging
+from src.infrastructure.logger.logger_config import logger
 from contextlib import asynccontextmanager
+from typing import Any
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from src.api.routes import router
+from src.cmd.api.routes import router
+from src.cmd.scheduler.scheduler import start_scheduler
 from src.infrastructure.database.init_db import init_database
 
-# Configure logging
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
 
-
-@asynccontextmanager
-async def lifespan(app: FastAPI):
+@asynccontextmanager # type: ignore
+async def lifespan(app: FastAPI) -> Any:
     """Handle application lifespan events"""
     # Startup
     try:
         logger.info("Initializing database...")
         init_database()
         logger.info("Database initialization completed successfully!")
+        start_scheduler()
     except Exception as e:
         logger.error(f"Database initialization failed: {e}")
         # You might want to raise the exception to prevent the app from starting
