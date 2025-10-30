@@ -21,14 +21,19 @@ class FetchCopilotMetricsUseCase:
         github_apps = self.github_apps_repository.list()
 
         for github_app in github_apps:
-            private_key = self.fernet.decrypt(github_app.private_key_encrypted.encode()).decode()
-            metrics = self._fetch_metrics_from_github(
-                github_app.app_id,
-                github_app.installation_id,
-                github_app.organization_name,
-                private_key
-            )
-            self.get_copilot_metrics_use_case.execute(metrics, github_app.user_id)
+            try:
+                print(f"Starting fetching copilot metrics for github app: {github_app.id}")
+                private_key = self.fernet.decrypt(github_app.private_key_encrypted.encode()).decode()
+                metrics = self._fetch_metrics_from_github(
+                    github_app.app_id,
+                    github_app.installation_id,
+                    github_app.organization_name,
+                    private_key
+                )
+                print(f"metrics: {metrics}")
+                self.get_copilot_metrics_use_case.execute(metrics, github_app.user_id)
+            except Exception as e:
+                print(f"Error during daily metrics collection: {e}")
 
     def _fetch_metrics_from_github(
         self,
