@@ -1,6 +1,7 @@
 from datetime import datetime
 import io
 from typing import Any, Dict, List
+import json
 
 from fastapi import APIRouter, Body, Depends, File, HTTPException, UploadFile
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
@@ -9,19 +10,19 @@ from pydantic import BaseModel
 
 from src.auth.verify_user_access import verify_user_access
 from src.auth.dual_auth import get_user_id_dual_auth
-from src.dependencies.dependency_setters import set_create_user_dependencies
-from src.dependencies.dependency_setters import set_validate_user_dependencies
-from src.dependencies.dependency_setters import set_get_commit_metrics_dependencies
-from src.dependencies.dependency_setters import set_get_copilot_metrics_dependencies
-from src.dependencies.dependency_setters import set_get_xlsx_commit_metrics_dependencies
-from src.dependencies.dependency_setters import set_get_calculated_metrics_dependencies
-from src.dependencies.dependency_setters import set_get_copilot_metrics_by_language_dependencies
-from src.dependencies.dependency_setters import set_get_copilot_metrics_by_period_dependencies
-from src.dependencies.dependency_setters import set_get_copilot_users_metrics_dependencies
-from src.dependencies.dependency_setters import set_create_github_app_dependencies
-from src.dependencies.dependency_setters import set_create_api_key_dependencies
-from src.dependencies.dependency_setters import set_list_api_keys_dependencies
-from src.dependencies.dependency_setters import set_revoke_api_key_dependencies
+from src.cmd.dependencies.dependency_setters import set_create_user_dependencies
+from src.cmd.dependencies.dependency_setters import set_validate_user_dependencies
+from src.cmd.dependencies.dependency_setters import set_get_commit_metrics_dependencies
+from src.cmd.dependencies.dependency_setters import set_get_copilot_metrics_dependencies
+from src.cmd.dependencies.dependency_setters import set_get_xlsx_commit_metrics_dependencies
+from src.cmd.dependencies.dependency_setters import set_get_calculated_metrics_dependencies
+from src.cmd.dependencies.dependency_setters import set_get_copilot_metrics_by_language_dependencies
+from src.cmd.dependencies.dependency_setters import set_get_copilot_metrics_by_period_dependencies
+from src.cmd.dependencies.dependency_setters import set_get_copilot_users_metrics_dependencies
+from src.cmd.dependencies.dependency_setters import set_create_github_app_dependencies
+from src.cmd.dependencies.dependency_setters import set_create_api_key_dependencies
+from src.cmd.dependencies.dependency_setters import set_list_api_keys_dependencies
+from src.cmd.dependencies.dependency_setters import set_revoke_api_key_dependencies
 from src.domain.entities.commit_metrics import CommitMetrics
 from src.domain.use_cases.dtos.calculated_metrics import CalculatedMetrics, CopilotMetricsByLanguage, CopilotMetricsByPeriod, CopilotUsersMetrics
 from src.domain.use_cases.dtos.token import Token
@@ -105,8 +106,9 @@ async def get_copilot_metrics(
         raise HTTPException(status_code=403, detail="Access denied: cannot access other user's data")
 
     file_content = await file.read()
+    data = json.loads(file_content)
     get_copilot_metrics_use_case = set_get_copilot_metrics_dependencies(db)
-    response = get_copilot_metrics_use_case.execute(file_content, user_id)
+    response = get_copilot_metrics_use_case.execute(data, user_id)
     return response
 
 

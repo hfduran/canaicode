@@ -1,4 +1,5 @@
 from sqlalchemy.orm import Session
+from typing import List
 
 from src.domain.entities.github_app import GitHubApp
 from src.infrastructure.database.github_apps.postgre.dtos.model import GitHubAppDbSchema
@@ -6,26 +7,40 @@ from src.infrastructure.database.github_apps.postgre.mappers.database_github_app
 
 
 class GitHubAppsRepository:
-  def __init__(self, db: Session) -> None:
+    def __init__(self, db: Session) -> None:
         self.db = db
 
-  def create(self, github_app: GitHubApp) -> None:
-      record_to_save = DatabaseGitHubAppsMapper.to_database(
-          github_app
-      )
+    def create(self, github_app: GitHubApp) -> None:
+        record_to_save = DatabaseGitHubAppsMapper.to_database(
+            github_app
+        )
 
-      self.db.add(record_to_save)
-      self.db.commit()
+        self.db.add(record_to_save)
+        self.db.commit()
 
-  def find_by_id(
-      self,
-      github_app_id: str
-  ) -> GitHubApp | None:
-      query = self.db.query(GitHubAppDbSchema)
+    def find_by_id(
+        self,
+        github_app_id: str
+    ) -> GitHubApp | None:
+        query = self.db.query(GitHubAppDbSchema)
 
-      record = query.filter(GitHubAppDbSchema.id == github_app_id).first()
+        record = query.filter(GitHubAppDbSchema.id == github_app_id).first()
 
-      if(not record):
-          return None
+        if(not record):
+            return None
 
-      return DatabaseGitHubAppsMapper.to_domain(record)
+        return DatabaseGitHubAppsMapper.to_domain(record)
+
+
+    def list(
+        self,
+    ) -> List[GitHubApp]:
+        query = self.db.query(GitHubAppDbSchema)
+
+        records = query.all()
+
+        github_apps = map(
+            lambda record: DatabaseGitHubAppsMapper.to_domain(record), records
+        )
+
+        return list(github_apps)

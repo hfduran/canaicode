@@ -26,6 +26,8 @@ python-jose = {extras = ["cryptography"], version = "*"}
 passlib = {extras = ["bcrypt"], version = "*"}
 openpyxl = "*"
 cryptography = "*"
+requests = "*"
+apscheduler = "*"
 
 [dev-packages]
 pytest = "*"
