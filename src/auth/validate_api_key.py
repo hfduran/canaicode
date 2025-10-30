@@ -1,4 +1,4 @@
-from src.dependencies.dependency_setters import set_validate_api_key_dependencies
+from src.cmd.dependencies.dependency_setters import set_validate_api_key_dependencies
 from src.infrastructure.database.connection.database_connection import SessionLocal
 
 
