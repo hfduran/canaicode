@@ -1,6 +1,7 @@
 from datetime import datetime
 from typing import List, Optional
 
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from src.domain.entities.commit_metrics import CommitMetrics
@@ -15,17 +16,24 @@ class RawCommitMetricsRepository:
     def create(self, commit_metrics: CommitMetrics) -> None:
         record_to_save = DatabaseRawCommitMetricsMapper.to_database(commit_metrics)
 
-        self.db.add(record_to_save)
-        self.db.commit()
+        try:
+            self.db.add(record_to_save)
+            self.db.commit()
+        except IntegrityError:
+            self.db.rollback()
+            # Silently ignore duplicate - record with this hash, repository_name, and language already exists
 
     def create_many(self, commit_metrics_list: List[CommitMetrics]) -> None:
-        records_to_save = [
-            DatabaseRawCommitMetricsMapper.to_database(cm)
-            for cm in commit_metrics_list
-        ]
+        # Process records individually to skip duplicates while inserting new ones
+        for commit_metrics in commit_metrics_list:
+            record_to_save = DatabaseRawCommitMetricsMapper.to_database(commit_metrics)
 
-        self.db.add_all(records_to_save)
-        self.db.commit()
+            try:
+                self.db.add(record_to_save)
+                self.db.commit()
+            except IntegrityError:
+                self.db.rollback()
+                # Silently ignore duplicate - record with this hash, repository_name, and language already exists
 
     def listByUserId(
         self,
