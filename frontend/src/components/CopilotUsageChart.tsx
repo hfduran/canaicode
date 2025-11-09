@@ -19,8 +19,21 @@ const CopilotUsageChart: React.FC = () => {
   const { copilotUsersData, isLoading, error, fetchCopilotUsersMetrics } = useCopilotUsersMetrics();
 
   // Add state for period selection
-  const [beginDate, setBeginDate] = useState<string>("");
-  const [endDate, setEndDate] = useState<string>("");
+  // Initialize with 6 months ago to today
+  const getDefaultDates = () => {
+    const today = new Date();
+    const sixMonthsAgo = new Date();
+    sixMonthsAgo.setMonth(today.getMonth() - 6);
+
+    return {
+      begin: sixMonthsAgo.toISOString().split('T')[0],
+      end: today.toISOString().split('T')[0]
+    };
+  };
+
+  const defaultDates = getDefaultDates();
+  const [beginDate, setBeginDate] = useState<string>(defaultDates.begin);
+  const [endDate, setEndDate] = useState<string>(defaultDates.end);
 
   useEffect(() => {
     fetchCopilotUsersMetrics();
@@ -170,7 +183,7 @@ const CopilotUsageChart: React.FC = () => {
                   yAxisId="left"
                   dataKey="total_code_assistant_users"
                   fill="#8884d8"
-                  name="Number of different users who used Copilot"
+                  name="Number of different users who used Copilot chat"
                 />
                 <Bar
                   yAxisId="left"
