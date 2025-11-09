@@ -28,6 +28,7 @@ openpyxl = "*"
 cryptography = "*"
 requests = "*"
 apscheduler = "*"
+bcrypt = "4.0.1"
 
 [dev-packages]
 pytest = "*"
