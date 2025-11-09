@@ -11,7 +11,6 @@ import {
   Badge,
   Select,
   FormField,
-  DatePicker,
   Button,
   Form,
   Multiselect,
@@ -19,6 +18,7 @@ import {
 import { useLanguageMetrics } from "../hooks/useLanguageMetrics";
 import { CopilotMetricsByLanguage } from "../types/model";
 import { PROGRAMMING_LANGUAGES_OPTIONS, PROGRAMMING_LANGUAGES } from "../constants/programming_languages";
+import DateRangeSelector from "../components/DateRangeSelector";
 
 const LanguageAnalytics: React.FC = () => {
   const {
@@ -32,8 +32,22 @@ const LanguageAnalytics: React.FC = () => {
 
   const [selectedMetric, setSelectedMetric] = useState<string>("both");
   const [selectedMetricAbsVals, setSelectedMetricAbsVals] = useState<string>("both_abs");
-  const [startDate, setStartDate] = useState<string>("");
-  const [endDate, setEndDate] = useState<string>("");
+
+  // Initialize with 6 months ago to today
+  const getDefaultDates = () => {
+    const today = new Date();
+    const sixMonthsAgo = new Date();
+    sixMonthsAgo.setMonth(today.getMonth() - 6);
+
+    return {
+      start: sixMonthsAgo.toISOString().split('T')[0],
+      end: today.toISOString().split('T')[0]
+    };
+  };
+
+  const defaultDates = getDefaultDates();
+  const [startDate, setStartDate] = useState<string>(defaultDates.start);
+  const [endDate, setEndDate] = useState<string>(defaultDates.end);
   const [isFiltering, setIsFiltering] = useState<boolean>(false);
   const [useFilteredData, setUseFilteredData] = useState<boolean>(false);
   const [selectedLanguages, setSelectedLanguages] = useState<string[]>([]);
@@ -282,22 +296,14 @@ const LanguageAnalytics: React.FC = () => {
           >
             <Form>
               <SpaceBetween direction="vertical" size="m">
-                <SpaceBetween direction="horizontal" size="m">
-                  <FormField label="Start Date" description="Beginning of the analysis period">
-                    <DatePicker
-                      value={startDate}
-                      onChange={({ detail }) => setStartDate(detail.value)}
-                      placeholder="YYYY-MM-DD"
-                    />
-                  </FormField>
-                  <FormField label="End Date" description="End of the analysis period">
-                    <DatePicker
-                      value={endDate}
-                      onChange={({ detail }) => setEndDate(detail.value)}
-                      placeholder="YYYY-MM-DD"
-                    />
-                  </FormField>
-                  <Box display="inline">
+                <SpaceBetween direction="vertical" size="m">
+                  <DateRangeSelector
+                    startDate={startDate}
+                    endDate={endDate}
+                    onStartDateChange={setStartDate}
+                    onEndDateChange={setEndDate}
+                  />
+                  <SpaceBetween direction="horizontal" size="m">
                     <Button
                       variant="primary"
                       onClick={handleFilter}
@@ -311,7 +317,7 @@ const LanguageAnalytics: React.FC = () => {
                         Clear Filter
                       </Button>
                     )}
-                  </Box>
+                  </SpaceBetween>
                 </SpaceBetween>
                 <FormField
                   label="Programming Languages"
