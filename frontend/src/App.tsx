@@ -114,7 +114,7 @@ const AppContent: React.FC = () => {
           items: [
             {
               type: "link" as const,
-              text: "On Demand Metrics",
+              text: "Productivity Analytics",
               href: "/on-demand-metrics",
             },
             {
