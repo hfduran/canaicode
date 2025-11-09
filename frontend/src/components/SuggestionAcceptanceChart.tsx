@@ -10,7 +10,6 @@ import {
 } from "@cloudscape-design/components";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 import { CopilotMetricsByPeriodService } from "../services/copilotMetricsByPeriodService";
-import { CopilotMetricsByPeriod } from "../types/model/index";
 
 interface ChartData {
   period: string;
@@ -26,7 +25,6 @@ interface SuggestionsChartData {
 
 const SuggestionAcceptanceChart: React.FC = () => {
   const [period, setPeriod] = useState<"W" | "M" | "Q" | "Y">("M");
-  const [data, setData] = useState<CopilotMetricsByPeriod[]>([]);
   const [chartData, setChartData] = useState<ChartData[]>([]);
   const [suggestionsChartData, setSuggestionsChartData] = useState<SuggestionsChartData[]>([]);
   const [loading, setLoading] = useState(false);
@@ -44,10 +42,9 @@ const SuggestionAcceptanceChart: React.FC = () => {
     setError(null);
     try {
       const result = await CopilotMetricsByPeriodService.getCopilotMetricsByPeriod(period);
-      setData(result);
 
       // Transform data for the Lines of Code chart
-      const transformedData: ChartData[] = result.map((item, index) => {
+      const transformedData: ChartData[] = result.map((item) => {
         const startDate = new Date(item.period_initial_date);
         const periodLabel = startDate.toLocaleDateString();
 
@@ -65,7 +62,7 @@ const SuggestionAcceptanceChart: React.FC = () => {
       });
 
       // Transform data for the Number of Suggestions chart
-      const transformedSuggestionsData: SuggestionsChartData[] = result.map((item, index) => {
+      const transformedSuggestionsData: SuggestionsChartData[] = result.map((item) => {
         const startDate = new Date(item.period_initial_date);
         const periodLabel = startDate.toLocaleDateString();
 
@@ -91,6 +88,7 @@ const SuggestionAcceptanceChart: React.FC = () => {
     }
   };
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     fetchData();
   }, [period]);
