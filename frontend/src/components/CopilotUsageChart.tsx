@@ -7,19 +7,16 @@ import {
   SpaceBetween,
   Alert,
   Spinner,
-  Box,
-  DatePicker,
-  FormField,
-  Form
+  Box
 } from "@cloudscape-design/components";
 import { useCopilotUsersMetrics } from "../hooks/useCopilotUsersMetrics";
 import { CopilotUsersMetrics } from "../types/model";
+import DateRangeSelector from "./DateRangeSelector";
 
 const CopilotUsageChart: React.FC = () => {
   const { copilotUsersData, isLoading, error, fetchCopilotUsersMetrics } = useCopilotUsersMetrics();
 
-  // Add state for period selection
-  // Initialize with 6 months ago to today
+  // Add state for period selection - initialized with 6 months ago to today
   const getDefaultDates = () => {
     const today = new Date();
     const sixMonthsAgo = new Date();
@@ -98,27 +95,13 @@ const CopilotUsageChart: React.FC = () => {
 
   return (
     <SpaceBetween size="l">
-      {/* Period selection inputs - copied design from RequestParamsForm.tsx */}
-      <Form>
-        <SpaceBetween size="m" direction="horizontal">
-          <FormField label="Beginning period">
-            <DatePicker
-              value={beginDate}
-              onChange={({ detail }) => setBeginDate(detail.value)}
-              placeholder="YYYY-MM-DD"
-              openCalendarAriaLabel={() => "Open calendar"}
-            />
-          </FormField>
-          <FormField label="Ending period">
-            <DatePicker
-              value={endDate}
-              onChange={({ detail }) => setEndDate(detail.value)}
-              placeholder="YYYY-MM-DD"
-              openCalendarAriaLabel={() => "Open calendar"}
-            />
-          </FormField>
-        </SpaceBetween>
-      </Form>
+      {/* Period selection */}
+      <DateRangeSelector
+        startDate={beginDate}
+        endDate={endDate}
+        onStartDateChange={setBeginDate}
+        onEndDateChange={setEndDate}
+      />
       {/* Chart Section - total_code_assistant_users*/}
       <Container
         header={

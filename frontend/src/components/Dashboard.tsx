@@ -19,11 +19,24 @@ import { useCalculatedMetrics } from "../hooks";
 import { pearsonCorrCalculator } from "../tools/pearsonCorrelationCalculator";
 
 const CalculatedMetricsDashboard: React.FC = () => {
+  // Initialize dates with 6 months ago to today
+  const getDefaultDates = () => {
+    const today = new Date();
+    const sixMonthsAgo = new Date();
+    sixMonthsAgo.setMonth(today.getMonth() - 6);
+
+    return {
+      initial: sixMonthsAgo.toISOString().split('T')[0],
+      final: today.toISOString().split('T')[0]
+    };
+  };
+
+  const defaultDates = getDefaultDates();
   const [timeRange, setTimeRange] = useState<string>("");
   const [team, setTeam] = useState<string>("");
   const [metric, setMetric] = useState<string>("");
-  const [initialDate, setInitialDate] = useState<string>("");
-  const [finalDate, setFinalDate] = useState<string>("");
+  const [initialDate, setInitialDate] = useState<string>(defaultDates.initial);
+  const [finalDate, setFinalDate] = useState<string>(defaultDates.final);
   const [programmingLanguages, setProgrammingLanguages] = useState<string[]>([]);
   const [filteredData, setFilteredData] = useState<FlattenedDataEntry[]>([]);
   const [isFiltersModalVisible, setIsFiltersModalVisible] = useState<boolean>(false);
