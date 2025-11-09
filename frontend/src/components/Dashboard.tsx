@@ -69,10 +69,6 @@ const CalculatedMetricsDashboard: React.FC = () => {
     });
   };
 
-  const handleOpenFiltersModal = () => {
-    setIsFiltersModalVisible(true);
-  };
-
   // Calculate summary metrics
   const totalLines = formattedData.reduce((acc, entry) => acc + (entry.net_changed_lines || 0), 0);
   const totalCopilotLines = formattedData.reduce(

@@ -23,6 +23,7 @@ export const DashboardFiltersModal: React.FC<props> = ({data, setFilteredData, v
     handleResetFilters,
   } = useDataFiltering(data, () => {setVisible(false)});
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     setFilteredData(filteredData)
   }, [filteredData])

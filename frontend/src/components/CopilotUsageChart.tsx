@@ -3,7 +3,6 @@ import { Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
 import {
   Container,
   Header,
-  ContentLayout,
   SpaceBetween,
   Alert,
   Spinner,
