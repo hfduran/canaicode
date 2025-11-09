@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Line, ComposedChart } from "recharts";
 import {
   Container,
@@ -14,9 +14,11 @@ import {
   DatePicker,
   Button,
   Form,
+  Multiselect,
 } from "@cloudscape-design/components";
 import { useLanguageMetrics } from "../hooks/useLanguageMetrics";
 import { CopilotMetricsByLanguage } from "../types/model";
+import { PROGRAMMING_LANGUAGES_OPTIONS, PROGRAMMING_LANGUAGES } from "../constants/programming_languages";
 
 const LanguageAnalytics: React.FC = () => {
   const {
@@ -34,22 +36,47 @@ const LanguageAnalytics: React.FC = () => {
   const [endDate, setEndDate] = useState<string>("");
   const [isFiltering, setIsFiltering] = useState<boolean>(false);
   const [useFilteredData, setUseFilteredData] = useState<boolean>(false);
+  const [selectedLanguages, setSelectedLanguages] = useState<string[]>([]);
+  const hasInitialized = useRef(false);
 
   const metricOptions = [
-    { label: "Accepted Suggestions and Accepted Lines", value: "both" },
-    { label: "Accepted Suggestions Only", value: "suggestions" },
-    { label: "Accepted Lines Only", value: "lines" },
+    { label: "Code and Lines Suggestions", value: "both" },
+    { label: "Code Suggestions", value: "suggestions" },
+    { label: "Lines Suggested", value: "lines" },
   ];
 
   const metricOptionsAbsValues = [
-    { label: "Code and Lines Suggestions", value: "both_abs" },
-    { label: "Code Suggestions", value: "suggestions_abs" },
-    { label: "Lines Suggested", value: "lines_abs" },
+    { label: "Accepted Suggestions and Accepted Lines (%)", value: "both_abs" },
+    { label: "Accepted Suggestions (%)", value: "suggestions_abs" },
+    { label: "Accepted Lines (%)", value: "lines_abs" },
   ];
+
+  // Helper function to normalize language names (case-insensitive matching)
+  const normalizeLanguageName = (languageName: string): string => {
+    const canonicalLanguage = PROGRAMMING_LANGUAGES.find(
+      lang => lang.toLowerCase() === languageName.toLowerCase()
+    );
+    return canonicalLanguage || languageName;
+  };
 
   useEffect(() => {
     fetchLanguageMetrics();
   }, [fetchLanguageMetrics]);
+
+  // Initialize selectedLanguages with all available languages on first load only
+  useEffect(() => {
+    if (languageData.length > 0 && !hasInitialized.current) {
+      const availableLangs = new Set(
+        languageData.map((item: CopilotMetricsByLanguage) => normalizeLanguageName(item.language))
+      );
+      const allAvailableLanguages = PROGRAMMING_LANGUAGES_OPTIONS
+        .filter(option => availableLangs.has(option.value))
+        .map(option => option.value);
+      setSelectedLanguages(allAvailableLanguages);
+      hasInitialized.current = true;
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [languageData]);
 
   // Chart data interface
   interface ChartDataEntry {
@@ -62,18 +89,76 @@ const LanguageAnalytics: React.FC = () => {
     lines_suggested: number;
   }
 
-  // Format data for the chart
-  const chartData: ChartDataEntry[] = (useFilteredData ? languageDataTimeFiltered : languageData).map(
-    (item: CopilotMetricsByLanguage) => ({
-      language: item.language,
-      percentage_accepted_suggestions: parseFloat(item.percentage_code_acceptances.toFixed(1)),
-      percentage_accepted_lines: parseFloat(item.percentage_lines_accepted.toFixed(1)),
-      code_acceptances: item.code_acceptances,
-      code_suggestions: item.code_suggestions,
-      lines_accepted: item.lines_accepted,
-      lines_suggested: item.lines_suggested,
-    })
+  // Get available languages from current dataset
+  const currentDataset = useFilteredData ? languageDataTimeFiltered : languageData;
+  const availableLanguages = new Set(
+    currentDataset.map((item: CopilotMetricsByLanguage) => normalizeLanguageName(item.language))
   );
+
+  // Create dynamic language options with disabled state
+  const dynamicLanguageOptions = PROGRAMMING_LANGUAGES_OPTIONS.map(option => ({
+    label: option.label,
+    value: option.value,
+    disabled: !availableLanguages.has(option.value),
+    disabledReason: !availableLanguages.has(option.value)
+      ? "No data available for this language"
+      : undefined
+  }));
+
+  // Format data for the chart with aggregation for duplicate languages
+  const chartData: ChartDataEntry[] = (() => {
+    // Step 1: Filter by selected languages
+    const filteredData = currentDataset.filter((item: CopilotMetricsByLanguage) => {
+      if (selectedLanguages.length === 0) return false;
+      const normalizedLanguage = normalizeLanguageName(item.language);
+      return selectedLanguages.includes(normalizedLanguage);
+    });
+
+    // Step 2: Aggregate by normalized language name
+    const aggregatedMap = filteredData.reduce((acc, item) => {
+      const normalizedLanguage = normalizeLanguageName(item.language);
+
+      if (!acc.has(normalizedLanguage)) {
+        acc.set(normalizedLanguage, {
+          code_acceptances: 0,
+          code_suggestions: 0,
+          lines_accepted: 0,
+          lines_suggested: 0,
+        });
+      }
+
+      const aggregated = acc.get(normalizedLanguage)!;
+      aggregated.code_acceptances += item.code_acceptances;
+      aggregated.code_suggestions += item.code_suggestions;
+      aggregated.lines_accepted += item.lines_accepted;
+      aggregated.lines_suggested += item.lines_suggested;
+
+      return acc;
+    }, new Map<string, {
+      code_acceptances: number;
+      code_suggestions: number;
+      lines_accepted: number;
+      lines_suggested: number;
+    }>());
+
+    // Step 3: Convert to chart data format with recalculated percentages
+    const chartDataArray = Array.from(aggregatedMap.entries()).map(([language, data]) => ({
+      language,
+      percentage_accepted_suggestions: parseFloat(
+        (data.code_suggestions > 0 ? (data.code_acceptances / data.code_suggestions) * 100 : 0).toFixed(1)
+      ),
+      percentage_accepted_lines: parseFloat(
+        (data.lines_suggested > 0 ? (data.lines_accepted / data.lines_suggested) * 100 : 0).toFixed(1)
+      ),
+      code_acceptances: data.code_acceptances,
+      code_suggestions: data.code_suggestions,
+      lines_accepted: data.lines_accepted,
+      lines_suggested: data.lines_suggested,
+    }));
+
+    // Step 4: Sort by lines_suggested (descending)
+    return chartDataArray.sort((a, b) => b.lines_suggested - a.lines_suggested);
+  })();
 
   // Calculate summary statistics
   const totalLanguages = chartData.length;
@@ -138,6 +223,7 @@ const LanguageAnalytics: React.FC = () => {
     setStartDate("");
     setEndDate("");
     setUseFilteredData(false);
+    setSelectedLanguages([]);
   };
 
   return (
@@ -158,7 +244,10 @@ const LanguageAnalytics: React.FC = () => {
           <Container>
             <SpaceBetween size="m">
               <Box variant="h3">
-                Summary Statistics {useFilteredData ? "(Filtered)" : "(Alltime)"}
+                Summary Statistics {useFilteredData || selectedLanguages.length > 0 ? "(Filtered)" : "(Alltime)"}
+                {selectedLanguages.length > 0 && (
+                  <Badge color="grey"> {selectedLanguages.length} language{selectedLanguages.length !== 1 ? 's' : ''} selected</Badge>
+                )}
               </Box>
               <div style={{ display: "flex", gap: "20px", flexWrap: "wrap" }}>
                 <div>
@@ -183,45 +272,85 @@ const LanguageAnalytics: React.FC = () => {
             </SpaceBetween>
           </Container>
 
-          {/* Time Filter Section */}
+          {/* Filter Section */}
           <Container
             header={
-              <Header variant="h2" description="Filter statistics by time period">
-                Time Filter
+              <Header variant="h2" description="Filter statistics by time period and languages">
+                Filters
               </Header>
             }
           >
             <Form>
-              <SpaceBetween direction="horizontal" size="m">
-                <FormField label="Start Date" description="Beginning of the analysis period">
-                  <DatePicker
-                    value={startDate}
-                    onChange={({ detail }) => setStartDate(detail.value)}
-                    placeholder="YYYY-MM-DD"
-                  />
-                </FormField>
-                <FormField label="End Date" description="End of the analysis period">
-                  <DatePicker
-                    value={endDate}
-                    onChange={({ detail }) => setEndDate(detail.value)}
-                    placeholder="YYYY-MM-DD"
-                  />
-                </FormField>
-                <Box display="inline">
-                  <Button
-                    variant="primary"
-                    onClick={handleFilter}
-                    loading={isFiltering}
-                    disabled={!startDate || !endDate}
-                  >
-                    Filter Language Statistics
-                  </Button>
-                  {useFilteredData && (
-                    <Button variant="link" onClick={handleClearFilter}>
-                      Clear Filter
+              <SpaceBetween direction="vertical" size="m">
+                <SpaceBetween direction="horizontal" size="m">
+                  <FormField label="Start Date" description="Beginning of the analysis period">
+                    <DatePicker
+                      value={startDate}
+                      onChange={({ detail }) => setStartDate(detail.value)}
+                      placeholder="YYYY-MM-DD"
+                    />
+                  </FormField>
+                  <FormField label="End Date" description="End of the analysis period">
+                    <DatePicker
+                      value={endDate}
+                      onChange={({ detail }) => setEndDate(detail.value)}
+                      placeholder="YYYY-MM-DD"
+                    />
+                  </FormField>
+                  <Box display="inline">
+                    <Button
+                      variant="primary"
+                      onClick={handleFilter}
+                      loading={isFiltering}
+                      disabled={!startDate || !endDate}
+                    >
+                      Filter Language Statistics
                     </Button>
-                  )}
-                </Box>
+                    {useFilteredData && (
+                      <Button variant="link" onClick={handleClearFilter}>
+                        Clear Filter
+                      </Button>
+                    )}
+                  </Box>
+                </SpaceBetween>
+                <FormField
+                  label="Programming Languages"
+                  description="Select at least one language to display analytics"
+                >
+                  <SpaceBetween direction="vertical" size="xs">
+                    <Multiselect
+                      selectedOptions={dynamicLanguageOptions.filter(option =>
+                        selectedLanguages.includes(option.value)
+                      )}
+                      onChange={({ detail }) =>
+                        setSelectedLanguages(
+                          detail.selectedOptions.map(option => option.value).filter((value): value is string => typeof value === "string")
+                        )
+                      }
+                      options={dynamicLanguageOptions}
+                      placeholder="Select programming languages"
+                    />
+                    <SpaceBetween direction="horizontal" size="xs">
+                      <Button
+                        variant="normal"
+                        onClick={() => {
+                          const allAvailableLanguages = dynamicLanguageOptions
+                            .filter(option => !option.disabled)
+                            .map(option => option.value as string);
+                          setSelectedLanguages(allAvailableLanguages);
+                        }}
+                      >
+                        Select All
+                      </Button>
+                      <Button
+                        variant="normal"
+                        onClick={() => setSelectedLanguages([])}
+                      >
+                        Select None
+                      </Button>
+                    </SpaceBetween>
+                  </SpaceBetween>
+                </FormField>
               </SpaceBetween>
             </Form>
           </Container>
@@ -231,7 +360,7 @@ const LanguageAnalytics: React.FC = () => {
             header={
               <Header
                 variant="h2"
-                description="Percentage of accepted GitHub Copilot suggestions by programming language"
+                description="GitHub Copilot suggestions and acceptance rates by programming language"
                 actions={
                   <div style={{ display: "flex", gap: "1rem", alignItems: "center" }}>
                     <Select
@@ -245,21 +374,21 @@ const LanguageAnalytics: React.FC = () => {
                         setSelectedMetric(detail.selectedOption.value || "both")
                       }
                       options={metricOptions}
-                      placeholder="Select percentage metric"
+                      placeholder="Select bar chart metric"
                     />
 
                     <Select
                       selectedOption={{
                         label:
                           metricOptionsAbsValues.find((opt) => opt.value === selectedMetricAbsVals)
-                            ?.label || "Both Absolute Metrics",
+                            ?.label || "Both Percentage Metrics",
                         value: selectedMetricAbsVals,
                       }}
                       onChange={({ detail }) =>
                         setSelectedMetricAbsVals(detail.selectedOption.value || "both_abs")
                       }
                       options={metricOptionsAbsValues}
-                      placeholder="Select absolute metric"
+                      placeholder="Select line chart metric"
                     />
                   </div>
                 }
@@ -309,51 +438,51 @@ const LanguageAnalytics: React.FC = () => {
                       fontSize={12}
                     />
 
-                    {/* Left Y Axis - Percentages */}
+                    {/* Left Y Axis - Absolute values */}
                     <YAxis
                       yAxisId="left"
-                      label={{ value: "Percentage (%)", angle: -90, position: "insideLeft" }}
+                      label={{ value: "Count ('000)", angle: -90, position: "insideLeft" }}
+                      tickFormatter={(value) => `${(value / 1000).toFixed(0)}`}
                     />
 
-                    {/* Right Y Axis - Absolute values */}
+                    {/* Right Y Axis - Percentages */}
                     <YAxis
                       yAxisId="right"
                       orientation="right"
-                      label={{ value: "Count ('000)", angle: 90, position: "insideRight" }}
-                      tickFormatter={(value) => `${(value / 1000).toFixed(0)}`}
+                      label={{ value: "Percentage (%)", angle: 90, position: "insideRight" }}
                     />
 
                     <Tooltip content={<CustomTooltip />} />
                     <Legend />
 
-                    {/* Bars on Left Axis */}
+                    {/* Bars on Left Axis (Absolute Values) */}
                     {(selectedMetric === "both" || selectedMetric === "suggestions") && (
                       <Bar
                         yAxisId="left"
-                        dataKey="percentage_accepted_suggestions"
+                        dataKey="code_suggestions"
                         fill="#8884d8"
-                        name="Code Suggestions Accepted (%)"
+                        name="Code Suggestions"
                       />
                     )}
                     {(selectedMetric === "both" || selectedMetric === "lines") && (
                       <Bar
                         yAxisId="left"
-                        dataKey="percentage_accepted_lines"
+                        dataKey="lines_suggested"
                         fill="#82ca9d"
-                        name="Lines Accepted (%)"
+                        name="Lines Suggested"
                       />
                     )}
 
-                    {/* Lines on Right Axis (Absolute Values) */}
-                    {(selectedMetricAbsVals === "both_abs" || selectedMetricAbsVals === "lines_abs") && (
+                    {/* Lines on Right Axis (Percentages) */}
+                    {(selectedMetricAbsVals === "both_abs" || selectedMetricAbsVals === "suggestions_abs") && (
                       <Line
                         yAxisId="right"
                         type="monotone"
-                        dataKey="code_suggestions"
+                        dataKey="percentage_accepted_suggestions"
                         stroke="#4B2E83"
                         strokeWidth={2}
                         dot={{ r: 2, stroke: "#4B2E83", strokeWidth: 1 }}
-                        name="Code Suggestions"
+                        name="Code Suggestions Accepted (%)"
                         strokeDasharray="0"
                         style={{
                           filter: "drop-shadow(0px 0px 2px #4B2E83)",
@@ -361,15 +490,15 @@ const LanguageAnalytics: React.FC = () => {
                         activeDot={{ r: 5, stroke: "#4B2E83", strokeWidth: 2 }}
                       />
                     )}
-                    {(selectedMetricAbsVals === "both_abs" || selectedMetricAbsVals === "suggestions_abs") && (
+                    {(selectedMetricAbsVals === "both_abs" || selectedMetricAbsVals === "lines_abs") && (
                       <Line
                         yAxisId="right"
                         type="monotone"
-                        dataKey="lines_suggested"
+                        dataKey="percentage_accepted_lines"
                         stroke="#2E8B57"
                         strokeWidth={3}
                         dot={{ r: 3, stroke: "#2E8B57", strokeWidth: 1 }}
-                        name="Lines Suggested"
+                        name="Lines Accepted (%)"
                         strokeDasharray="0"
                         style={{
                           filter: "drop-shadow(0px 0px 2px #2E8B57)",
@@ -382,13 +511,24 @@ const LanguageAnalytics: React.FC = () => {
               </div>
             )}
 
-            {!isLoading && !error && chartData.length === 0 && (
+            {!isLoading && !error && selectedLanguages.length === 0 && (
+              <Box textAlign="center" padding="xl">
+                <Box variant="h3" color="text-body-secondary">
+                  No languages selected
+                </Box>
+                <Box variant="p" color="text-body-secondary">
+                  Please select at least one programming language from the filter above to view analytics.
+                </Box>
+              </Box>
+            )}
+
+            {!isLoading && !error && selectedLanguages.length > 0 && chartData.length === 0 && (
               <Box textAlign="center" padding="xl">
                 <Box variant="h3" color="text-body-secondary">
                   No language data available
                 </Box>
                 <Box variant="p" color="text-body-secondary">
-                  There are no language analytics to display at the moment.
+                  There are no language analytics to display for the selected languages.
                 </Box>
               </Box>
             )}
