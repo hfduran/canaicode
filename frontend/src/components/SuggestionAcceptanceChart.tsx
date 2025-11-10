@@ -88,9 +88,9 @@ const SuggestionAcceptanceChart: React.FC = () => {
     }
   };
 
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     fetchData();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [period]);
 
   const customTooltip = ({ active, payload, label }: any) => {
