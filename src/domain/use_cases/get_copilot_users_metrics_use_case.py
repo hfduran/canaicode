@@ -48,10 +48,16 @@ class GetCopilotUsersMetricsUseCase:
 
     for date_chat_metrics, values_chat_metrics in grouped_chat_metrics.items():
         index = next(
-            i
-            for i, data in enumerate(response)
-            if data.date == date_chat_metrics
+            (i for i, data in enumerate(response) if data.date == date_chat_metrics),
+            None
         )
-        response[index].total_chat_users = values_chat_metrics["total_users"]
+        if index is not None:
+            response[index].total_chat_users = values_chat_metrics["total_users"]
+        else:
+            response.append(CopilotUsersMetrics(
+                date=date_chat_metrics,
+                total_code_assistant_users=0,
+                total_chat_users=values_chat_metrics["total_users"]
+            ))
 
     return response

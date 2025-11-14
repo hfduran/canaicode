@@ -29,6 +29,7 @@ cryptography = "*"
 requests = "*"
 apscheduler = "*"
 matplotlib = "*"
+bcrypt = "4.0.1"
 
 [dev-packages]
 pytest = "*"

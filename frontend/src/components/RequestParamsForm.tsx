@@ -1,14 +1,15 @@
 import React from "react";
-import { 
-  Select, 
+import {
+  Select,
   Multiselect,
-  DatePicker, 
-  FormField, 
-  SpaceBetween, 
-  ColumnLayout 
+  FormField,
+  SpaceBetween,
+  ColumnLayout,
+  Button
 } from "@cloudscape-design/components";
 import { TEAM_OPTIONS } from "../constants/teams";
 import { PROGRAMMING_LANGUAGES_OPTIONS } from "../constants/programming_languages";
+import DateRangeSelector from "./DateRangeSelector";
 
 interface RequestParamsFormProps {
   timeRange: string;
@@ -94,37 +95,42 @@ const RequestParamsForm: React.FC<RequestParamsFormProps> = ({
           label="Programming Languages (Optional)"
           description="Select the programming languages to analyze"
         >
-          <Multiselect
-            selectedOptions={PROGRAMMING_LANGUAGES_OPTIONS.filter(option => programmingLanguages.includes(option.value))}
-            onChange={({ detail }) => setProgrammingLanguages(detail.selectedOptions.map(option => option.value).filter((value): value is string => typeof value === "string"))}
-            options={PROGRAMMING_LANGUAGES_OPTIONS}
-            placeholder="Select programming languages"
-          />
+          <SpaceBetween direction="vertical" size="xs">
+            <Multiselect
+              selectedOptions={PROGRAMMING_LANGUAGES_OPTIONS.filter(option => programmingLanguages.includes(option.value))}
+              onChange={({ detail }) => setProgrammingLanguages(detail.selectedOptions.map(option => option.value).filter((value): value is string => typeof value === "string"))}
+              options={PROGRAMMING_LANGUAGES_OPTIONS}
+              placeholder="Select programming languages"
+            />
+            <SpaceBetween direction="horizontal" size="xs">
+              <Button
+                variant="normal"
+                onClick={() => {
+                  const allLanguages = PROGRAMMING_LANGUAGES_OPTIONS.map(option => option.value as string);
+                  setProgrammingLanguages(allLanguages);
+                }}
+              >
+                Select All
+              </Button>
+              <Button
+                variant="normal"
+                onClick={() => setProgrammingLanguages([])}
+              >
+                Select None
+              </Button>
+            </SpaceBetween>
+          </SpaceBetween>
         </FormField>
       </SpaceBetween>
 
       <SpaceBetween direction="vertical" size="m">
-        <FormField 
-          label="Start Date"
-          description="Beginning of the analysis period"
-        >
-          <DatePicker
-            value={initialDate}
-            onChange={({ detail }) => setInitialDate(detail.value)}
-            placeholder="YYYY-MM-DD"
-          />
-        </FormField>
-
-        <FormField 
-          label="End Date"
-          description="End of the analysis period"
-        >
-          <DatePicker
-            value={finalDate}
-            onChange={({ detail }) => setFinalDate(detail.value)}
-            placeholder="YYYY-MM-DD"
-          />
-        </FormField>
+        <DateRangeSelector
+          startDate={initialDate}
+          endDate={finalDate}
+          onStartDateChange={setInitialDate}
+          onEndDateChange={setFinalDate}
+          direction="vertical"
+        />
       </SpaceBetween>
     </ColumnLayout>
   );

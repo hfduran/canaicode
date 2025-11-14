@@ -3,24 +3,33 @@ import { Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
 import {
   Container,
   Header,
-  ContentLayout,
   SpaceBetween,
   Alert,
   Spinner,
-  Box,
-  DatePicker,
-  FormField,
-  Form
+  Box
 } from "@cloudscape-design/components";
 import { useCopilotUsersMetrics } from "../hooks/useCopilotUsersMetrics";
 import { CopilotUsersMetrics } from "../types/model";
+import DateRangeSelector from "./DateRangeSelector";
 
 const CopilotUsageChart: React.FC = () => {
   const { copilotUsersData, isLoading, error, fetchCopilotUsersMetrics } = useCopilotUsersMetrics();
 
-  // Add state for period selection
-  const [beginDate, setBeginDate] = useState<string>("");
-  const [endDate, setEndDate] = useState<string>("");
+  // Add state for period selection - initialized with 6 months ago to today
+  const getDefaultDates = () => {
+    const today = new Date();
+    const sixMonthsAgo = new Date();
+    sixMonthsAgo.setMonth(today.getMonth() - 6);
+
+    return {
+      begin: sixMonthsAgo.toISOString().split('T')[0],
+      end: today.toISOString().split('T')[0]
+    };
+  };
+
+  const defaultDates = getDefaultDates();
+  const [beginDate, setBeginDate] = useState<string>(defaultDates.begin);
+  const [endDate, setEndDate] = useState<string>(defaultDates.end);
 
   useEffect(() => {
     fetchCopilotUsersMetrics();
@@ -85,27 +94,13 @@ const CopilotUsageChart: React.FC = () => {
 
   return (
     <SpaceBetween size="l">
-      {/* Period selection inputs - copied design from RequestParamsForm.tsx */}
-      <Form>
-        <SpaceBetween size="m" direction="horizontal">
-          <FormField label="Beginning period">
-            <DatePicker
-              value={beginDate}
-              onChange={({ detail }) => setBeginDate(detail.value)}
-              placeholder="YYYY-MM-DD"
-              openCalendarAriaLabel={() => "Open calendar"}
-            />
-          </FormField>
-          <FormField label="Ending period">
-            <DatePicker
-              value={endDate}
-              onChange={({ detail }) => setEndDate(detail.value)}
-              placeholder="YYYY-MM-DD"
-              openCalendarAriaLabel={() => "Open calendar"}
-            />
-          </FormField>
-        </SpaceBetween>
-      </Form>
+      {/* Period selection */}
+      <DateRangeSelector
+        startDate={beginDate}
+        endDate={endDate}
+        onStartDateChange={setBeginDate}
+        onEndDateChange={setEndDate}
+      />
       {/* Chart Section - total_code_assistant_users*/}
       <Container
         header={
@@ -170,7 +165,7 @@ const CopilotUsageChart: React.FC = () => {
                   yAxisId="left"
                   dataKey="total_code_assistant_users"
                   fill="#8884d8"
-                  name="Number of different users who used Copilot"
+                  name="Number of different users who used Copilot chat"
                 />
                 <Bar
                   yAxisId="left"
