@@ -21,7 +21,7 @@ class DatabaseUsersMapper:
     @staticmethod
     def to_domain(db_schema: UserDbSchema) -> User:
         return User(
-            id=cast(Optional[str], db_schema.id),
+            id=cast(str, db_schema.id),
             username=cast(str, db_schema.username),
             hashed_password=cast(str, db_schema.hashed_password),
             full_name=cast(str, db_schema.full_name),

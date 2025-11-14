@@ -1,3 +1,4 @@
+from typing import List
 from sqlalchemy.orm import Session
 
 from src.domain.entities.user import User
@@ -67,3 +68,16 @@ class UsersRepository:
             return None
 
         return DatabaseUsersMapper.to_domain(record)
+    
+    def list(
+        self,
+    ) -> List[User]:
+        query = self.db.query(UserDbSchema)
+
+        records = query.all()
+
+        users = map(
+            lambda record: DatabaseUsersMapper.to_domain(record), records
+        )
+
+        return list(users)

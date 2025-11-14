@@ -1,4 +1,4 @@
-from typing import Optional, cast
+from typing import cast
 from src.domain.entities.github_app import GitHubApp
 from src.infrastructure.database.github_apps.postgre.dtos.model import GitHubAppDbSchema
 
@@ -19,7 +19,7 @@ class DatabaseGitHubAppsMapper:
     @staticmethod
     def to_domain(db_schema: GitHubAppDbSchema) -> GitHubApp:
         return GitHubApp(
-            id=cast(Optional[str], db_schema.id),
+            id=cast(str, db_schema.id),
             organization_name=cast(str, db_schema.organization_name),
             app_id=cast(str, db_schema.app_id),
             installation_id=cast(str, db_schema.installation_id),
