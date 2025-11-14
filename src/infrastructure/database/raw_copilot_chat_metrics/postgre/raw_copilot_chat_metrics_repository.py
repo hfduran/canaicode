@@ -1,4 +1,5 @@
-from typing import List
+from datetime import datetime
+from typing import List, Optional
 from sqlalchemy.orm import Session
 
 from src.domain.entities.copilot_chat_metrics import CopilotChatMetrics
@@ -19,9 +20,17 @@ class RawCopilotChatMetricsRepository:
 
     def listByUserId(
         self,
-        user_id: str
+        user_id: str,
+        initial_date: Optional[datetime] = None,
+        final_date: Optional[datetime] = None,
     ) -> List[CopilotChatMetrics]:
         query = self.db.query(RawCopilotChatMetrics)
+
+        if initial_date:
+            query = query.filter(RawCopilotChatMetrics.date >= initial_date)
+
+        if final_date:
+            query = query.filter(RawCopilotChatMetrics.date <= final_date)
 
         records = query.filter(RawCopilotChatMetrics.user_id == user_id).all()
 

@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import DefaultDict, Dict, List
+from typing import DefaultDict, Dict, List, Optional
 from src.domain.use_cases.dtos.calculated_metrics import CopilotUsersMetrics
 from src.infrastructure.database.raw_copilot_chat_metrics.postgre.raw_copilot_chat_metrics_repository import RawCopilotChatMetricsRepository
 from src.infrastructure.database.raw_copilot_code_metrics.postgre.raw_copilot_code_metrics_repository import RawCopilotCodeMetricsRepository
@@ -14,8 +14,8 @@ class GetCopilotUsersMetricsUseCase:
         self.copilot_code_metrics_repository = copilot_code_metrics_repository
         self.copilot_chat_metrics_repository = copilot_chat_metrics_repository
 
-  def execute(self, user_id: str) -> List[CopilotUsersMetrics]:
-    raw_copilot_code_metrics = self.copilot_code_metrics_repository.listByUserId(user_id)
+  def execute(self, user_id: str, initial_date: Optional[datetime] = None, final_date: Optional[datetime] = None) -> List[CopilotUsersMetrics]:
+    raw_copilot_code_metrics = self.copilot_code_metrics_repository.listByUserId(user_id, initial_date, final_date)
 
     if (not raw_copilot_code_metrics):
       return []
@@ -36,7 +36,7 @@ class GetCopilotUsersMetricsUseCase:
             total_chat_users=0
         ))
 
-    raw_copilot_chat_metrics = self.copilot_chat_metrics_repository.listByUserId(user_id)
+    raw_copilot_chat_metrics = self.copilot_chat_metrics_repository.listByUserId(user_id, initial_date, final_date)
 
     grouped_chat_metrics: DefaultDict[datetime, Dict[str, int]] = DefaultDict(lambda: {
       "total_users": 0,

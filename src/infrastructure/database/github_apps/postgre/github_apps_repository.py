@@ -31,6 +31,19 @@ class GitHubAppsRepository:
 
         return DatabaseGitHubAppsMapper.to_domain(record)
 
+    def find_by_user_id(
+        self,
+        user_id: str
+    ) -> GitHubApp | None:
+        query = self.db.query(GitHubAppDbSchema)
+
+        record = query.filter(GitHubAppDbSchema.user_id == user_id).first()
+
+        if(not record):
+            return None
+
+        return DatabaseGitHubAppsMapper.to_domain(record)
+
 
     def list(
         self,
@@ -44,3 +57,11 @@ class GitHubAppsRepository:
         )
 
         return list(github_apps)
+    
+    def delete(
+        self, 
+        github_app_id: str
+    ) -> None:
+        query = self.db.query(GitHubAppDbSchema)
+        query.filter(GitHubAppDbSchema.id == github_app_id).delete()
+        self.db.commit()

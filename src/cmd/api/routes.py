@@ -10,7 +10,7 @@ from pydantic import BaseModel
 
 from src.auth.verify_user_access import verify_user_access
 from src.auth.dual_auth import get_user_id_dual_auth
-from src.cmd.dependencies.dependency_setters import set_create_user_dependencies
+from src.cmd.dependencies.dependency_setters import set_create_report_config_dependencies, set_create_user_dependencies, set_delete_github_app_dependencies, set_delete_report_config_dependencies, set_find_github_app_dependencies, set_find_report_config_dependencies
 from src.cmd.dependencies.dependency_setters import set_validate_user_dependencies
 from src.cmd.dependencies.dependency_setters import set_get_commit_metrics_dependencies
 from src.cmd.dependencies.dependency_setters import set_get_copilot_metrics_dependencies
@@ -24,6 +24,9 @@ from src.cmd.dependencies.dependency_setters import set_create_api_key_dependenc
 from src.cmd.dependencies.dependency_setters import set_list_api_keys_dependencies
 from src.cmd.dependencies.dependency_setters import set_revoke_api_key_dependencies
 from src.domain.entities.commit_metrics import CommitMetrics
+from src.domain.entities.github_app import GitHubApp
+from src.domain.entities.report_config import ReportConfig
+from src.domain.entities.value_objects.enums.period import Period
 from src.domain.use_cases.dtos.calculated_metrics import CalculatedMetrics, CopilotMetricsByLanguage, CopilotMetricsByPeriod, CopilotUsersMetrics
 from src.domain.use_cases.dtos.token import Token
 from src.domain.use_cases.dtos.user_response import UserResponse
@@ -203,10 +206,10 @@ def create_github_app(
     private_key: str = Body(..., embed=True),
     token: str = Depends(oauth2_scheme),
     db: Session = Depends(get_db),
-) -> None:
+) -> GitHubApp:
     verify_user_access(token, user_id)
     create_github_app_use_case = set_create_github_app_dependencies(db)
-    create_github_app_use_case.execute(user_id, organization_name, app_id, installation_id, private_key)
+    return create_github_app_use_case.execute(user_id, organization_name, app_id, installation_id, private_key)
 
 
 @router.post("/api_keys", response_model=ApiKeyResponse)
@@ -273,3 +276,64 @@ def revoke_api_key(
     revoke_api_key_use_case = set_revoke_api_key_dependencies(db)
     revoke_api_key_use_case.execute(user_id, key_id)
     return {"message": "API key revoked successfully"}
+
+
+@router.get("/github_app/{user_id}")
+def find_github_app(
+    user_id: str,
+    token: str = Depends(oauth2_scheme),
+    db: Session = Depends(get_db),
+) -> GitHubApp | None:
+    verify_user_access(token, user_id)
+    find_github_app_use_case = set_find_github_app_dependencies(db)
+    return find_github_app_use_case.execute(user_id)
+
+
+@router.delete("/github_app/{github_app_id}")
+def delete_github_app(
+    github_app_id: str,
+    user_id: str = Body(..., embed=True),
+    token: str = Depends(oauth2_scheme),
+    db: Session = Depends(get_db),
+) -> Dict[str, str]:
+    verify_user_access(token, user_id)
+    delete_github_app_use_case = set_delete_github_app_dependencies(db)
+    delete_github_app_use_case.execute(user_id, github_app_id)
+    return {"message": "Github App deleted successfully"}
+
+
+@router.post("/report_config")
+def create_report_config(
+    user_id: str = Body(..., embed=True),
+    emails: List[str] = Body(..., embed=True),
+    period: Period = Body(..., embed=True),
+    token: str = Depends(oauth2_scheme),
+    db: Session = Depends(get_db),
+) -> ReportConfig:
+    verify_user_access(token, user_id)
+    create_report_config_use_case = set_create_report_config_dependencies(db)
+    return create_report_config_use_case.execute(user_id, emails, period,)
+
+
+@router.get("/report_config/{user_id}")
+def find_report_config(
+    user_id: str,
+    token: str = Depends(oauth2_scheme),
+    db: Session = Depends(get_db),
+) -> ReportConfig | None:
+    verify_user_access(token, user_id)
+    find_report_config_use_case = set_find_report_config_dependencies(db)
+    return find_report_config_use_case.execute(user_id)
+
+
+@router.delete("/report_config/{report_config_id}")
+def delete_report_config(
+    report_config_id: str,
+    user_id: str = Body(..., embed=True),
+    token: str = Depends(oauth2_scheme),
+    db: Session = Depends(get_db),
+) -> Dict[str, str]:
+    verify_user_access(token, user_id)
+    delete_report_config_use_case = set_delete_report_config_dependencies(db)
+    delete_report_config_use_case.execute(user_id, report_config_id)
+    return {"message": "Report config deleted successfully"}

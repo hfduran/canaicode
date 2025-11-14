@@ -4,8 +4,13 @@ from src.consumers.gh_copilot.gh_copilot_consumer import GhCopilotConsumer
 from src.consumers.git_metrics_xlsx.git_metrics_xlsx_consumer import GitCommitMetricsXlsxConsumer
 from src.consumers.git_repo_consumer import GitRepoConsumer
 from src.domain.use_cases.create_github_app_use_case import CreateGitHubAppUseCase
+from src.domain.use_cases.create_report_config_use_case import CreateReportConfigUseCase
 from src.domain.use_cases.create_user_use_case import CreateUserUseCase
+from src.domain.use_cases.delete_github_app_use_case import DeleteGitHubAppUseCase
+from src.domain.use_cases.delete_report_config_use_case import DeleteReportConfigUseCase
 from src.domain.use_cases.fetch_copilot_metrics_use_case import FetchCopilotMetricsUseCase
+from src.domain.use_cases.find_github_app_use_case import FindGitHubAppUseCase
+from src.domain.use_cases.find_report_config_use_case import FindReportConfigUseCase
 from src.domain.use_cases.get_calculated_metrics_use_case import GetCalculatedMetricsUseCase
 from src.domain.use_cases.get_commit_metrics_use_case import GetCommitMetricsUseCase
 from src.domain.use_cases.get_copilot_metrics_by_language_use_case import GetCopilotMetricsByLanguageUseCase
@@ -13,6 +18,7 @@ from src.domain.use_cases.get_copilot_metrics_by_period_use_case import GetCopil
 from src.domain.use_cases.get_copilot_metrics_use_case import GetCopilotMetricsUseCase
 from src.domain.use_cases.get_copilot_users_metrics_use_case import GetCopilotUsersMetricsUseCase
 from src.domain.use_cases.get_csv_commit_metrics_use_case import GetXlsxCommitMetricsUseCase
+from src.domain.use_cases.send_metrics_email_use_case import SendMetricsEmailUseCase
 from src.domain.use_cases.validate_user_use_case import ValidateUserUseCase
 from src.domain.use_cases.validate_api_key_use_case import ValidateApiKeyUseCase
 from src.domain.use_cases.create_api_key_use_case import CreateApiKeyUseCase
@@ -23,12 +29,15 @@ from src.infrastructure.database.github_apps.postgre.github_apps_repository impo
 from src.infrastructure.database.raw_commit_metrics.postgre.raw_commit_metrics_repository import RawCommitMetricsRepository
 from src.infrastructure.database.raw_copilot_chat_metrics.postgre.raw_copilot_chat_metrics_repository import RawCopilotChatMetricsRepository
 from src.infrastructure.database.raw_copilot_code_metrics.postgre.raw_copilot_code_metrics_repository import RawCopilotCodeMetricsRepository
+from src.infrastructure.database.report_config.postgre.report_config_repository import ReportConfigRepository
 from src.infrastructure.database.users.postgre.users_repository import UsersRepository
 
 
 from sqlalchemy.orm import Session
 
 FERNET_KEY = os.getenv("FERNET_KEY")
+MAIL_NAME = os.getenv("MAIL_NAME")
+MAIL_PASSWORD = os.getenv("MAIL_PASSWORD")
 
 def set_create_user_dependencies(
     db: Session,
@@ -153,3 +162,43 @@ def set_fetch_copilot_metrics_dependencies(
     github_apps_repository = GitHubAppsRepository(db)
     get_copilot_metrics_use_case = set_get_copilot_metrics_dependencies(db)
     return FetchCopilotMetricsUseCase(github_apps_repository, get_copilot_metrics_use_case, encryption_key=FERNET_KEY) # type: ignore
+
+def set_send_metrics_email_dependencies(
+    db: Session
+) -> SendMetricsEmailUseCase:
+    report_config_repository = ReportConfigRepository(db)
+    get_calculated_metrics_use_case = set_get_calculated_metrics_dependencies(db)
+    get_copilot_metrics_by_language_use_case = set_get_copilot_metrics_by_language_dependencies(db)
+    get_copilot_metrics_by_period_use_case = set_get_copilot_metrics_by_period_dependencies(db)
+    get_copilot_users_metrics_use_case = set_get_copilot_users_metrics_dependencies(db)
+    return SendMetricsEmailUseCase(report_config_repository, get_calculated_metrics_use_case, get_copilot_metrics_by_language_use_case, get_copilot_metrics_by_period_use_case, get_copilot_users_metrics_use_case, mail_name=MAIL_NAME, mail_password=MAIL_PASSWORD) # type: ignore
+
+def set_find_github_app_dependencies(
+    db: Session
+) -> FindGitHubAppUseCase:
+    github_apps_repository = GitHubAppsRepository(db)
+    return FindGitHubAppUseCase(github_apps_repository)
+
+def set_delete_github_app_dependencies(
+    db: Session
+) -> DeleteGitHubAppUseCase:
+    github_apps_repository = GitHubAppsRepository(db)
+    return DeleteGitHubAppUseCase(github_apps_repository)
+
+def set_create_report_config_dependencies(
+    db: Session
+) -> CreateReportConfigUseCase:
+    report_config_repository = ReportConfigRepository(db)
+    return CreateReportConfigUseCase(report_config_repository)
+
+def set_find_report_config_dependencies(
+    db: Session
+) -> FindReportConfigUseCase:
+    report_config_repository = ReportConfigRepository(db)
+    return FindReportConfigUseCase(report_config_repository)
+
+def set_delete_report_config_dependencies(
+    db: Session
+) -> DeleteReportConfigUseCase:
+    report_config_repository = ReportConfigRepository(db)
+    return DeleteReportConfigUseCase(report_config_repository)

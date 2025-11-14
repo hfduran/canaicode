@@ -13,7 +13,7 @@ class CreateGitHubAppUseCase:
         self.github_apps_repository = github_apps_repository
         self.fernet = Fernet(encryption_key.encode())
 
-  def execute(self, user_id: str, organization_name: str, app_id: str, installation_id: str, private_key: str) -> None:
+  def execute(self, user_id: str, organization_name: str, app_id: str, installation_id: str, private_key: str) -> GitHubApp:
       encrypted_private_key = self.fernet.encrypt(private_key.encode()).decode()
 
       github_app = GitHubApp(
@@ -26,3 +26,5 @@ class CreateGitHubAppUseCase:
       )
 
       self.github_apps_repository.create(github_app)
+
+      return github_app

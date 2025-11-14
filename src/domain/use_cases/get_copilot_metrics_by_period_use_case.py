@@ -1,5 +1,6 @@
+from datetime import datetime
 import pandas as pd  # type: ignore
-from typing import List
+from typing import List, Optional
 from src.domain.entities.value_objects.enums.period import Period
 from src.domain.use_cases.dtos.calculated_metrics import CopilotMetricsByPeriod
 from src.domain.use_cases.metrics_calculator import MetricsCalculator
@@ -13,8 +14,8 @@ class GetCopilotMetricsByPeriodUseCase:
     ) -> None:
         self.copilot_code_metrics_repository = copilot_code_metrics_repository
 
-  def execute(self, user_id: str, period: Period) -> List[CopilotMetricsByPeriod]:
-      raw_copilot_code_metrics = self.copilot_code_metrics_repository.listByUserId(user_id)
+  def execute(self, user_id: str, period: Period, initial_date: Optional[datetime] = None, final_date: Optional[datetime] = None) -> List[CopilotMetricsByPeriod]:
+      raw_copilot_code_metrics = self.copilot_code_metrics_repository.listByUserId(user_id, initial_date, final_date)
 
       if (not raw_copilot_code_metrics):
         return []

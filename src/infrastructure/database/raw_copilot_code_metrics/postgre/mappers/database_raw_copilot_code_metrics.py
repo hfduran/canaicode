@@ -29,7 +29,7 @@ class DatabaseRawCopilotCodeMetricsMapper:
         team = Team(name=cast(str, db_schema.team_name))
 
         return CopilotCodeMetrics(
-            id=cast(Optional[str], db_schema.id),
+            id=cast(str, db_schema.id),
             team=team,
             date=cast(datetime, db_schema.date),
             IDE=cast(str, db_schema.ide),

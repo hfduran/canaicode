@@ -28,6 +28,7 @@ openpyxl = "*"
 cryptography = "*"
 requests = "*"
 apscheduler = "*"
+matplotlib = "*"
 
 [dev-packages]
 pytest = "*"

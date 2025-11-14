@@ -21,7 +21,7 @@ class DatabaseApiKeysMapper:
     @staticmethod
     def to_domain(db_schema: ApiKeyDbSchema) -> ApiKey:
         return ApiKey(
-            id=cast(Optional[str], db_schema.id),
+            id=cast(str, db_schema.id),
             user_id=cast(str, db_schema.user_id),
             key_name=cast(str, db_schema.key_name),
             key_hash=cast(str, db_schema.key_hash),
