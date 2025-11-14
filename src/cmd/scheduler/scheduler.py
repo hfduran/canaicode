@@ -1,12 +1,12 @@
 from src.infrastructure.logger.logger_config import logger
-from apscheduler.schedulers.blocking import BlockingScheduler # type: ignore
+from apscheduler.schedulers.background import BackgroundScheduler # type: ignore
 
 from src.cmd.dependencies.dependency_setters import set_fetch_copilot_metrics_dependencies, set_send_metrics_email_dependencies
 from src.infrastructure.database.connection.database_connection import SessionLocal # type: ignore
 
 
 
-scheduler = BlockingScheduler()
+scheduler = BackgroundScheduler()
 
 def start_scheduler() -> None:
     scheduler.start() # type: ignore
@@ -31,7 +31,7 @@ def fetch_metrics_job() -> None:
         logger.info("Database session closed.")
 
 
-@scheduler.scheduled_job('interval', seconds=1) # type: ignore
+@scheduler.scheduled_job('interval', weeks=1) # type: ignore
 def send_email_job() -> None:
     logger.info("Starting weekly metrics email dispatch")
     db = SessionLocal()
