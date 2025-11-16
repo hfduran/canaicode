@@ -179,11 +179,11 @@ const LanguageAnalytics: React.FC = () => {
   const avgAcceptanceRate =
     totalLanguages > 0
       ? (
-          chartData.reduce(
-            (sum: number, item: ChartDataEntry) => sum + item.percentage_accepted_suggestions,
-            0
-          ) / totalLanguages
-        ).toFixed(1)
+        chartData.reduce(
+          (sum: number, item: ChartDataEntry) => sum + item.percentage_accepted_suggestions,
+          0
+        ) / totalLanguages
+      ).toFixed(1)
       : "0";
 
   const highestAcceptanceLanguage =
@@ -295,7 +295,7 @@ const LanguageAnalytics: React.FC = () => {
             }
           >
             <Form>
-              <SpaceBetween direction="vertical" size="m">
+              <SpaceBetween direction="vertical" size="xl">
                 <SpaceBetween direction="vertical" size="m">
                   <DateRangeSelector
                     startDate={startDate}
@@ -303,21 +303,6 @@ const LanguageAnalytics: React.FC = () => {
                     onStartDateChange={setStartDate}
                     onEndDateChange={setEndDate}
                   />
-                  <SpaceBetween direction="horizontal" size="m">
-                    <Button
-                      variant="primary"
-                      onClick={handleFilter}
-                      loading={isFiltering}
-                      disabled={!startDate || !endDate}
-                    >
-                      Filter Language Statistics
-                    </Button>
-                    {useFilteredData && (
-                      <Button variant="link" onClick={handleClearFilter}>
-                        Clear Filter
-                      </Button>
-                    )}
-                  </SpaceBetween>
                 </SpaceBetween>
                 <FormField
                   label="Programming Languages"
@@ -357,6 +342,21 @@ const LanguageAnalytics: React.FC = () => {
                     </SpaceBetween>
                   </SpaceBetween>
                 </FormField>
+                <SpaceBetween direction="horizontal" size="m">
+                  <Button
+                    variant="primary"
+                    onClick={handleFilter}
+                    loading={isFiltering}
+                    disabled={!startDate || !endDate}
+                  >
+                    Filter Language Statistics
+                  </Button>
+                  {useFilteredData && (
+                    <Button variant="link" onClick={handleClearFilter}>
+                      Clear Filter
+                    </Button>
+                  )}
+                </SpaceBetween>
               </SpaceBetween>
             </Form>
           </Container>
