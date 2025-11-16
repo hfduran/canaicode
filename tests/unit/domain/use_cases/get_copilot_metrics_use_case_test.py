@@ -20,6 +20,7 @@ class TestGetCopilotMetricsUseCase(TestCase):
         ).replace(tzinfo=timezone.utc)
         copilot_code_metrics = CopilotCodeMetrics(
             id="123",
+            user_id="test-user-id",
             team=Team(
                 name="canaicode",
             ),
@@ -36,6 +37,7 @@ class TestGetCopilotMetricsUseCase(TestCase):
         )
         copilot_chat_metrics = CopilotChatMetrics(
             id="123",
+            user_id="test-user-id",
             team=Team(
                 name="canaicode",
             ),
@@ -54,7 +56,7 @@ class TestGetCopilotMetricsUseCase(TestCase):
             "chat": [copilot_chat_metrics, copilot_chat_metrics],
         }
 
-        github_copilot_consumer.get_metrics_by_date.return_value = copilot_metrics
+        github_copilot_consumer.get_metrics.return_value = copilot_metrics
 
         get_copilot_metrics_use_case = GetCopilotMetricsUseCase(
             copilot_code_metrics_repository,
@@ -62,13 +64,15 @@ class TestGetCopilotMetricsUseCase(TestCase):
             github_copilot_consumer,
         )
 
-        get_copilot_metrics_use_case.execute(date, "canaicode")
+        # execute() now takes data (dict) and user_id
+        test_data = {"test": "data"}
+        get_copilot_metrics_use_case.execute(test_data, "test-user-id")
 
-        self.assertEqual(copilot_code_metrics_repository.put_item.call_count, 2)
-        copilot_code_metrics_repository.put_item.assert_called_with(
+        self.assertEqual(copilot_code_metrics_repository.create.call_count, 2)
+        copilot_code_metrics_repository.create.assert_called_with(
             copilot_code_metrics
         )
-        self.assertEqual(copilot_chat_metrics_repository.put_item.call_count, 2)
-        copilot_chat_metrics_repository.put_item.assert_called_with(
+        self.assertEqual(copilot_chat_metrics_repository.create.call_count, 2)
+        copilot_chat_metrics_repository.create.assert_called_with(
             copilot_chat_metrics
         )

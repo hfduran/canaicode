@@ -25,6 +25,7 @@ class TestGetCommitMetricsUseCase(TestCase):
             language="python",
             removed_lines=2,
             repository=Repository(name="canaicode", team="canaicode"),
+            user_id="test-user-id",
             created_at=date,
         )
 
@@ -36,7 +37,7 @@ class TestGetCommitMetricsUseCase(TestCase):
             commit_metrics_repository, git_repo_consumer
         )
 
-        get_commit_metrics_use_case.execute(date, "canaicode")
+        get_commit_metrics_use_case.execute(date.date(), "canaicode", "test-user-id")
 
-        self.assertEqual(commit_metrics_repository.put_item.call_count, 2)
-        commit_metrics_repository.put_item.assert_called_with(commit_metrics)
+        self.assertEqual(commit_metrics_repository.create.call_count, 2)
+        commit_metrics_repository.create.assert_called_with(commit_metrics)
