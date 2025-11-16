@@ -52,7 +52,7 @@ class SendMetricsEmailUseCase:
         for report_config in report_configs:
             try:
               github_app = self.github_apps_repository.find_by_user_id(report_config.user_id)
-              today = datetime(2025, 5, 1) # datetime.now()
+              today = datetime.now()
               graphs: List[Tuple[str, io.BytesIO]] = []
               inactive_users: List[str] = []
               if report_config.period == Period.DAILY:
