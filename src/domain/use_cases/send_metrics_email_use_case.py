@@ -238,7 +238,7 @@ class SendMetricsEmailUseCase:
       msg['From'] = self.mail_name
       msg['To'] = ", ".join(emails)
 
-      msg.set_content("Seu cliente de e-mail não suporta HTML.")
+      msg.set_content("Your email client does not support HTML.")
 
       graphs_html = ""
       for index, (name, _) in enumerate(graphs):
@@ -256,8 +256,8 @@ class SendMetricsEmailUseCase:
           inactive_users_list = "".join(f"<li>{user}</li>" for user in inactive_users)
           inactive_users_html = f"""
           <div style="padding:15px; margin-top:30px; background:#fff6f6; border:1px solid #ffa39e; border-radius:6px;">
-              <h3 style="margin-top:0; color:#cf1322;">⚠️ Usuários inativos nos últimos 30 dias</h3>
-              <p style="margin:0 0 10px;">Os seguintes usuários não tiveram atividade registrada recentemente:</p>
+              <h3 style="margin-top:0; color:#cf1322;">⚠️ Inactive users in the last 30 days</h3>
+              <p style="margin:0 0 10px;">The following users have not shown activity recently:</p>
               <ul style="margin:0; padding-left:20px; color:#555; font-size:14px;">
                   {inactive_users_list}
               </ul>
@@ -276,14 +276,14 @@ class SendMetricsEmailUseCase:
             </h1>
 
             <p style="font-size:16px; color:#444; text-align:center; margin-top:0;">
-              Segue abaixo o relatório da última semana contendo métricas e gráficos.
+              Below is the weekly report containing metrics and graphs.
             </p>
 
             <hr style="border:none; border-top:1px solid #ddd; margin:20px 0;">
 
             <div style="font-size:15px; color:#333;">
-              <p>Olá,</p>
-              <p>Confira abaixo os gráficos gerados automaticamente pelo sistema:</p>
+              <p>Hello,</p>
+              <p>Please find below the graphs generated automatically by the system:</p>
             </div>
 
             {graphs_html}
@@ -293,7 +293,7 @@ class SendMetricsEmailUseCase:
             <hr style="border:none; border-top:1px solid #ddd; margin:30px 0;">
 
             <p style="font-size:14px; color:#666; text-align:center;">
-              Este e-mail foi enviado automaticamente pelo sistema de relatórios.
+              This email was sent automatically by the reporting system.
             </p>
 
           </div>
@@ -304,13 +304,13 @@ class SendMetricsEmailUseCase:
 
       msg.add_alternative(html, subtype='html')
 
-      html_part = msg.get_payload()[-1] # type: ignore
+      html_part = msg.get_payload()[-1]  # type: ignore
 
       for index, (_, img_bytes) in enumerate(graphs):
           cid = f"graph{index}"
           img_bytes.seek(0)
 
-          html_part.add_related( # type: ignore
+          html_part.add_related(  # type: ignore
               img_bytes.read(),
               maintype='image',
               subtype='png',

@@ -31,19 +31,19 @@ def fetch_metrics_job() -> None:
         logger.info("Database session closed.")
 
 
-@scheduler.scheduled_job('interval', weeks=1) # type: ignore
+@scheduler.scheduled_job('interval', days=1) # type: ignore
 def send_email_job() -> None:
-    logger.info("Starting weekly metrics email dispatch")
+    logger.info("Starting metrics email dispatch")
     db = SessionLocal()
 
     send_metrics_email_use_case = set_send_metrics_email_dependencies(db)
 
     try:
         send_metrics_email_use_case.execute()
-        logger.info("Weekly metrics email dispatch completed successfully")
+        logger.info("Metrics email dispatch completed successfully")
 
     except Exception as e:
-        logger.error(f"Error during weekly metrics email dispatch: {e}")
+        logger.error(f"Error during metrics email dispatch: {e}")
 
     finally:
         db.close()

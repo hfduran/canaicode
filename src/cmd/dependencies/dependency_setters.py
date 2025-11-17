@@ -167,11 +167,12 @@ def set_send_metrics_email_dependencies(
     db: Session
 ) -> SendMetricsEmailUseCase:
     report_config_repository = ReportConfigRepository(db)
+    github_apps_repository = GitHubAppsRepository(db)
     get_calculated_metrics_use_case = set_get_calculated_metrics_dependencies(db)
     get_copilot_metrics_by_language_use_case = set_get_copilot_metrics_by_language_dependencies(db)
     get_copilot_metrics_by_period_use_case = set_get_copilot_metrics_by_period_dependencies(db)
     get_copilot_users_metrics_use_case = set_get_copilot_users_metrics_dependencies(db)
-    return SendMetricsEmailUseCase(report_config_repository, get_calculated_metrics_use_case, get_copilot_metrics_by_language_use_case, get_copilot_metrics_by_period_use_case, get_copilot_users_metrics_use_case, mail_name=MAIL_NAME, mail_password=MAIL_PASSWORD) # type: ignore
+    return SendMetricsEmailUseCase(report_config_repository, github_apps_repository, get_calculated_metrics_use_case, get_copilot_metrics_by_language_use_case, get_copilot_metrics_by_period_use_case, get_copilot_users_metrics_use_case, mail_name=MAIL_NAME, mail_password=MAIL_PASSWORD, encryption_key=FERNET_KEY) # type: ignore
 
 def set_find_github_app_dependencies(
     db: Session
