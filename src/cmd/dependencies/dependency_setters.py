@@ -19,6 +19,7 @@ from src.domain.use_cases.get_copilot_metrics_use_case import GetCopilotMetricsU
 from src.domain.use_cases.get_copilot_users_metrics_use_case import GetCopilotUsersMetricsUseCase
 from src.domain.use_cases.get_csv_commit_metrics_use_case import GetXlsxCommitMetricsUseCase
 from src.domain.use_cases.send_metrics_email_use_case import SendMetricsEmailUseCase
+from src.domain.use_cases.update_report_config_use_case import UpdateReportConfigUseCase
 from src.domain.use_cases.validate_user_use_case import ValidateUserUseCase
 from src.domain.use_cases.validate_api_key_use_case import ValidateApiKeyUseCase
 from src.domain.use_cases.create_api_key_use_case import CreateApiKeyUseCase
@@ -203,3 +204,9 @@ def set_delete_report_config_dependencies(
 ) -> DeleteReportConfigUseCase:
     report_config_repository = ReportConfigRepository(db)
     return DeleteReportConfigUseCase(report_config_repository)
+
+def set_update_report_config_dependencies(
+    db: Session
+) -> UpdateReportConfigUseCase:
+    report_config_repository = ReportConfigRepository(db)
+    return UpdateReportConfigUseCase(report_config_repository)
