@@ -65,3 +65,15 @@ class ReportConfigRepository:
         query = self.db.query(ReportConfigDbSchema)
         query.filter(ReportConfigDbSchema.id == report_config_id).delete()
         self.db.commit()
+
+    def update(
+        self, 
+        report_config: ReportConfig
+    ) -> None:
+        record_to_save = DatabaseReportConfigMapper.to_database(
+            report_config
+        )
+
+        query = self.db.query(ReportConfigDbSchema)
+        query.filter(ReportConfigDbSchema.id == record_to_save.id).update({"emails": record_to_save.emails, "period": record_to_save.period})
+        self.db.commit()

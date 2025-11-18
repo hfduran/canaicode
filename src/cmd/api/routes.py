@@ -10,7 +10,7 @@ from pydantic import BaseModel
 
 from src.auth.verify_user_access import verify_user_access
 from src.auth.dual_auth import get_user_id_dual_auth
-from src.cmd.dependencies.dependency_setters import set_create_report_config_dependencies, set_create_user_dependencies, set_delete_github_app_dependencies, set_delete_report_config_dependencies, set_find_github_app_dependencies, set_find_report_config_dependencies
+from src.cmd.dependencies.dependency_setters import set_create_report_config_dependencies, set_create_user_dependencies, set_delete_github_app_dependencies, set_delete_report_config_dependencies, set_find_github_app_dependencies, set_find_report_config_dependencies, set_update_report_config_dependencies
 from src.cmd.dependencies.dependency_setters import set_validate_user_dependencies
 from src.cmd.dependencies.dependency_setters import set_get_commit_metrics_dependencies
 from src.cmd.dependencies.dependency_setters import set_get_copilot_metrics_dependencies
@@ -312,7 +312,7 @@ def create_report_config(
 ) -> ReportConfig:
     verify_user_access(token, user_id)
     create_report_config_use_case = set_create_report_config_dependencies(db)
-    return create_report_config_use_case.execute(user_id, emails, period,)
+    return create_report_config_use_case.execute(user_id, emails, period)
 
 
 @router.get("/report_config/{user_id}")
@@ -337,3 +337,16 @@ def delete_report_config(
     delete_report_config_use_case = set_delete_report_config_dependencies(db)
     delete_report_config_use_case.execute(user_id, report_config_id)
     return {"message": "Report config deleted successfully"}
+
+@router.put("/report_config/{report_config_id}")
+def update_report_config(
+    report_config_id: str,
+    user_id: str = Body(..., embed=True),
+    emails: List[str] = Body(..., embed=True),
+    period: Period = Body(..., embed=True),
+    token: str = Depends(oauth2_scheme),
+    db: Session = Depends(get_db),
+) -> ReportConfig:
+    verify_user_access(token, user_id)
+    update_report_config_use_case = set_update_report_config_dependencies(db)
+    return update_report_config_use_case.execute(user_id, report_config_id, emails, period)
