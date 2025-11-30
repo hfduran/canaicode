@@ -13,6 +13,7 @@ import UserLogin from "./pages/UserLogin";
 import UserRegister from "./pages/UserRegister";
 import GitHubApp from "./pages/GitHubApp";
 import ApiKeys from "./pages/ApiKeys";
+import Reports from "./pages/Reports";
 import ProtectedRoute from "./components/ProtectedRoute";
 import { isAuthenticated, logout, getUsername } from "./utils/auth";
 
@@ -36,14 +37,6 @@ const GitHubAppPage: React.FC = () => {
 
 const OnDemandMetrics: React.FC = () => {
   return <Dashboard />;
-};
-
-const Reports: React.FC = () => {
-  return (
-    <div style={{ flex: 1 }}>
-      <p>TO BE DONE</p>
-    </div>
-  );
 };
 
 const AppContent: React.FC = () => {
