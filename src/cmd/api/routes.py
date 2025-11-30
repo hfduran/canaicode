@@ -8,9 +8,10 @@ from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
 
+from src.auth.verify_admin_access import verify_admin_access
 from src.auth.verify_user_access import verify_user_access
 from src.auth.dual_auth import get_user_id_dual_auth
-from src.cmd.dependencies.dependency_setters import set_create_report_config_dependencies, set_create_user_dependencies, set_delete_github_app_dependencies, set_delete_report_config_dependencies, set_find_github_app_dependencies, set_find_report_config_dependencies, set_update_report_config_dependencies
+from src.cmd.dependencies.dependency_setters import set_create_report_config_dependencies, set_create_user_dependencies, set_delete_github_app_dependencies, set_delete_report_config_dependencies, set_fetch_copilot_metrics_dependencies, set_find_github_app_dependencies, set_find_report_config_dependencies, set_send_metrics_email_dependencies, set_update_report_config_dependencies
 from src.cmd.dependencies.dependency_setters import set_validate_user_dependencies
 from src.cmd.dependencies.dependency_setters import set_get_commit_metrics_dependencies
 from src.cmd.dependencies.dependency_setters import set_get_copilot_metrics_dependencies
@@ -350,3 +351,25 @@ def update_report_config(
     verify_user_access(token, user_id)
     update_report_config_use_case = set_update_report_config_dependencies(db)
     return update_report_config_use_case.execute(user_id, report_config_id, emails, period)
+
+@router.post("/admin/copilot_metrics/fetch")
+def fetch_copilot_metrics(
+    token: str = Body(..., embed=True),
+    db: Session = Depends(get_db),
+) -> None:
+    verify_admin_access(token)
+    fetch_copilot_metrics_use_case = set_fetch_copilot_metrics_dependencies(db)
+    fetch_copilot_metrics_use_case.execute()
+
+@router.post("/admin/report/send")
+def send_metrics_email(
+    date_string: str = Body(..., embed=True),
+    token: str = Body(..., embed=True),
+    db: Session = Depends(get_db),
+) -> None:
+    date = None
+    if(date_string):
+        date = datetime.strptime(date_string, "%Y-%m-%d")
+    verify_admin_access(token)
+    send_metrics_email_use_case = set_send_metrics_email_dependencies(db)
+    send_metrics_email_use_case.execute(date)
