@@ -81,3 +81,17 @@ export interface ApiKeyCreateResponse {
   created_at: string;
   expires_at: string | null;
 }
+
+export interface ReportConfig {
+  id: string;
+  emails: string[];
+  period: string;
+  user_id: string;
+  created_at: string;
+}
+
+export interface ReportConfigRequest {
+  emails: string[];
+  period: string;
+  user_id: string;
+}
