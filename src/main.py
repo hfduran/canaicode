@@ -31,7 +31,7 @@ async def lifespan(app: FastAPI) -> Any:
     logger.info("Application shutting down...")
 
 
-app = FastAPI(lifespan=lifespan)
+app = FastAPI(lifespan=lifespan, root_path="/api")
 
 # Configure CORS
 app.add_middleware(
