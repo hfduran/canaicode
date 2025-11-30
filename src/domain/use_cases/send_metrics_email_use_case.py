@@ -1,6 +1,6 @@
 import time
 import requests
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 import pandas as pd
 import matplotlib.pyplot as plt
 import io
@@ -35,6 +35,7 @@ class SendMetricsEmailUseCase:
         mail_name: str,
         mail_password: str,
         encryption_key: str,
+        unsubscribe_link: str,
     ) -> None:
         self.report_config_repository = report_config_repository
         self.github_apps_repository = github_apps_repository
@@ -45,38 +46,41 @@ class SendMetricsEmailUseCase:
         self.mail_name = mail_name
         self.mail_password = mail_password
         self.fernet = Fernet(encryption_key.encode())
+        self.unsubscribe_link = unsubscribe_link
 
-    def execute(self) -> None:
+    def execute(self, date: Optional[datetime] = None) -> None:
         report_configs = self.report_config_repository.list()
+        today = datetime.now()
+        if date == None:
+            date = today
 
         for report_config in report_configs:
             try:
               github_app = self.github_apps_repository.find_by_user_id(report_config.user_id)
-              today = datetime.now()
               graphs: List[Tuple[str, io.BytesIO]] = []
               inactive_users: List[str] = []
               if report_config.period == Period.DAILY:
-                 graphs, inactive_users = self.make_daily_graphs(report_config, today, github_app)
-              elif report_config.period == Period.WEEK and today.weekday() == 0:
-                 graphs, inactive_users = self.make_weekly_graphs(report_config, today, github_app)
-              elif report_config.period == Period.MONTH and today.day == 1:
-                 graphs, inactive_users = self.make_monthly_graphs(report_config, today, github_app)
-              elif report_config.period == Period.QUARTER and today.month in [1, 4, 7, 10] and today.day == 1:
-                 graphs, inactive_users = self.make_quarterly_graphs(report_config, today, github_app)
+                 graphs, inactive_users = self.make_daily_graphs(report_config, date, github_app)
+              elif report_config.period == Period.WEEK and date.weekday() == 0:
+                 graphs, inactive_users = self.make_weekly_graphs(report_config, date, github_app)
+              elif report_config.period == Period.MONTH and date.day == 1:
+                 graphs, inactive_users = self.make_monthly_graphs(report_config, date, github_app)
+              elif report_config.period == Period.QUARTER and date.month in [1, 4, 7, 10] and date.day == 1:
+                 graphs, inactive_users = self.make_quarterly_graphs(report_config, date, github_app)
               if len(graphs) > 0:
                 self.send_email(report_config.emails, graphs, inactive_users)
             except Exception as e:
                 logger.error(f"Error during send weekly email: {e}")
 
-    def make_daily_graphs(self, report_config: ReportConfig, today: datetime, github_app: GitHubApp | None) -> Tuple[List[Tuple[str, io.BytesIO]], List[str]]:
-      ten_weeks_ago = today - timedelta(weeks=10)
-      last_ten_weeks_productivity_metrics = self.get_calculated_metrics_use_case.execute(report_config.user_id, Period.WEEK, Productivity_metric.code_lines, ten_weeks_ago, today)
-      six_months_ago = today - relativedelta(months=6)
-      last_six_months_productivity_metrics = self.get_calculated_metrics_use_case.execute(report_config.user_id, Period.MONTH, Productivity_metric.code_lines, six_months_ago, today)
-      one_week_ago = today - timedelta(weeks=1)
-      last_week_copilot_metrics_by_language = self.get_copilot_metrics_by_language_use_case.execute(report_config.user_id, one_week_ago, today)
-      last_week_copilot_metrics_by_day = self.get_copilot_metrics_by_period_use_case.execute(report_config.user_id, Period.DAILY, one_week_ago, today)
-      last_week_copilot_users_metrics = self.get_copilot_users_metrics_use_case.execute(report_config.user_id, one_week_ago, today)
+    def make_daily_graphs(self, report_config: ReportConfig, date: datetime, github_app: GitHubApp | None) -> Tuple[List[Tuple[str, io.BytesIO]], List[str]]:
+      ten_weeks_ago = date - timedelta(weeks=10)
+      last_ten_weeks_productivity_metrics = self.get_calculated_metrics_use_case.execute(report_config.user_id, Period.WEEK, Productivity_metric.code_lines, ten_weeks_ago, date)
+      six_months_ago = date - relativedelta(months=6)
+      last_six_months_productivity_metrics = self.get_calculated_metrics_use_case.execute(report_config.user_id, Period.MONTH, Productivity_metric.code_lines, six_months_ago, date)
+      one_week_ago = date - timedelta(weeks=1)
+      last_week_copilot_metrics_by_language = self.get_copilot_metrics_by_language_use_case.execute(report_config.user_id, one_week_ago, date)
+      last_week_copilot_metrics_by_day = self.get_copilot_metrics_by_period_use_case.execute(report_config.user_id, Period.DAILY, one_week_ago, date)
+      last_week_copilot_users_metrics = self.get_copilot_users_metrics_use_case.execute(report_config.user_id, one_week_ago, date)
       graphs: List[Tuple[str, io.BytesIO]] = []
       if len(last_ten_weeks_productivity_metrics.data) > 0:
         graphs.append(('last_ten_weeks_productivity.png', self.make_graph(last_ten_weeks_productivity_metrics.data, 'Last ten weeks productivity', 'initial_date', ['net_changed_lines', 'net_changed_lines_by_copilot'], 'Date', 'Changed lines total/copilot'))) # type: ignore
@@ -93,15 +97,15 @@ class SendMetricsEmailUseCase:
          inactive_users = self.get_inactive_users(github_app, 30)
       return graphs, inactive_users
 
-    def make_weekly_graphs(self, report_config: ReportConfig, today: datetime, github_app: GitHubApp | None) -> Tuple[List[Tuple[str, io.BytesIO]], List[str]]:
-      ten_weeks_ago = today - timedelta(weeks=10)
-      last_ten_weeks_productivity_metrics = self.get_calculated_metrics_use_case.execute(report_config.user_id, Period.WEEK, Productivity_metric.code_lines, ten_weeks_ago, today)
-      six_months_ago = today - relativedelta(months=6)
-      last_six_months_productivity_metrics = self.get_calculated_metrics_use_case.execute(report_config.user_id, Period.MONTH, Productivity_metric.code_lines, six_months_ago, today)
-      one_week_ago = today - timedelta(weeks=1)
-      last_week_copilot_metrics_by_language = self.get_copilot_metrics_by_language_use_case.execute(report_config.user_id, one_week_ago, today)
-      last_week_copilot_metrics_by_day = self.get_copilot_metrics_by_period_use_case.execute(report_config.user_id, Period.DAILY, one_week_ago, today)
-      last_week_copilot_users_metrics = self.get_copilot_users_metrics_use_case.execute(report_config.user_id, one_week_ago, today)
+    def make_weekly_graphs(self, report_config: ReportConfig, date: datetime, github_app: GitHubApp | None) -> Tuple[List[Tuple[str, io.BytesIO]], List[str]]:
+      ten_weeks_ago = date - timedelta(weeks=10)
+      last_ten_weeks_productivity_metrics = self.get_calculated_metrics_use_case.execute(report_config.user_id, Period.WEEK, Productivity_metric.code_lines, ten_weeks_ago, date)
+      six_months_ago = date - relativedelta(months=6)
+      last_six_months_productivity_metrics = self.get_calculated_metrics_use_case.execute(report_config.user_id, Period.MONTH, Productivity_metric.code_lines, six_months_ago, date)
+      one_week_ago = date - timedelta(weeks=1)
+      last_week_copilot_metrics_by_language = self.get_copilot_metrics_by_language_use_case.execute(report_config.user_id, one_week_ago, date)
+      last_week_copilot_metrics_by_day = self.get_copilot_metrics_by_period_use_case.execute(report_config.user_id, Period.DAILY, one_week_ago, date)
+      last_week_copilot_users_metrics = self.get_copilot_users_metrics_use_case.execute(report_config.user_id, one_week_ago, date)
       graphs: List[Tuple[str, io.BytesIO]] = []
       if len(last_ten_weeks_productivity_metrics.data) > 0:
         graphs.append(('last_ten_weeks_productivity.png', self.make_graph(last_ten_weeks_productivity_metrics.data, 'Last ten weeks productivity', 'initial_date', ['net_changed_lines', 'net_changed_lines_by_copilot'], 'Date', 'Changed lines total/copilot'))) # type: ignore
@@ -118,15 +122,15 @@ class SendMetricsEmailUseCase:
          inactive_users = self.get_inactive_users(github_app, 30)
       return graphs, inactive_users
     
-    def make_monthly_graphs(self, report_config: ReportConfig, today: datetime, github_app: GitHubApp | None) -> Tuple[List[Tuple[str, io.BytesIO]], List[str]]:
-      ten_weeks_ago = today - timedelta(weeks=10)
-      last_ten_weeks_productivity_metrics = self.get_calculated_metrics_use_case.execute(report_config.user_id, Period.WEEK, Productivity_metric.code_lines, ten_weeks_ago, today)
-      six_months_ago = today - relativedelta(months=6)
-      last_six_months_productivity_metrics = self.get_calculated_metrics_use_case.execute(report_config.user_id, Period.MONTH, Productivity_metric.code_lines, six_months_ago, today)
-      one_month_ago = today - relativedelta(months=1)
-      last_month_copilot_metrics_by_language = self.get_copilot_metrics_by_language_use_case.execute(report_config.user_id, one_month_ago, today)
-      last_month_copilot_metrics_by_week = self.get_copilot_metrics_by_period_use_case.execute(report_config.user_id, Period.WEEK, one_month_ago, today)
-      last_month_copilot_users_metrics = self.get_copilot_users_metrics_use_case.execute(report_config.user_id, one_month_ago, today)
+    def make_monthly_graphs(self, report_config: ReportConfig, date: datetime, github_app: GitHubApp | None) -> Tuple[List[Tuple[str, io.BytesIO]], List[str]]:
+      ten_weeks_ago = date - timedelta(weeks=10)
+      last_ten_weeks_productivity_metrics = self.get_calculated_metrics_use_case.execute(report_config.user_id, Period.WEEK, Productivity_metric.code_lines, ten_weeks_ago, date)
+      six_months_ago = date - relativedelta(months=6)
+      last_six_months_productivity_metrics = self.get_calculated_metrics_use_case.execute(report_config.user_id, Period.MONTH, Productivity_metric.code_lines, six_months_ago, date)
+      one_month_ago = date - relativedelta(months=1)
+      last_month_copilot_metrics_by_language = self.get_copilot_metrics_by_language_use_case.execute(report_config.user_id, one_month_ago, date)
+      last_month_copilot_metrics_by_week = self.get_copilot_metrics_by_period_use_case.execute(report_config.user_id, Period.WEEK, one_month_ago, date)
+      last_month_copilot_users_metrics = self.get_copilot_users_metrics_use_case.execute(report_config.user_id, one_month_ago, date)
       graphs: List[Tuple[str, io.BytesIO]] = []
       if len(last_ten_weeks_productivity_metrics.data) > 0:
         graphs.append(('last_ten_weeks_productivity.png', self.make_graph(last_ten_weeks_productivity_metrics.data, 'Last ten weeks productivity', 'initial_date', ['net_changed_lines', 'net_changed_lines_by_copilot'], 'Date', 'Changed lines total/copilot'))) # type: ignore
@@ -143,16 +147,16 @@ class SendMetricsEmailUseCase:
          inactive_users = self.get_inactive_users(github_app, 30)
       return graphs, inactive_users
     
-    def make_quarterly_graphs(self, report_config: ReportConfig, today: datetime, github_app: GitHubApp | None) -> Tuple[List[Tuple[str, io.BytesIO]], List[str]]:
-      ten_weeks_ago = today - timedelta(weeks=10)
-      last_ten_weeks_productivity_metrics = self.get_calculated_metrics_use_case.execute(report_config.user_id, Period.WEEK, Productivity_metric.code_lines, ten_weeks_ago, today)
-      six_months_ago = today - relativedelta(months=6)
-      last_six_months_productivity_metrics = self.get_calculated_metrics_use_case.execute(report_config.user_id, Period.MONTH, Productivity_metric.code_lines, six_months_ago, today)
-      one_month_ago = today - relativedelta(months=1)
-      one_quarter_ago = today - relativedelta(months=3)
-      last_quarter_copilot_metrics_by_language = self.get_copilot_metrics_by_language_use_case.execute(report_config.user_id, one_quarter_ago, today)
-      last_quarter_copilot_metrics_by_week = self.get_copilot_metrics_by_period_use_case.execute(report_config.user_id, Period.WEEK, one_quarter_ago, today)
-      last_month_copilot_users_metrics = self.get_copilot_users_metrics_use_case.execute(report_config.user_id, one_month_ago, today)
+    def make_quarterly_graphs(self, report_config: ReportConfig, date: datetime, github_app: GitHubApp | None) -> Tuple[List[Tuple[str, io.BytesIO]], List[str]]:
+      ten_weeks_ago = date - timedelta(weeks=10)
+      last_ten_weeks_productivity_metrics = self.get_calculated_metrics_use_case.execute(report_config.user_id, Period.WEEK, Productivity_metric.code_lines, ten_weeks_ago, date)
+      six_months_ago = date - relativedelta(months=6)
+      last_six_months_productivity_metrics = self.get_calculated_metrics_use_case.execute(report_config.user_id, Period.MONTH, Productivity_metric.code_lines, six_months_ago, date)
+      one_month_ago = date - relativedelta(months=1)
+      one_quarter_ago = date - relativedelta(months=3)
+      last_quarter_copilot_metrics_by_language = self.get_copilot_metrics_by_language_use_case.execute(report_config.user_id, one_quarter_ago, date)
+      last_quarter_copilot_metrics_by_week = self.get_copilot_metrics_by_period_use_case.execute(report_config.user_id, Period.WEEK, one_quarter_ago, date)
+      last_month_copilot_users_metrics = self.get_copilot_users_metrics_use_case.execute(report_config.user_id, one_month_ago, date)
       graphs: List[Tuple[str, io.BytesIO]] = []
       if len(last_ten_weeks_productivity_metrics.data) > 0:
         graphs.append(('last_ten_weeks_productivity.png', self.make_graph(last_ten_weeks_productivity_metrics.data, 'Last ten weeks productivity', 'initial_date', ['net_changed_lines', 'net_changed_lines_by_copilot'], 'Date', 'Changed lines total/copilot'))) # type: ignore
@@ -243,11 +247,12 @@ class SendMetricsEmailUseCase:
       graphs_html = ""
       for index, (name, _) in enumerate(graphs):
           cid = f"graph{index}"
+          title = self.format_title(name)
 
           graphs_html += f"""
           <div style="margin:25px 0;">
-              <h3 style="color:#2a4d8f; margin-bottom:5px;">{name}</h3>
-              <img src="cid:{cid}" alt="{name}" style="max-width:100%; border-radius:6px;">
+              <h3 style="color:#2a4d8f; margin-bottom:5px;">{title}</h3>
+              <img src="cid:{cid}" alt="{title}" style="max-width:100%; border-radius:6px;">
           </div>
           """
 
@@ -276,14 +281,17 @@ class SendMetricsEmailUseCase:
             </h1>
 
             <p style="font-size:16px; color:#444; text-align:center; margin-top:0;">
-              Below is the weekly report containing metrics and graphs.
+              Please find below the latest report containing relevant metrics and graphical analyses.
             </p>
 
             <hr style="border:none; border-top:1px solid #ddd; margin:20px 0;">
 
             <div style="font-size:15px; color:#333;">
               <p>Hello,</p>
-              <p>Please find below the graphs generated automatically by the system:</p>
+              <p>
+                This email contains the automatically generated performance metrics 
+                and visual insights for the selected reporting period.
+              </p>
             </div>
 
             {graphs_html}
@@ -296,11 +304,17 @@ class SendMetricsEmailUseCase:
               This email was sent automatically by the reporting system.
             </p>
 
+            <p style="font-size:13px; color:#888; text-align:center; margin-top:20px;">
+              If you wish to stop receiving these emails, you can disable notifications using the link below:<br>
+              <a href="{self.unsubscribe_link}" style="color:#2a4d8f;">Unsubscribe</a>
+            </p>
+
           </div>
 
         </body>
       </html>
       """
+
 
       msg.add_alternative(html, subtype='html')
 
@@ -321,6 +335,14 @@ class SendMetricsEmailUseCase:
       with smtplib.SMTP_SSL('smtp.gmail.com', 465) as smtp:
           smtp.login(self.mail_name, self.mail_password)
           smtp.send_message(msg)
+
+    def format_title(self, filename: str) -> str:
+      name = filename.rsplit('.', 1)[0]
+
+      name = name.replace('_', ' ')
+
+      return name.title()
+
 
     def get_inactive_users(self, github_app: GitHubApp, days_inactive: int) -> List[str]:
       try:
