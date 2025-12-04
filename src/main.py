@@ -33,16 +33,13 @@ async def lifespan(app: FastAPI) -> Any:
 
 app = FastAPI(lifespan=lifespan, root_path="/api")
 
-# Configure CORS
+# Configure CORS - Allow everything
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:3000",  # React development server
-        "https://canaicode-seven.vercel.app",  # Production frontend
-    ],
-    allow_credentials=True,
-    allow_methods=["GET", "POST", "PUT", "DELETE"],
-    allow_headers=["*"],
+    allow_origins=["*"],  # Allow all origins
+    allow_credentials=False,  # Must be False when using wildcard origins
+    allow_methods=["*"],  # Allow all HTTP methods
+    allow_headers=["*"],  # Allow all headers
 )
 
 app.include_router(router)
