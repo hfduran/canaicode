@@ -29,6 +29,7 @@ cp .env.example .env
 3. Configure environment variables in `.env`:
    - `REACT_APP_API_URL`: Backend API URL (e.g., `http://localhost:8000/api`)
    - `REACT_APP_ADMIN_KEY`: Admin authentication key (must match the backend's `ADMIN_KEY`)
+   - `PUBLIC_URL`: Base path for deployment (e.g., `/admin` for subdirectory, `/` for root)
 
 ## Running the Application
 
@@ -47,6 +48,25 @@ npm run build
 ```
 
 This builds the app for production to the `build` folder.
+
+### Deploying to a Subdirectory
+
+The app base path is configured via the `PUBLIC_URL` environment variable in `.env`. Set it to `/admin` for subdirectory deployment or `/` for root deployment. When deploying with nginx to `/admin`:
+
+```nginx
+location /admin/ {
+   auth_basic "Restricted";
+   auth_basic_user_file /etc/nginx/.htpasswd;
+   rewrite ^/admin(/.*)$ $1 break;
+   proxy_pass http://127.0.0.1:3001;
+   proxy_set_header Host $host;
+   proxy_set_header X-Real-IP $remote_addr;
+   proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+   proxy_set_header X-Forwarded-Proto $scheme;
+}
+```
+
+All static assets will correctly load from `/admin/static/...`.
 
 ## Usage
 
