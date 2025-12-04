@@ -105,15 +105,15 @@ async def get_copilot_metrics(
     user_id: str = Body(..., embed=True),
     authenticated_user_id: str = Depends(get_user_id_dual_auth),
     db: Session = Depends(get_db),
-) -> Dict[str, List[Any]]:
+) -> Dict[str, str]:
     if authenticated_user_id != user_id:
         raise HTTPException(status_code=403, detail="Access denied: cannot access other user's data")
 
     file_content = await file.read()
     data = json.loads(file_content)
     get_copilot_metrics_use_case = set_get_copilot_metrics_dependencies(db)
-    response = get_copilot_metrics_use_case.execute(data, user_id)
-    return response
+    get_copilot_metrics_use_case.execute(data, user_id)
+    return {"message": "Copilot metrics uploaded successfully"}
 
 
 @router.post("/commit_metrics/upload")
