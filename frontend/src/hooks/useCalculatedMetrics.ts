@@ -5,7 +5,6 @@ import { CalculatedMetricsService } from '../services/calculatedMetricsService';
 
 interface UseCalculatedMetricsParams {
   timeRange: string;
-  team: string;
   metric: string;
   initialDate: string;
   finalDate: string;
@@ -18,17 +17,16 @@ export const useCalculatedMetrics = () => {
   const [error, setError] = useState<string | null>(null);
 
   const handleRequestData = async (params: UseCalculatedMetricsParams) => {
-    const { timeRange, team, metric, initialDate, finalDate, programmingLanguages } = params;
-    
+    const { timeRange, metric, initialDate, finalDate, programmingLanguages } = params;
+
     // Validate that all required parameters are provided
-    if (!timeRange || !team || !metric || !initialDate || !finalDate) {
-      setError('All fields except Programming Languages are required');
+    if (!timeRange || !metric || !initialDate || !finalDate) {
+      setError('Time Period, Metric Type, and Date Range are required');
       return;
     }
     
     console.log("Form Data:", {
       timeRange,
-      team,
       metric,
       initialDate,
       finalDate,
@@ -58,7 +56,6 @@ export const useCalculatedMetrics = () => {
       requestFinalDate = new Date(finalDate);
 
       const request: CalculatedMetricsRequest = {
-        team_name: team,
         period: periodMap[timeRange] || "M",
         productivity_metric: productivityMetricMap[metric] || "code_lines",
         initial_date: requestInitialDate,

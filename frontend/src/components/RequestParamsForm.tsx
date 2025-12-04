@@ -7,15 +7,12 @@ import {
   ColumnLayout,
   Button
 } from "@cloudscape-design/components";
-import { TEAM_OPTIONS } from "../constants/teams";
 import { PROGRAMMING_LANGUAGES_OPTIONS } from "../constants/programming_languages";
 import DateRangeSelector from "./DateRangeSelector";
 
 interface RequestParamsFormProps {
   timeRange: string;
   setTimeRange: (value: string) => void;
-  team: string;
-  setTeam: (value: string) => void;
   metric: string;
   setMetric: (value: string) => void;
   initialDate: string;
@@ -29,8 +26,6 @@ interface RequestParamsFormProps {
 const RequestParamsForm: React.FC<RequestParamsFormProps> = ({
   timeRange,
   setTimeRange,
-  team,
-  setTeam,
   metric,
   setMetric,
   initialDate,
@@ -67,7 +62,7 @@ const RequestParamsForm: React.FC<RequestParamsFormProps> = ({
           />
         </FormField>
 
-        <FormField 
+        <FormField
           label="Metric Type"
           description="Choose the type of metrics to analyze"
         >
@@ -76,18 +71,6 @@ const RequestParamsForm: React.FC<RequestParamsFormProps> = ({
             onChange={({ detail }) => setMetric(detail.selectedOption?.value || "")}
             options={METRIC_OPTIONS}
             placeholder="Select metric option"
-          />
-        </FormField>
-
-        <FormField 
-          label="Developer Team"
-          description="Select the team to analyze"
-        >
-          <Select
-            selectedOption={TEAM_OPTIONS.find(option => option.value === team) || null}
-            onChange={({ detail }) => setTeam(detail.selectedOption?.value || "")}
-            options={TEAM_OPTIONS}
-            placeholder="Select team"
           />
         </FormField>
 

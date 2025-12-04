@@ -14,7 +14,6 @@ export interface CalculatedDashboardData {
 }
 
 export interface CalculatedMetricsRequest {
-  team_name: string;
   period: "W" | "M" | "Q" | "Y"; // Week, Month, Quarter, Year
   productivity_metric: "code_lines" | "commits";
   initial_date: Date;

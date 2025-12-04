@@ -33,7 +33,6 @@ const CalculatedMetricsDashboard: React.FC = () => {
 
   const defaultDates = getDefaultDates();
   const [timeRange, setTimeRange] = useState<string>("");
-  const [team, setTeam] = useState<string>("");
   const [metric, setMetric] = useState<string>("");
   const [initialDate, setInitialDate] = useState<string>(defaultDates.initial);
   const [finalDate, setFinalDate] = useState<string>(defaultDates.final);
@@ -52,7 +51,7 @@ const CalculatedMetricsDashboard: React.FC = () => {
 
   const pearsonCorr = pearsonCorrCalculator(formattedData);
 
-  const isFormValid = timeRange && team && metric && initialDate && finalDate; // programmingLanguages is optional
+  const isFormValid = timeRange && metric && initialDate && finalDate; // programmingLanguages is optional
 
   const handleSubmitRequest = async () => {
     if (!isFormValid) {
@@ -61,7 +60,6 @@ const CalculatedMetricsDashboard: React.FC = () => {
 
     await handleRequestData({
       timeRange,
-      team,
       metric,
       initialDate,
       finalDate,
@@ -122,8 +120,6 @@ const CalculatedMetricsDashboard: React.FC = () => {
               <RequestParamsForm
                 timeRange={timeRange}
                 setTimeRange={setTimeRange}
-                team={team}
-                setTeam={setTeam}
                 metric={metric}
                 setMetric={setMetric}
                 initialDate={initialDate}
