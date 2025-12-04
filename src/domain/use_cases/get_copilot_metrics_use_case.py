@@ -24,12 +24,22 @@ class GetCopilotMetricsUseCase:
             data, user_id
         )
 
-        for copilot_code_metrics in copilot_metrics["code"]:
-            if isinstance(copilot_code_metrics, CopilotCodeMetrics):
-                self.copilot_code_metrics_repository.create(copilot_code_metrics)
+        # Bulk upsert code metrics
+        code_metrics_to_insert = [
+            copilot_code_metrics
+            for copilot_code_metrics in copilot_metrics["code"]
+            if isinstance(copilot_code_metrics, CopilotCodeMetrics)
+        ]
+        if code_metrics_to_insert:
+            self.copilot_code_metrics_repository.upsert_many(code_metrics_to_insert)
 
-        for copilot_chat_metrics in copilot_metrics["chat"]:
-            if isinstance(copilot_chat_metrics, CopilotChatMetrics):
-                self.copilot_chat_metrics_repository.create(copilot_chat_metrics)
+        # Bulk upsert chat metrics
+        chat_metrics_to_insert = [
+            copilot_chat_metrics
+            for copilot_chat_metrics in copilot_metrics["chat"]
+            if isinstance(copilot_chat_metrics, CopilotChatMetrics)
+        ]
+        if chat_metrics_to_insert:
+            self.copilot_chat_metrics_repository.upsert_many(chat_metrics_to_insert)
 
         return copilot_metrics

@@ -68,11 +68,12 @@ class TestGetCopilotMetricsUseCase(TestCase):
         test_data = {"test": "data"}
         get_copilot_metrics_use_case.execute(test_data, "test-user-id")
 
-        self.assertEqual(copilot_code_metrics_repository.create.call_count, 2)
-        copilot_code_metrics_repository.create.assert_called_with(
-            copilot_code_metrics
+        # Verify upsert_many is called once with list of metrics
+        self.assertEqual(copilot_code_metrics_repository.upsert_many.call_count, 1)
+        copilot_code_metrics_repository.upsert_many.assert_called_with(
+            [copilot_code_metrics, copilot_code_metrics]
         )
-        self.assertEqual(copilot_chat_metrics_repository.create.call_count, 2)
-        copilot_chat_metrics_repository.create.assert_called_with(
-            copilot_chat_metrics
+        self.assertEqual(copilot_chat_metrics_repository.upsert_many.call_count, 1)
+        copilot_chat_metrics_repository.upsert_many.assert_called_with(
+            [copilot_chat_metrics, copilot_chat_metrics]
         )
