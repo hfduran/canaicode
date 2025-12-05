@@ -1,5 +1,0 @@
-# Backend API URL
-REACT_APP_API_URL=http://ec2-18-116-165-118.us-east-2.compute.amazonaws.com/api
-
-# Admin authentication key (must match backend ADMIN_KEY)
-REACT_APP_ADMIN_KEY="27a0edba-78b5-4d52-9419-7c2f7424d176"
