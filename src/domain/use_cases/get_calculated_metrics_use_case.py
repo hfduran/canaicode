@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import List, Optional
+from typing import Dict, List, Optional
 
 import pandas as pd  # type: ignore
 
@@ -147,66 +147,63 @@ class GetCalculatedMetricsUseCase:
     def get_commit_metrics(
         self,
         raw_commit_metrics: List[CommitMetrics],
-        raw_copilot_code_metrics: List[CopilotCodeMetrics],
         period: Period,
     ) -> CalculatedMetrics:
-        df_commit_metrics = pd.DataFrame(
-            [{"metrics": c, "date": c.date} for c in raw_commit_metrics]
-        )
-        df_copilot_code_metrics = pd.DataFrame(
-            [{"metrics": c, "date": c.date} for c in raw_copilot_code_metrics],
-            columns=["metrics", "date"]
-        )
-        df_copilot_code_metrics["date"] = pd.to_datetime(df_copilot_code_metrics["date"], errors="coerce") # type: ignore
 
-        grouped_commit_metrics = df_commit_metrics.groupby(  # type: ignore
-            pd.Grouper(key="date", freq=period)
-        )
+        aggregated_by_hash: Dict[str, CommitMetrics] = {}
 
-        grouped_copilot_code_metrics = df_copilot_code_metrics.groupby(  # type: ignore
-            pd.Grouper(key="date", freq=period)
-        )
+        languages: List[str] = []
+        authors: List[str] = []
+
+        for c in raw_commit_metrics:
+            if c.language not in languages:
+                languages.append(c.language)
+
+            if c.author.name not in authors:
+                authors.append(c.author.name)
+
+            if c.hash not in aggregated_by_hash:
+                aggregated_by_hash[c.hash] = CommitMetrics(
+                    hash=c.hash,
+                    user_id=c.user_id,
+                    date=c.date,
+                    language=c.language,
+                    author=c.author,
+                    added_lines=0,
+                    removed_lines=0,
+                )
+            else:
+                if c.date > aggregated_by_hash[c.hash].date:
+                    aggregated_by_hash[c.hash].date = c.date
+
+        aggregated_list = list(aggregated_by_hash.values())
 
         response = CalculatedMetrics(
-            user_id=raw_commit_metrics[0].user_id,
-            languages=[],
+            user_id=aggregated_list[0].user_id,
+            languages=languages,
             period=period,
             data=[],
         )
 
-        for period_final_date, commit_metrics_df in grouped_commit_metrics:  # type: ignore
-            authors = []
-            for commit_metrics in commit_metrics_df["metrics"]:  # type: ignore
-                if commit_metrics.language not in response.languages:  # type: ignore
-                    response.languages.append(commit_metrics.language)  # type: ignore
-                if commit_metrics.author.name not in authors:  # type: ignore
-                    authors.append(commit_metrics.author.name)  # type: ignore
+        df_commit_metrics = pd.DataFrame(
+            [{"metrics": c, "date": c.date} for c in aggregated_list]
+        )
+
+        grouped_commit_metrics = df_commit_metrics.groupby(
+            pd.Grouper(key="date", freq=period)
+        )
+
+        for period_final_date, commit_metrics_df in grouped_commit_metrics:
             response.data.append(
                 CommitMetricsData(
-                    initial_date=period_final_date.to_period(  # type: ignore
-                        period
-                    ).start_time.to_pydatetime(),
-                    final_date=period_final_date.to_pydatetime(),  # type: ignore
-                    total_commits=commit_metrics_df["metrics"].__len__(),
-                    percentage_copilot_suggestions_accepted=0,
-                    number_of_authors=authors.__len__()
+                    initial_date=period_final_date
+                        .to_period(period)
+                        .start_time
+                        .to_pydatetime(),
+                    final_date=period_final_date.to_pydatetime(),
+                    total_commits=len(commit_metrics_df["metrics"]),
+                    number_of_authors=len(authors),
                 )
             )
-
-        for (
-            copilot_period_final_date,  # type: ignore
-            copilot_code_metrics_df,
-        ) in grouped_copilot_code_metrics:
-            index = next(
-                (i for i, data in enumerate(response.data)
-                if data.final_date == copilot_period_final_date),
-                None
-            )
-            if index is None:
-                continue
-            response.data[index].percentage_copilot_suggestions_accepted = MetricsCalculator.calculate_relative_use_of_AI( # type: ignore
-                copilot_code_metrics_df["metrics"].to_list()  # type: ignore
-            )
-
 
         return response
