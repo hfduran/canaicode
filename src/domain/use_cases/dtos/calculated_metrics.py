@@ -19,7 +19,6 @@ class CommitMetricsData(BaseModel):
     initial_date: datetime
     final_date: datetime
     total_commits: int
-    percentage_copilot_suggestions_accepted: float
     number_of_authors: int
 
 

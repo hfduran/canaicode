@@ -17,9 +17,9 @@ class GetCopilotUsersMetricsUseCase:
   def execute(self, user_id: str, initial_date: Optional[datetime] = None, final_date: Optional[datetime] = None) -> List[CopilotUsersMetrics]:
     raw_copilot_code_metrics = self.copilot_code_metrics_repository.listByUserId(user_id, initial_date, final_date)
 
-    if (not raw_copilot_code_metrics):
-      return []
-    
+    if not raw_copilot_code_metrics:
+        return []
+
     grouped_code_metrics: DefaultDict[datetime, Dict[str, int]] = DefaultDict(lambda: {
       "total_users": 0,
     })
@@ -59,5 +59,7 @@ class GetCopilotUsersMetricsUseCase:
                 total_code_assistant_users=0,
                 total_chat_users=values_chat_metrics["total_users"]
             ))
+
+    response.sort(key=lambda item: item.date)
 
     return response
