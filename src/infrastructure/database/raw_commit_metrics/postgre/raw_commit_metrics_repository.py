@@ -2,6 +2,7 @@ from datetime import datetime
 from typing import List, Optional
 
 from sqlalchemy.orm import Session
+from sqlalchemy import func
 
 from src.domain.entities.commit_metrics import CommitMetrics
 from src.infrastructure.database.raw_commit_metrics.postgre.dtos.model import RawCommitMetrics
@@ -43,7 +44,8 @@ class RawCommitMetricsRepository:
             query = query.filter(RawCommitMetrics.date <= final_date)
 
         if languages:
-            query = query.filter(RawCommitMetrics.language.in_(languages))
+            normalized_languages = [lang.lower() for lang in languages]
+            query = query.filter(func.lower(RawCommitMetrics.language).in_(normalized_languages))
 
         records = query.filter(RawCommitMetrics.user_id == user_id).all()
 

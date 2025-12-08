@@ -4,6 +4,7 @@ from typing import List, Optional
 from sqlalchemy.orm import Session
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy import func
 
 from src.domain.entities.copilot_code_metrics import CopilotCodeMetrics
 from src.infrastructure.database.raw_copilot_code_metrics.postgre.dtos.model import RawCopilotCodeMetrics
@@ -85,7 +86,8 @@ class RawCopilotCodeMetricsRepository:
             query = query.filter(RawCopilotCodeMetrics.date <= final_date)
 
         if languages:
-            query = query.filter(RawCopilotCodeMetrics.language.in_(languages))
+            normalized_languages = [lang.lower() for lang in languages]
+            query = query.filter(func.lower(RawCopilotCodeMetrics.language).in_(normalized_languages))
 
         records = query.filter(RawCopilotCodeMetrics.user_id == user_id).all()
 
