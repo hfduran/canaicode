@@ -1,5 +1,6 @@
 from datetime import datetime
 from typing import Dict, List, Optional
+import uuid
 
 import pandas as pd  # type: ignore
 
@@ -147,6 +148,7 @@ class GetCalculatedMetricsUseCase:
     def get_commit_metrics(
         self,
         raw_commit_metrics: List[CommitMetrics],
+        raw_copilot_code_metrics: List[CopilotCodeMetrics],
         period: Period,
     ) -> CalculatedMetrics:
 
@@ -160,10 +162,11 @@ class GetCalculatedMetricsUseCase:
                 languages.append(c.language)
 
             if c.author.name not in authors:
-                authors.append(c.author.name)
+                authors.append(c.author.name) # type: ignore
 
             if c.hash not in aggregated_by_hash:
                 aggregated_by_hash[c.hash] = CommitMetrics(
+                    id=str(uuid.uuid4()),
                     hash=c.hash,
                     user_id=c.user_id,
                     date=c.date,
@@ -171,6 +174,7 @@ class GetCalculatedMetricsUseCase:
                     author=c.author,
                     added_lines=0,
                     removed_lines=0,
+                    repository=c.repository
                 )
             else:
                 if c.date > aggregated_by_hash[c.hash].date:
@@ -189,18 +193,15 @@ class GetCalculatedMetricsUseCase:
             [{"metrics": c, "date": c.date} for c in aggregated_list]
         )
 
-        grouped_commit_metrics = df_commit_metrics.groupby(
+        grouped_commit_metrics = df_commit_metrics.groupby( # type: ignore
             pd.Grouper(key="date", freq=period)
         )
 
-        for period_final_date, commit_metrics_df in grouped_commit_metrics:
+        for period_final_date, commit_metrics_df in grouped_commit_metrics: # type: ignore
             response.data.append(
                 CommitMetricsData(
-                    initial_date=period_final_date
-                        .to_period(period)
-                        .start_time
-                        .to_pydatetime(),
-                    final_date=period_final_date.to_pydatetime(),
+                    initial_date=period_final_date.to_period(period).start_time.to_pydatetime(), # type: ignore
+                    final_date=period_final_date.to_pydatetime(), # type: ignore
                     total_commits=len(commit_metrics_df["metrics"]),
                     number_of_authors=len(authors),
                 )
