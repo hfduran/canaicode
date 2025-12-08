@@ -95,3 +95,11 @@ class RawCopilotCodeMetricsRepository:
         )
 
         return list(copilot_code_metrics)
+    
+    def deleteByUserId(
+        self, 
+        user_id: str
+    ) -> None:
+        query = self.db.query(RawCopilotCodeMetrics)
+        query.filter(RawCopilotCodeMetrics.user_id == user_id).delete()
+        self.db.commit()

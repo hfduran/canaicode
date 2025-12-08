@@ -11,7 +11,7 @@ from pydantic import BaseModel
 from src.auth.verify_admin_access import verify_admin_access
 from src.auth.verify_user_access import verify_user_access
 from src.auth.dual_auth import get_user_id_dual_auth
-from src.cmd.dependencies.dependency_setters import set_create_report_config_dependencies, set_create_user_dependencies, set_delete_github_app_dependencies, set_delete_report_config_dependencies, set_fetch_copilot_metrics_dependencies, set_find_github_app_dependencies, set_find_report_config_dependencies, set_send_metrics_email_dependencies, set_update_report_config_dependencies
+from src.cmd.dependencies.dependency_setters import set_create_report_config_dependencies, set_create_user_dependencies, set_delete_github_app_dependencies, set_delete_metrics_dependencies, set_delete_report_config_dependencies, set_fetch_copilot_metrics_dependencies, set_find_github_app_dependencies, set_find_report_config_dependencies, set_send_metrics_email_dependencies, set_update_report_config_dependencies
 from src.cmd.dependencies.dependency_setters import set_validate_user_dependencies
 from src.cmd.dependencies.dependency_setters import set_get_commit_metrics_dependencies
 from src.cmd.dependencies.dependency_setters import set_get_copilot_metrics_dependencies
@@ -373,3 +373,13 @@ def send_metrics_email(
     verify_admin_access(token)
     send_metrics_email_use_case = set_send_metrics_email_dependencies(db)
     send_metrics_email_use_case.execute(date)
+
+@router.delete("/admin/user_metrics")
+def delete_user_metrics(
+    username: str = Body(..., embed=True),
+    token: str = Body(..., embed=True),
+    db: Session = Depends(get_db),
+) -> None:
+    verify_admin_access(token)
+    delete_user_metrics_use_case = set_delete_metrics_dependencies(db)
+    delete_user_metrics_use_case.execute(username)

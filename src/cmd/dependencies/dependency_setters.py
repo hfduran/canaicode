@@ -7,6 +7,7 @@ from src.domain.use_cases.create_github_app_use_case import CreateGitHubAppUseCa
 from src.domain.use_cases.create_report_config_use_case import CreateReportConfigUseCase
 from src.domain.use_cases.create_user_use_case import CreateUserUseCase
 from src.domain.use_cases.delete_github_app_use_case import DeleteGitHubAppUseCase
+from src.domain.use_cases.delete_metrics_use_case import DeleteMetricsUseCase
 from src.domain.use_cases.delete_report_config_use_case import DeleteReportConfigUseCase
 from src.domain.use_cases.fetch_copilot_metrics_use_case import FetchCopilotMetricsUseCase
 from src.domain.use_cases.find_github_app_use_case import FindGitHubAppUseCase
@@ -211,3 +212,12 @@ def set_update_report_config_dependencies(
 ) -> UpdateReportConfigUseCase:
     report_config_repository = ReportConfigRepository(db)
     return UpdateReportConfigUseCase(report_config_repository)
+
+def set_delete_metrics_dependencies(
+    db: Session
+) -> DeleteMetricsUseCase:
+    users_repository = UsersRepository(db)
+    commit_metrics_repository = RawCommitMetricsRepository(db)
+    copilot_code_metrics_repository = RawCopilotCodeMetricsRepository(db)
+    copilot_chat_metrics_repository = RawCopilotChatMetricsRepository(db)
+    return DeleteMetricsUseCase(users_repository, commit_metrics_repository, copilot_code_metrics_repository, copilot_chat_metrics_repository)
