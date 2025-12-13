@@ -20,6 +20,9 @@ class CommitMetricsData(BaseModel):
     final_date: datetime
     total_commits: int
     number_of_authors: int
+    net_changed_lines: int
+    net_changed_lines_by_copilot: int
+    percentage_changed_lines_by_copilot: float
 
 
 class CalculatedMetrics(BaseModel):

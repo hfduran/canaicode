@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { BarChart, Bar, CartesianGrid, XAxis, YAxis, Tooltip, Legend } from "recharts";
+import { BarChart, Bar, ComposedChart, Line, CartesianGrid, XAxis, YAxis, Tooltip, Legend } from "recharts";
 import RequestParamsForm from "./RequestParamsForm";
 import { FlattenedDataEntry, FormattedDataEntry } from "../types/ui";
 import {
@@ -46,8 +46,15 @@ const CalculatedMetricsDashboard: React.FC = () => {
     ...entry,
     initial_date: formatDate(entry.initial_date),
     final_date: formatDate(entry.final_date),
-    net_changed_lines_without_copilot: entry.net_changed_lines - entry.net_changed_lines_by_copilot,
+    net_changed_lines_without_copilot: (entry.net_changed_lines || 0) - (entry.net_changed_lines_by_copilot || 0),
   }));
+
+  // Debug logging
+  if (formattedData.length > 0) {
+    console.log("formattedData sample:", formattedData[0]);
+    console.log("Has total_commits?", 'total_commits' in formattedData[0]);
+    console.log("percentage_changed_lines_by_copilot:", formattedData[0].percentage_changed_lines_by_copilot);
+  }
 
   const pearsonCorr = pearsonCorrCalculator(formattedData);
 
@@ -68,6 +75,8 @@ const CalculatedMetricsDashboard: React.FC = () => {
   };
 
   // Calculate summary metrics
+  const isCommitsMetric = formattedData.length > 0 && 'total_commits' in formattedData[0];
+
   const totalLines = formattedData.reduce((acc, entry) => acc + (entry.net_changed_lines || 0), 0);
   const totalCopilotLines = formattedData.reduce(
     (acc, entry) => acc + (entry.net_changed_lines_by_copilot || 0),
@@ -75,6 +84,16 @@ const CalculatedMetricsDashboard: React.FC = () => {
   );
   const copilotPercentage =
     totalLines > 0 ? ((totalCopilotLines / totalLines) * 100).toFixed(1) : "0";
+
+  // For Commits metric
+  const totalCommits = formattedData.reduce((acc, entry) => acc + ((entry as any).total_commits || 0), 0);
+  const avgCopilotIntensityValue = formattedData.length > 0
+    ? formattedData.reduce((acc, entry) => {
+        const value = entry.percentage_changed_lines_by_copilot;
+        return acc + (typeof value === 'number' && !isNaN(value) ? value : 0);
+      }, 0) / formattedData.length * 100
+    : 0;
+  const avgCopilotIntensity = !isNaN(avgCopilotIntensityValue) ? avgCopilotIntensityValue.toFixed(1) : "0";
 
   // Responsive chart dimensions
   const getChartDimensions = () => {
@@ -161,8 +180,12 @@ const CalculatedMetricsDashboard: React.FC = () => {
               <Container variant="stacked">
                 <Box textAlign="center" padding="l">
                   <SpaceBetween direction="vertical" size="xs">
-                    <Box variant="h1">{totalLines.toLocaleString()}</Box>
-                    <Box variant="strong">Total Lines Added</Box>
+                    <Box variant="h1">
+                      {isCommitsMetric ? totalCommits.toLocaleString() : totalLines.toLocaleString()}
+                    </Box>
+                    <Box variant="strong">
+                      {isCommitsMetric ? "Total Commits" : "Total Lines Added"}
+                    </Box>
                     <Box variant="small">Across all analyzed period</Box>
                   </SpaceBetween>
                 </Box>
@@ -171,9 +194,15 @@ const CalculatedMetricsDashboard: React.FC = () => {
               <Container>
                 <Box textAlign="center" padding="l">
                   <SpaceBetween direction="vertical" size="xs">
-                    <Box variant="h1">{totalCopilotLines.toLocaleString()}</Box>
-                    <Box variant="strong">Copilot Generated Lines</Box>
-                    <Box variant="small">AI-assisted code contributions</Box>
+                    <Box variant="h1">
+                      {isCommitsMetric ? totalLines.toLocaleString() : totalCopilotLines.toLocaleString()}
+                    </Box>
+                    <Box variant="strong">
+                      {isCommitsMetric ? "Total Lines Changed" : "Copilot Generated Lines"}
+                    </Box>
+                    <Box variant="small">
+                      {isCommitsMetric ? "Across all commits" : "AI-assisted code contributions"}
+                    </Box>
                   </SpaceBetween>
                 </Box>
               </Container>
@@ -181,9 +210,15 @@ const CalculatedMetricsDashboard: React.FC = () => {
               <Container>
                 <Box textAlign="center" padding="l">
                   <SpaceBetween direction="vertical" size="xs">
-                    <Box variant="h1">{copilotPercentage}%</Box>
-                    <Box variant="strong">Copilot Contribution Rate</Box>
-                    <Box variant="small">Percentage of AI-generated code</Box>
+                    <Box variant="h1">
+                      {isCommitsMetric ? `${avgCopilotIntensity}%` : `${copilotPercentage}%`}
+                    </Box>
+                    <Box variant="strong">
+                      {isCommitsMetric ? "Avg Copilot Intensity" : "Copilot Contribution Rate"}
+                    </Box>
+                    <Box variant="small">
+                      {isCommitsMetric ? "Average intensity across periods" : "Percentage of AI-generated code"}
+                    </Box>
                   </SpaceBetween>
                 </Box>
               </Container>
@@ -199,87 +234,162 @@ const CalculatedMetricsDashboard: React.FC = () => {
                   header={
                     <Header
                       variant="h2"
-                      description="Visual representation of code contribution metrics over time"
+                      description={
+                        isCommitsMetric
+                          ? "Commit count and Copilot usage intensity over time"
+                          : "Visual representation of code contribution metrics over time"
+                      }
                       actions={<Badge color="blue">{formattedData.length} data points</Badge>}
                     >
-                      Code Contribution Analytics
+                      {isCommitsMetric ? "Commit Analytics" : "Code Contribution Analytics"}
                     </Header>
                   }
                 >
-                  <BarChart
-                    width={chartDimensions.width}
-                    height={chartDimensions.height}
-                    data={formattedData}
-                    margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
-                  >
-                    <CartesianGrid strokeDasharray="3 3" stroke="#e9ecef" opacity={0.7} />
-                    <XAxis
-                      dataKey="initial_date"
-                      tick={{ fontSize: 12, fill: "#6c757d" }}
-                      stroke="#6c757d"
-                      tickLine={{ stroke: "#6c757d" }}
-                    />
-                    <YAxis
-                      tick={{ fontSize: 12, fill: "#6c757d" }}
-                      stroke="#6c757d"
-                      tickLine={{ stroke: "#6c757d" }}
-                    />
-                    <Tooltip
-                      formatter={(value: any, name: string, props: any) => {
-                        const total = props.payload.net_changed_lines;
-                        let percent = 0;
-                        if (name === "Copilot Changed Lines") {
-                          percent = total > 0 ? (value / total) * 100 : 0;
-                          return [
-                            `${value} lines (${percent.toFixed(1)}% of total)`,
-                            "Copilot Changed Lines",
-                          ];
-                        }
-                        if (name === "Changed Lines without Copilot") {
-                          percent = total > 0 ? (value / total) * 100 : 0;
-                          return [
-                            `${value} lines (${percent.toFixed(1)}% of total)`,
-                            "Changed Lines without Copilot",
-                          ];
-                        }
-                        return [`${value} lines`, name];
-                      }}
-                      contentStyle={{
-                        backgroundColor: "#ffffff",
-                        border: "1px solid #e9ecef",
-                        borderRadius: "8px",
-                        boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
-                        fontSize: "14px",
-                      }}
-                      labelStyle={{ color: "#232f3e", fontWeight: "bold" }}
-                    />
-                    <Legend wrapperStyle={{ paddingTop: "20px" }} />
-                    <Bar
-                      dataKey="net_changed_lines_without_copilot"
-                      fill="#0073bb"
-                      name="Changed Lines without Copilot"
-                      radius={[4, 4, 0, 0]}
-                      stackId="a"
-                    />
-                    <Bar
-                      dataKey="net_changed_lines_by_copilot"
-                      fill="#037f0c"
-                      name="Copilot Changed Lines"
-                      radius={[4, 4, 0, 0]}
-                      stackId="a"
-                    />
-                  </BarChart>
-                    <Box margin={{ top: "xs" }}>
-                      <Box
-                        variant="small"
-                        color="text-body-secondary"
-                        textAlign="left"
-                      >
-                        <span style={{ fontStyle: "italic", fontSize: "0.85em" }}>
-                          P.S. Copilot changed lines reflect taken suggestions from Copilot – it is possible for these numbers to be inflated, for instance, if a method is rewritten multiple times over a long period of time.
-                        </span>
-                      </Box>
+                  {isCommitsMetric ? (
+                    // Commits metric: ComposedChart with bars for commits and line for intensity
+                    <ComposedChart
+                      width={chartDimensions.width}
+                      height={chartDimensions.height}
+                      data={formattedData}
+                      margin={{ top: 20, right: 60, left: 20, bottom: 5 }}
+                    >
+                      <CartesianGrid strokeDasharray="3 3" stroke="#e9ecef" opacity={0.7} />
+                      <XAxis
+                        dataKey="initial_date"
+                        tick={{ fontSize: 12, fill: "#6c757d" }}
+                        stroke="#6c757d"
+                        tickLine={{ stroke: "#6c757d" }}
+                      />
+                      <YAxis
+                        yAxisId="left"
+                        tick={{ fontSize: 12, fill: "#6c757d" }}
+                        stroke="#6c757d"
+                        tickLine={{ stroke: "#6c757d" }}
+                        label={{ value: "Commits", angle: -90, position: "insideLeft" }}
+                      />
+                      <YAxis
+                        yAxisId="right"
+                        orientation="right"
+                        tick={{ fontSize: 12, fill: "#6c757d" }}
+                        stroke="#6c757d"
+                        tickLine={{ stroke: "#6c757d" }}
+                        label={{ value: "Copilot Intensity (%)", angle: 90, position: "insideRight" }}
+                        domain={[0, 100]}
+                      />
+                      <Tooltip
+                        formatter={(value: any, name: string, props: any) => {
+                          if (name === "Total Commits") {
+                            return [`${value} commits`, name];
+                          }
+                          if (name === "Copilot Intensity") {
+                            return [`${value.toFixed(1)}%`, name];
+                          }
+                          return [value, name];
+                        }}
+                        contentStyle={{
+                          backgroundColor: "#ffffff",
+                          border: "1px solid #e9ecef",
+                          borderRadius: "8px",
+                          boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
+                          fontSize: "14px",
+                        }}
+                        labelStyle={{ color: "#232f3e", fontWeight: "bold" }}
+                      />
+                      <Legend wrapperStyle={{ paddingTop: "20px" }} />
+                      <Bar
+                        yAxisId="left"
+                        dataKey="total_commits"
+                        fill="#0073bb"
+                        name="Total Commits"
+                        radius={[4, 4, 0, 0]}
+                      />
+                      <Line
+                        yAxisId="right"
+                        type="monotone"
+                        dataKey={(entry: any) => entry.percentage_changed_lines_by_copilot * 100}
+                        stroke="#28A745"
+                        strokeWidth={3}
+                        name="Copilot Intensity"
+                        dot={{ r: 5, fill: "#28A745" }}
+                      />
+                    </ComposedChart>
+                  ) : (
+                    // Code Lines metric: Stacked bar chart (original implementation)
+                    <BarChart
+                      width={chartDimensions.width}
+                      height={chartDimensions.height}
+                      data={formattedData}
+                      margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
+                    >
+                      <CartesianGrid strokeDasharray="3 3" stroke="#e9ecef" opacity={0.7} />
+                      <XAxis
+                        dataKey="initial_date"
+                        tick={{ fontSize: 12, fill: "#6c757d" }}
+                        stroke="#6c757d"
+                        tickLine={{ stroke: "#6c757d" }}
+                      />
+                      <YAxis
+                        tick={{ fontSize: 12, fill: "#6c757d" }}
+                        stroke="#6c757d"
+                        tickLine={{ stroke: "#6c757d" }}
+                      />
+                      <Tooltip
+                        formatter={(value: any, name: string, props: any) => {
+                          const total = props.payload.net_changed_lines;
+                          let percent = 0;
+                          if (name === "Copilot Changed Lines") {
+                            percent = total > 0 ? (value / total) * 100 : 0;
+                            return [
+                              `${value} lines (${percent.toFixed(1)}% of total)`,
+                              "Copilot Changed Lines",
+                            ];
+                          }
+                          if (name === "Changed Lines without Copilot") {
+                            percent = total > 0 ? (value / total) * 100 : 0;
+                            return [
+                              `${value} lines (${percent.toFixed(1)}% of total)`,
+                              "Changed Lines without Copilot",
+                            ];
+                          }
+                          return [`${value} lines`, name];
+                        }}
+                        contentStyle={{
+                          backgroundColor: "#ffffff",
+                          border: "1px solid #e9ecef",
+                          borderRadius: "8px",
+                          boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
+                          fontSize: "14px",
+                        }}
+                        labelStyle={{ color: "#232f3e", fontWeight: "bold" }}
+                      />
+                      <Legend wrapperStyle={{ paddingTop: "20px" }} />
+                      <Bar
+                        dataKey="net_changed_lines_without_copilot"
+                        fill="#0073bb"
+                        name="Changed Lines without Copilot"
+                        radius={[4, 4, 0, 0]}
+                        stackId="a"
+                      />
+                      <Bar
+                        dataKey="net_changed_lines_by_copilot"
+                        fill="#037f0c"
+                        name="Copilot Changed Lines"
+                        radius={[4, 4, 0, 0]}
+                        stackId="a"
+                      />
+                    </BarChart>
+                  )}
+                  <Box margin={{ top: "xs" }}>
+                    <Box
+                      variant="small"
+                      color="text-body-secondary"
+                      textAlign="left"
+                    >
+                      <span style={{ fontStyle: "italic", fontSize: "0.85em" }}>
+                        P.S. Copilot changed lines reflect taken suggestions from Copilot – it is possible for these numbers to be inflated, for instance, if a method is rewritten multiple times over a long period of time.
+                      </span>
                     </Box>
+                  </Box>
                 </Container>
 
                 <Container
@@ -293,73 +403,94 @@ const CalculatedMetricsDashboard: React.FC = () => {
                   }
                 >
                   {!isNaN(pearsonCorr) && (
-                    <div style={{ padding: '20px', textAlign: 'center' }}>
-                      <p style={{ fontSize: '1.0em', color: '#6c757d', textAlign: 'left' }}>
-                        Pearson Correlation between
-                        <br />- <i>Total Changed Lines</i>
-                        <br />- <i>Copilot Changed Lines</i>
-                      </p>
+                    <Box padding="l">
+                      <SpaceBetween size="l">
+                        <SpaceBetween size="xs">
+                          <Box variant="p" color="text-body-secondary">
+                            Pearson Correlation between:
+                          </Box>
+                          <Box margin={{ left: "s" }}>
+                            <SpaceBetween size="xxs">
+                              <Box variant="p" color="text-body-secondary">
+                                • {isCommitsMetric ? <em>Total Commits</em> : <em>Total Changed Lines</em>}
+                              </Box>
+                              <Box variant="p" color="text-body-secondary">
+                                • <em>Copilot Changed Lines</em>
+                              </Box>
+                            </SpaceBetween>
+                          </Box>
+                        </SpaceBetween>
 
-                      {/* Visual Bar and Number Section */}
-                      <div style={{ position: 'relative', width: '100%', margin: '15px 0' }}>
-                        {/* Bar container */}
-                        <div style={{
-                          height: '10px',
-                          width: '100%',
-                          backgroundColor: '#e9ecef',
-                          borderRadius: '5px'
-                        }} />
+                        {/* Visual Bar and Number Section */}
+                        <Box>
+                          <div style={{ position: 'relative', width: '100%', marginTop: '15px', marginBottom: '15px' }}>
+                            {/* Bar container */}
+                            <div style={{
+                              height: '10px',
+                              width: '100%',
+                              backgroundColor: '#e9ecef',
+                              borderRadius: '5px'
+                            }} />
 
-                        {/* Filled bar */}
-                        {pearsonCorr !== null && (
-                          <>
+                            {/* Center line at 0 */}
                             <div style={{
                               position: 'absolute',
                               top: 0,
-                              left: 0,
+                              left: '50%',
+                              width: '2px',
                               height: '100%',
-                              width: `${Math.max(0, Math.min(1, pearsonCorr)) * 100}%`,
-                              backgroundColor: '#0073bb',
-                              borderRadius: '5px',
+                              backgroundColor: '#6c757d',
                             }} />
 
-                            {/* Number on the bar */}
-                            <span style={{
-                              position: 'absolute',
-                              top: '-25px',
-                              left: `${Math.max(0, Math.min(1, pearsonCorr)) * 100}%`,
-                              transform: 'translateX(-50%)',
-                              fontSize: '1.2em',
-                              fontWeight: 'bold',
-                              color: '#0073bb',
-                            }}>
-                              {pearsonCorr.toFixed(2)}
-                            </span>
-                          </>
-                        )}
-                      </div>
+                            {/* Filled bar */}
+                            {pearsonCorr !== null && (
+                              <>
+                                <div style={{
+                                  position: 'absolute',
+                                  top: 0,
+                                  left: pearsonCorr >= 0 ? '50%' : `${(pearsonCorr + 1) * 50}%`,
+                                  height: '100%',
+                                  width: `${Math.abs(pearsonCorr) * 50}%`,
+                                  backgroundColor: pearsonCorr >= 0 ? '#037f0c' : '#d13212',
+                                  borderRadius: pearsonCorr >= 0 ? '0 5px 5px 0' : '5px 0 0 5px',
+                                }} />
 
-                      {/* Legend */}
-                      <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '10px', fontSize: '0.8em', color: '#0073bb' }}>
-                        <p style={{ margin: 0 }}>
-                          Weaker correlation
-                        </p>
-                        <p style={{ margin: 0 }}>
-                          Stronger correlation
-                        </p>
-                      </div>
+                                {/* Number on the bar */}
+                                <span style={{
+                                  position: 'absolute',
+                                  top: '-25px',
+                                  left: `${(pearsonCorr + 1) * 50}%`,
+                                  transform: 'translateX(-50%)',
+                                  fontSize: '1.2em',
+                                  fontWeight: 'bold',
+                                  color: pearsonCorr >= 0 ? '#037f0c' : '#d13212',
+                                }}>
+                                  {pearsonCorr.toFixed(2)}
+                                </span>
+                              </>
+                            )}
+                          </div>
 
-                      <p style={{ fontSize: '0.7em', color: '#6c757d', textAlign: 'left', marginTop: '20px' }}>
-                        (A value closer to 1 indicates a strong positive linear relationship)
-                      </p>
-                    </div>
+                          {/* Legend */}
+                          <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                            <Box variant="small" color="text-body-secondary">-1 (Negative)</Box>
+                            <Box variant="small" color="text-body-secondary">0 (None)</Box>
+                            <Box variant="small" color="text-body-secondary">+1 (Positive)</Box>
+                          </div>
+                        </Box>
+
+                        <Box variant="small" color="text-body-secondary">
+                          Values closer to -1 or +1 indicate stronger linear relationships. Negative values indicate inverse correlation.
+                        </Box>
+                      </SpaceBetween>
+                    </Box>
                   )}
                   {isNaN(pearsonCorr) && (
-                    <div style={{ padding: '20px', textAlign: 'center' }}>
-                      <p style={{ fontSize: '1.0em', color: '#6c757d' }}>
-                        Sorry! No Pearson Correlation for commit metrics.
-                      </p>
-                    </div>
+                    <Box textAlign="center" padding="l">
+                      <Box variant="p" color="text-body-secondary">
+                        No data available to calculate correlation.
+                      </Box>
+                    </Box>
                   )}
                 </Container>
               </Grid>

@@ -172,11 +172,13 @@ class GetCalculatedMetricsUseCase:
                     date=c.date,
                     language=c.language,
                     author=c.author,
-                    added_lines=0,
-                    removed_lines=0,
+                    added_lines=c.added_lines,
+                    removed_lines=c.removed_lines,
                     repository=c.repository
                 )
             else:
+                aggregated_by_hash[c.hash].added_lines += c.added_lines
+                aggregated_by_hash[c.hash].removed_lines += c.removed_lines
                 if c.date > aggregated_by_hash[c.hash].date:
                     aggregated_by_hash[c.hash].date = c.date
 
@@ -193,18 +195,60 @@ class GetCalculatedMetricsUseCase:
             [{"metrics": c, "date": c.date} for c in aggregated_list]
         )
 
+        df_copilot_code_metrics = pd.DataFrame(
+            [{"metrics": c, "date": c.date} for c in raw_copilot_code_metrics],
+            columns=["metrics", "date"]
+        )
+        df_copilot_code_metrics["date"] = pd.to_datetime(df_copilot_code_metrics["date"], errors="coerce") # type: ignore
+
         grouped_commit_metrics = df_commit_metrics.groupby( # type: ignore
             pd.Grouper(key="date", freq=period)
         )
 
+        grouped_copilot_code_metrics = df_copilot_code_metrics.groupby( # type: ignore
+            pd.Grouper(key="date", freq=period)
+        )
+
+        total_added_lines: int = 0
+
         for period_final_date, commit_metrics_df in grouped_commit_metrics: # type: ignore
+            net_changed_lines = 0
+            for commit_metrics in commit_metrics_df["metrics"]: # type: ignore
+                net_changed_lines += MetricsCalculator.calculate_gross_productivity(
+                    [commit_metrics]
+                )
+                total_added_lines += commit_metrics.added_lines # type: ignore
+
             response.data.append(
                 CommitMetricsData(
                     initial_date=period_final_date.to_period(period).start_time.to_pydatetime(), # type: ignore
                     final_date=period_final_date.to_pydatetime(), # type: ignore
                     total_commits=len(commit_metrics_df["metrics"]),
                     number_of_authors=len(authors),
+                    net_changed_lines=net_changed_lines,
+                    net_changed_lines_by_copilot=0,
+                    percentage_changed_lines_by_copilot=0,
                 )
             )
+
+        for (
+            copilot_period_final_date,  # type: ignore
+            copilot_code_metrics_df,
+        ) in grouped_copilot_code_metrics:
+            index = next(
+                (i for i, data in enumerate(response.data)
+                if data.final_date == copilot_period_final_date),
+                None
+            )
+            if index is None:
+                continue
+            total_added_lines_by_copilot = MetricsCalculator.calculate_gross_use_of_AI_lines(
+                copilot_code_metrics_df["metrics"].to_list()  # type: ignore
+            )
+            percentage_changed_lines_by_copilot = (  # type: ignore
+                total_added_lines_by_copilot / total_added_lines if total_added_lines > 0 else 0
+            )
+            response.data[index].percentage_changed_lines_by_copilot = percentage_changed_lines_by_copilot # type: ignore
+            response.data[index].net_changed_lines_by_copilot = round(percentage_changed_lines_by_copilot * response.data[index].net_changed_lines) # type: ignore
 
         return response

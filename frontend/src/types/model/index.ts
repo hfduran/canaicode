@@ -30,6 +30,16 @@ export interface CodeLineMetricsData {
   number_of_authors: number;
 }
 
+export interface CommitMetricsData {
+  initial_date: Date;
+  final_date: Date;
+  total_commits: number;
+  number_of_authors: number;
+  net_changed_lines: number;
+  net_changed_lines_by_copilot: number;
+  percentage_changed_lines_by_copilot: number;
+}
+
 export interface CodeLineMetrics {
   programming_languages: string[];
   team: string;
@@ -37,7 +47,14 @@ export interface CodeLineMetrics {
   data: CodeLineMetricsData[];
 }
 
-export type CalculatedMetricsResponse = CodeLineMetrics | null;
+export interface CommitMetrics {
+  programming_languages: string[];
+  team: string;
+  period: "W" | "M" | "Q" | "Y";
+  data: CommitMetricsData[];
+}
+
+export type CalculatedMetricsResponse = CodeLineMetrics | CommitMetrics | null;
 
 export interface CopilotMetricsByLanguage {
   language: string;

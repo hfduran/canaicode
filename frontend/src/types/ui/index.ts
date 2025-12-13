@@ -1,15 +1,22 @@
-import { CodeLineMetrics, CodeLineMetricsData } from "../model";
+import { CodeLineMetrics, CodeLineMetricsData, CommitMetrics, CommitMetricsData } from "../model";
 
-export interface DataEntry extends CodeLineMetricsData {}
+export type DataEntry = CodeLineMetricsData | CommitMetricsData;
 
-export interface DashboardData extends Omit<CodeLineMetrics, 'period'> {
+export type DashboardData = (Omit<CodeLineMetrics, 'period'> | Omit<CommitMetrics, 'period'>) & {
   period: string
 }
 
-export interface FlattenedDataEntry extends DataEntry {
+export interface FlattenedDataEntry {
   team: string;
   period: string;
   programming_languages: string[];
+  initial_date: Date;
+  final_date: Date;
+  number_of_authors: number;
+  net_changed_lines: number;
+  net_changed_lines_by_copilot: number;
+  percentage_changed_lines_by_copilot: number;
+  total_commits?: number;
 }
 
 export interface FormattedDataEntry extends Omit<FlattenedDataEntry, 'initial_date' | 'final_date'> {
