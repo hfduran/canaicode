@@ -10,15 +10,14 @@ import {
   Box,
   Badge,
   Select,
-  FormField,
   Button,
   Form,
-  Multiselect,
 } from "@cloudscape-design/components";
 import { useLanguageMetrics } from "../hooks/useLanguageMetrics";
 import { CopilotMetricsByLanguage } from "../types/model";
 import { PROGRAMMING_LANGUAGES_OPTIONS, PROGRAMMING_LANGUAGES } from "../constants/programming_languages";
 import DateRangeSelector from "../components/DateRangeSelector";
+import ProgrammingLanguageSelector from "../components/ProgrammingLanguageSelector";
 
 const LanguageAnalytics: React.FC = () => {
   const {
@@ -108,16 +107,6 @@ const LanguageAnalytics: React.FC = () => {
   const availableLanguages = new Set(
     currentDataset.map((item: CopilotMetricsByLanguage) => normalizeLanguageName(item.language))
   );
-
-  // Create dynamic language options with disabled state
-  const dynamicLanguageOptions = PROGRAMMING_LANGUAGES_OPTIONS.map(option => ({
-    label: option.label,
-    value: option.value,
-    disabled: !availableLanguages.has(option.value),
-    disabledReason: !availableLanguages.has(option.value)
-      ? "No data available for this language"
-      : undefined
-  }));
 
   // Format data for the chart with aggregation for duplicate languages
   const chartData: ChartDataEntry[] = (() => {
@@ -304,44 +293,14 @@ const LanguageAnalytics: React.FC = () => {
                     onEndDateChange={setEndDate}
                   />
                 </SpaceBetween>
-                <FormField
+                <ProgrammingLanguageSelector
+                  selectedLanguages={selectedLanguages}
+                  onSelectedLanguagesChange={setSelectedLanguages}
                   label="Programming Languages"
                   description="Select at least one language to display analytics"
-                >
-                  <SpaceBetween direction="vertical" size="xs">
-                    <Multiselect
-                      selectedOptions={dynamicLanguageOptions.filter(option =>
-                        selectedLanguages.includes(option.value)
-                      )}
-                      onChange={({ detail }) =>
-                        setSelectedLanguages(
-                          detail.selectedOptions.map(option => option.value).filter((value): value is string => typeof value === "string")
-                        )
-                      }
-                      options={dynamicLanguageOptions}
-                      placeholder="Select programming languages"
-                    />
-                    <SpaceBetween direction="horizontal" size="xs">
-                      <Button
-                        variant="normal"
-                        onClick={() => {
-                          const allAvailableLanguages = dynamicLanguageOptions
-                            .filter(option => !option.disabled)
-                            .map(option => option.value as string);
-                          setSelectedLanguages(allAvailableLanguages);
-                        }}
-                      >
-                        Select All
-                      </Button>
-                      <Button
-                        variant="normal"
-                        onClick={() => setSelectedLanguages([])}
-                      >
-                        Select None
-                      </Button>
-                    </SpaceBetween>
-                  </SpaceBetween>
-                </FormField>
+                  enableDynamicDisabling={true}
+                  availableLanguages={availableLanguages}
+                />
                 <SpaceBetween direction="horizontal" size="m">
                   <Button
                     variant="primary"

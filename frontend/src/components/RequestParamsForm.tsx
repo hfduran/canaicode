@@ -1,14 +1,12 @@
 import React from "react";
 import {
   Select,
-  Multiselect,
   FormField,
   SpaceBetween,
   ColumnLayout,
-  Button
 } from "@cloudscape-design/components";
-import { PROGRAMMING_LANGUAGES_OPTIONS } from "../constants/programming_languages";
 import DateRangeSelector from "./DateRangeSelector";
+import ProgrammingLanguageSelector from "./ProgrammingLanguageSelector";
 
 interface RequestParamsFormProps {
   timeRange: string;
@@ -74,36 +72,12 @@ const RequestParamsForm: React.FC<RequestParamsFormProps> = ({
           />
         </FormField>
 
-        <FormField
+        <ProgrammingLanguageSelector
+          selectedLanguages={programmingLanguages}
+          onSelectedLanguagesChange={setProgrammingLanguages}
           label="Programming Languages (Optional)"
           description="Select the programming languages to analyze"
-        >
-          <SpaceBetween direction="vertical" size="xs">
-            <Multiselect
-              selectedOptions={PROGRAMMING_LANGUAGES_OPTIONS.filter(option => programmingLanguages.includes(option.value))}
-              onChange={({ detail }) => setProgrammingLanguages(detail.selectedOptions.map(option => option.value).filter((value): value is string => typeof value === "string"))}
-              options={PROGRAMMING_LANGUAGES_OPTIONS}
-              placeholder="Select programming languages"
-            />
-            <SpaceBetween direction="horizontal" size="xs">
-              <Button
-                variant="normal"
-                onClick={() => {
-                  const allLanguages = PROGRAMMING_LANGUAGES_OPTIONS.map(option => option.value as string);
-                  setProgrammingLanguages(allLanguages);
-                }}
-              >
-                Select All
-              </Button>
-              <Button
-                variant="normal"
-                onClick={() => setProgrammingLanguages([])}
-              >
-                Select None
-              </Button>
-            </SpaceBetween>
-          </SpaceBetween>
-        </FormField>
+        />
       </SpaceBetween>
 
       <SpaceBetween direction="vertical" size="m">

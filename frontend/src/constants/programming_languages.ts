@@ -32,5 +32,5 @@ export type ProgrammingLanguageType = typeof PROGRAMMING_LANGUAGES[number];
 export const PROGRAMMING_LANGUAGES_OPTIONS = PROGRAMMING_LANGUAGES.map(lang => ({
   label: lang,
   value: lang
-}));
+})).sort((a, b) => a.label.localeCompare(b.label));
 

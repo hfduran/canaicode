@@ -1,5 +1,4 @@
 import React, { useState } from "react";
-import { BarChart, Bar, ComposedChart, Line, CartesianGrid, XAxis, YAxis, Tooltip, Legend } from "recharts";
 import RequestParamsForm from "./RequestParamsForm";
 import { FlattenedDataEntry, FormattedDataEntry } from "../types/ui";
 import {
@@ -17,6 +16,9 @@ import { DashboardFiltersModal } from "./DashboardFiltersModal";
 import { formatDate } from "../utils/date/formatDate";
 import { useCalculatedMetrics } from "../hooks";
 import { pearsonCorrCalculator } from "../tools/pearsonCorrelationCalculator";
+import CommitMetricsChart from "./charts/CommitMetricsChart";
+import CodeLinesChart from "./charts/CodeLinesChart";
+import PearsonCorrelationDisplay from "./PearsonCorrelationDisplay";
 
 const CalculatedMetricsDashboard: React.FC = () => {
   // Initialize dates with 6 months ago to today
@@ -246,138 +248,17 @@ const CalculatedMetricsDashboard: React.FC = () => {
                   }
                 >
                   {isCommitsMetric ? (
-                    // Commits metric: ComposedChart with bars for commits and line for intensity
-                    <ComposedChart
+                    <CommitMetricsChart
+                      data={formattedData}
                       width={chartDimensions.width}
                       height={chartDimensions.height}
-                      data={formattedData}
-                      margin={{ top: 20, right: 60, left: 20, bottom: 5 }}
-                    >
-                      <CartesianGrid strokeDasharray="3 3" stroke="#e9ecef" opacity={0.7} />
-                      <XAxis
-                        dataKey="initial_date"
-                        tick={{ fontSize: 12, fill: "#6c757d" }}
-                        stroke="#6c757d"
-                        tickLine={{ stroke: "#6c757d" }}
-                      />
-                      <YAxis
-                        yAxisId="left"
-                        tick={{ fontSize: 12, fill: "#6c757d" }}
-                        stroke="#6c757d"
-                        tickLine={{ stroke: "#6c757d" }}
-                        label={{ value: "Commits", angle: -90, position: "insideLeft" }}
-                      />
-                      <YAxis
-                        yAxisId="right"
-                        orientation="right"
-                        tick={{ fontSize: 12, fill: "#6c757d" }}
-                        stroke="#6c757d"
-                        tickLine={{ stroke: "#6c757d" }}
-                        label={{ value: "Copilot Intensity (%)", angle: 90, position: "insideRight" }}
-                        domain={[0, 100]}
-                      />
-                      <Tooltip
-                        formatter={(value: any, name: string, props: any) => {
-                          if (name === "Total Commits") {
-                            return [`${value} commits`, name];
-                          }
-                          if (name === "Copilot Intensity") {
-                            return [`${value.toFixed(1)}%`, name];
-                          }
-                          return [value, name];
-                        }}
-                        contentStyle={{
-                          backgroundColor: "#ffffff",
-                          border: "1px solid #e9ecef",
-                          borderRadius: "8px",
-                          boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
-                          fontSize: "14px",
-                        }}
-                        labelStyle={{ color: "#232f3e", fontWeight: "bold" }}
-                      />
-                      <Legend wrapperStyle={{ paddingTop: "20px" }} />
-                      <Bar
-                        yAxisId="left"
-                        dataKey="total_commits"
-                        fill="#0073bb"
-                        name="Total Commits"
-                        radius={[4, 4, 0, 0]}
-                      />
-                      <Line
-                        yAxisId="right"
-                        type="monotone"
-                        dataKey={(entry: any) => entry.percentage_changed_lines_by_copilot * 100}
-                        stroke="#28A745"
-                        strokeWidth={3}
-                        name="Copilot Intensity"
-                        dot={{ r: 5, fill: "#28A745" }}
-                      />
-                    </ComposedChart>
+                    />
                   ) : (
-                    // Code Lines metric: Stacked bar chart (original implementation)
-                    <BarChart
+                    <CodeLinesChart
+                      data={formattedData}
                       width={chartDimensions.width}
                       height={chartDimensions.height}
-                      data={formattedData}
-                      margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
-                    >
-                      <CartesianGrid strokeDasharray="3 3" stroke="#e9ecef" opacity={0.7} />
-                      <XAxis
-                        dataKey="initial_date"
-                        tick={{ fontSize: 12, fill: "#6c757d" }}
-                        stroke="#6c757d"
-                        tickLine={{ stroke: "#6c757d" }}
-                      />
-                      <YAxis
-                        tick={{ fontSize: 12, fill: "#6c757d" }}
-                        stroke="#6c757d"
-                        tickLine={{ stroke: "#6c757d" }}
-                      />
-                      <Tooltip
-                        formatter={(value: any, name: string, props: any) => {
-                          const total = props.payload.net_changed_lines;
-                          let percent = 0;
-                          if (name === "Copilot Changed Lines") {
-                            percent = total > 0 ? (value / total) * 100 : 0;
-                            return [
-                              `${value} lines (${percent.toFixed(1)}% of total)`,
-                              "Copilot Changed Lines",
-                            ];
-                          }
-                          if (name === "Changed Lines without Copilot") {
-                            percent = total > 0 ? (value / total) * 100 : 0;
-                            return [
-                              `${value} lines (${percent.toFixed(1)}% of total)`,
-                              "Changed Lines without Copilot",
-                            ];
-                          }
-                          return [`${value} lines`, name];
-                        }}
-                        contentStyle={{
-                          backgroundColor: "#ffffff",
-                          border: "1px solid #e9ecef",
-                          borderRadius: "8px",
-                          boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
-                          fontSize: "14px",
-                        }}
-                        labelStyle={{ color: "#232f3e", fontWeight: "bold" }}
-                      />
-                      <Legend wrapperStyle={{ paddingTop: "20px" }} />
-                      <Bar
-                        dataKey="net_changed_lines_without_copilot"
-                        fill="#0073bb"
-                        name="Changed Lines without Copilot"
-                        radius={[4, 4, 0, 0]}
-                        stackId="a"
-                      />
-                      <Bar
-                        dataKey="net_changed_lines_by_copilot"
-                        fill="#037f0c"
-                        name="Copilot Changed Lines"
-                        radius={[4, 4, 0, 0]}
-                        stackId="a"
-                      />
-                    </BarChart>
+                    />
                   )}
                   <Box margin={{ top: "xs" }}>
                     <Box
@@ -402,96 +283,10 @@ const CalculatedMetricsDashboard: React.FC = () => {
                     </Header>
                   }
                 >
-                  {!isNaN(pearsonCorr) && (
-                    <Box padding="l">
-                      <SpaceBetween size="l">
-                        <SpaceBetween size="xs">
-                          <Box variant="p" color="text-body-secondary">
-                            Pearson Correlation between:
-                          </Box>
-                          <Box margin={{ left: "s" }}>
-                            <SpaceBetween size="xxs">
-                              <Box variant="p" color="text-body-secondary">
-                                • {isCommitsMetric ? <em>Total Commits</em> : <em>Total Changed Lines</em>}
-                              </Box>
-                              <Box variant="p" color="text-body-secondary">
-                                • <em>Copilot Changed Lines</em>
-                              </Box>
-                            </SpaceBetween>
-                          </Box>
-                        </SpaceBetween>
-
-                        {/* Visual Bar and Number Section */}
-                        <Box>
-                          <div style={{ position: 'relative', width: '100%', marginTop: '15px', marginBottom: '15px' }}>
-                            {/* Bar container */}
-                            <div style={{
-                              height: '10px',
-                              width: '100%',
-                              backgroundColor: '#e9ecef',
-                              borderRadius: '5px'
-                            }} />
-
-                            {/* Center line at 0 */}
-                            <div style={{
-                              position: 'absolute',
-                              top: 0,
-                              left: '50%',
-                              width: '2px',
-                              height: '100%',
-                              backgroundColor: '#6c757d',
-                            }} />
-
-                            {/* Filled bar */}
-                            {pearsonCorr !== null && (
-                              <>
-                                <div style={{
-                                  position: 'absolute',
-                                  top: 0,
-                                  left: pearsonCorr >= 0 ? '50%' : `${(pearsonCorr + 1) * 50}%`,
-                                  height: '100%',
-                                  width: `${Math.abs(pearsonCorr) * 50}%`,
-                                  backgroundColor: pearsonCorr >= 0 ? '#037f0c' : '#d13212',
-                                  borderRadius: pearsonCorr >= 0 ? '0 5px 5px 0' : '5px 0 0 5px',
-                                }} />
-
-                                {/* Number on the bar */}
-                                <span style={{
-                                  position: 'absolute',
-                                  top: '-25px',
-                                  left: `${(pearsonCorr + 1) * 50}%`,
-                                  transform: 'translateX(-50%)',
-                                  fontSize: '1.2em',
-                                  fontWeight: 'bold',
-                                  color: pearsonCorr >= 0 ? '#037f0c' : '#d13212',
-                                }}>
-                                  {pearsonCorr.toFixed(2)}
-                                </span>
-                              </>
-                            )}
-                          </div>
-
-                          {/* Legend */}
-                          <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                            <Box variant="small" color="text-body-secondary">-1 (Negative)</Box>
-                            <Box variant="small" color="text-body-secondary">0 (None)</Box>
-                            <Box variant="small" color="text-body-secondary">+1 (Positive)</Box>
-                          </div>
-                        </Box>
-
-                        <Box variant="small" color="text-body-secondary">
-                          Values closer to -1 or +1 indicate stronger linear relationships. Negative values indicate inverse correlation.
-                        </Box>
-                      </SpaceBetween>
-                    </Box>
-                  )}
-                  {isNaN(pearsonCorr) && (
-                    <Box textAlign="center" padding="l">
-                      <Box variant="p" color="text-body-secondary">
-                        No data available to calculate correlation.
-                      </Box>
-                    </Box>
-                  )}
+                  <PearsonCorrelationDisplay
+                    correlationValue={pearsonCorr}
+                    isCommitsMetric={isCommitsMetric}
+                  />
                 </Container>
               </Grid>
             </div>
