@@ -4,3 +4,4 @@ __pycache__/
 sensible_data/*
 !sensible_data/.gitkeep
 .coverage
+node_modules/
