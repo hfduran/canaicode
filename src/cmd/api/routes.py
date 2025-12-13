@@ -85,20 +85,6 @@ def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depend
     response = validate_user_use_case.execute(form_data.username, form_data.password)
     return response
 
-
-@router.get("/commit_metrics/upload_deprecated/{team_name}")
-def get_commit_metrics(
-    team_name: str,
-    user_id: str = "",
-    date_string: str = "",
-    db: Session = Depends(get_db),
-) -> List[CommitMetrics]:
-    date = datetime.strptime(date_string, "%Y-%m-%d").date()
-    get_commit_metrics_use_case = set_get_commit_metrics_dependencies(db)
-    response = get_commit_metrics_use_case.execute(date, team_name, user_id)
-    return response
-
-
 @router.post("/copilot_metrics/upload")
 async def get_copilot_metrics(
     file: UploadFile = File(...),
