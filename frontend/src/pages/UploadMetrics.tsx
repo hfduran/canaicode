@@ -8,6 +8,8 @@ import {
   Button,
   Box,
   FileUpload,
+  Table,
+  StatusIndicator,
 } from "@cloudscape-design/components";
 import UploadMetricsService from "../services/uploadMetricsService";
 
@@ -15,56 +17,108 @@ const COPILOT_EXAMPLE_PATH = "/static/examples/Copilot_example.json";
 const COMMIT_EXAMPLE_PATH = "/static/examples/Commits_example.xlsx";
 const COMMIT_SCRIPT_PATH = "/static/examples/git_consumer.zip";
 
+type FileUploadStatus = {
+  file: File;
+  status: 'pending' | 'uploading' | 'success' | 'error';
+  error?: string;
+};
+
 const UploadMetrics: React.FC = () => {
-  const [copilotFile, setCopilotFile] = useState<File | null>(null);
-  const [commitFile, setCommitFile] = useState<File | null>(null);
+  const [copilotFiles, setCopilotFiles] = useState<File[]>([]);
+  const [commitFiles, setCommitFiles] = useState<File[]>([]);
+  const [copilotUploads, setCopilotUploads] = useState<FileUploadStatus[]>([]);
+  const [commitUploads, setCommitUploads] = useState<FileUploadStatus[]>([]);
   const [copilotLoading, setCopilotLoading] = useState(false);
   const [commitLoading, setCommitLoading] = useState(false);
-  const [copilotSuccess, setCopilotSuccess] = useState<string | null>(null);
-  const [commitSuccess, setCommitSuccess] = useState<string | null>(null);
-  const [copilotError, setCopilotError] = useState<string | null>(null);
-  const [commitError, setCommitError] = useState<string | null>(null);
 
   const handleCopilotUpload = async (e: React.FormEvent) => {
     e.preventDefault();
-    setCopilotLoading(true);
-    setCopilotSuccess(null);
-    setCopilotError(null);
 
-    try {
-      if (!copilotFile) {
-        setCopilotError("Please select a JSON file.");
-        setCopilotLoading(false);
-        return;
-      }
-      await UploadMetricsService.uploadCopilotMetrics(copilotFile);
-      setCopilotSuccess("Copilot metrics uploaded successfully!");
-    } catch (error: any) {
-      setCopilotError("Failed to upload copilot metrics.");
-    } finally {
-      setCopilotLoading(false);
+    if (copilotFiles.length === 0) {
+      return;
     }
+
+    setCopilotLoading(true);
+    const uploadStatuses: FileUploadStatus[] = copilotFiles.map(file => ({
+      file,
+      status: 'pending' as const,
+    }));
+    setCopilotUploads(uploadStatuses);
+
+    const uploadPromises = copilotFiles.map(async (file, index) => {
+      setCopilotUploads(prev => {
+        const updated = [...prev];
+        updated[index] = { ...updated[index], status: 'uploading' };
+        return updated;
+      });
+
+      try {
+        await UploadMetricsService.uploadCopilotMetrics(file);
+        setCopilotUploads(prev => {
+          const updated = [...prev];
+          updated[index] = { ...updated[index], status: 'success' };
+          return updated;
+        });
+      } catch (error: any) {
+        setCopilotUploads(prev => {
+          const updated = [...prev];
+          updated[index] = {
+            ...updated[index],
+            status: 'error',
+            error: error.message || 'Upload failed'
+          };
+          return updated;
+        });
+      }
+    });
+
+    await Promise.allSettled(uploadPromises);
+    setCopilotLoading(false);
   };
 
   const handleCommitUpload = async (e: React.FormEvent) => {
     e.preventDefault();
-    setCommitLoading(true);
-    setCommitSuccess(null);
-    setCommitError(null);
 
-    try {
-      if (!commitFile) {
-        setCommitError("Please select an XLSX file.");
-        setCommitLoading(false);
-        return;
-      }
-      await UploadMetricsService.uploadCommitMetrics(commitFile);
-      setCommitSuccess("Commit metrics uploaded successfully!");
-    } catch (error: any) {
-      setCommitError("Failed to upload commit metrics.");
-    } finally {
-      setCommitLoading(false);
+    if (commitFiles.length === 0) {
+      return;
     }
+
+    setCommitLoading(true);
+    const uploadStatuses: FileUploadStatus[] = commitFiles.map(file => ({
+      file,
+      status: 'pending' as const,
+    }));
+    setCommitUploads(uploadStatuses);
+
+    const uploadPromises = commitFiles.map(async (file, index) => {
+      setCommitUploads(prev => {
+        const updated = [...prev];
+        updated[index] = { ...updated[index], status: 'uploading' };
+        return updated;
+      });
+
+      try {
+        await UploadMetricsService.uploadCommitMetrics(file);
+        setCommitUploads(prev => {
+          const updated = [...prev];
+          updated[index] = { ...updated[index], status: 'success' };
+          return updated;
+        });
+      } catch (error: any) {
+        setCommitUploads(prev => {
+          const updated = [...prev];
+          updated[index] = {
+            ...updated[index],
+            status: 'error',
+            error: error.message || 'Upload failed'
+          };
+          return updated;
+        });
+      }
+    });
+
+    await Promise.allSettled(uploadPromises);
+    setCommitLoading(false);
   };
 
   const handleDownloadCopilotExample = () => {
@@ -110,26 +164,53 @@ const UploadMetrics: React.FC = () => {
           >
             <form onSubmit={handleCopilotUpload}>
               <SpaceBetween size="m">
-              <FormField label="Copilot Metrics File" description="Drop a JSON file here">
+              <FormField label="Copilot Metrics Files" description="Drop one or more JSON files here">
                 <FileUpload
                   accept=".json"
-                  onChange={({ detail }) => setCopilotFile(detail.value[0] || null)}
-                  value={copilotFile ? [copilotFile] : []}
+                  onChange={({ detail }) => setCopilotFiles(detail.value)}
+                  value={copilotFiles}
                   showFileLastModified
                   showFileSize
                   showFileThumbnail={false}
-                  multiple={false}
+                  multiple={true}
                 />
               </FormField>
               <Button
                 variant="primary"
                 loading={copilotLoading}
-                disabled={!copilotFile}
+                disabled={copilotFiles.length === 0}
               >
                 Upload Copilot Metrics
               </Button>
-              {copilotSuccess && <Box color="text-status-success">{copilotSuccess}</Box>}
-              {copilotError && <Box color="text-status-error">{copilotError}</Box>}
+              {copilotUploads.length > 0 && (
+                <Table
+                  columnDefinitions={[
+                    {
+                      id: "filename",
+                      header: "File name",
+                      cell: (item: FileUploadStatus) => item.file.name,
+                    },
+                    {
+                      id: "size",
+                      header: "Size",
+                      cell: (item: FileUploadStatus) => `${(item.file.size / 1024).toFixed(2)} KB`,
+                    },
+                    {
+                      id: "status",
+                      header: "Status",
+                      cell: (item: FileUploadStatus) => {
+                        if (item.status === 'pending') return <StatusIndicator>Pending</StatusIndicator>;
+                        if (item.status === 'uploading') return <StatusIndicator type="in-progress">Uploading</StatusIndicator>;
+                        if (item.status === 'success') return <StatusIndicator type="success">Success</StatusIndicator>;
+                        if (item.status === 'error') return <StatusIndicator type="error">{item.error || 'Failed'}</StatusIndicator>;
+                        return null;
+                      },
+                    },
+                  ]}
+                  items={copilotUploads}
+                  variant="embedded"
+                />
+              )}
               <Box margin={{ top: "m" }}>
                 <Button
                   variant="link"
@@ -151,26 +232,53 @@ const UploadMetrics: React.FC = () => {
           >
             <form onSubmit={handleCommitUpload}>
               <SpaceBetween size="m">
-              <FormField label="Commit Metrics File" description="Drop an XLSX file here">
+              <FormField label="Commit Metrics Files" description="Drop one or more XLSX files here">
                 <FileUpload
                   accept=".xlsx"
-                  onChange={({ detail }) => setCommitFile(detail.value[0] || null)}
-                  value={commitFile ? [commitFile] : []}
+                  onChange={({ detail }) => setCommitFiles(detail.value)}
+                  value={commitFiles}
                   showFileLastModified
                   showFileSize
                   showFileThumbnail={false}
-                  multiple={false}
+                  multiple={true}
                 />
               </FormField>
               <Button
                 variant="primary"
                 loading={commitLoading}
-                disabled={!commitFile}
+                disabled={commitFiles.length === 0}
               >
                 Upload Commit Metrics
               </Button>
-              {commitSuccess && <Box color="text-status-success">{commitSuccess}</Box>}
-              {commitError && <Box color="text-status-error">{commitError}</Box>}
+              {commitUploads.length > 0 && (
+                <Table
+                  columnDefinitions={[
+                    {
+                      id: "filename",
+                      header: "File name",
+                      cell: (item: FileUploadStatus) => item.file.name,
+                    },
+                    {
+                      id: "size",
+                      header: "Size",
+                      cell: (item: FileUploadStatus) => `${(item.file.size / 1024).toFixed(2)} KB`,
+                    },
+                    {
+                      id: "status",
+                      header: "Status",
+                      cell: (item: FileUploadStatus) => {
+                        if (item.status === 'pending') return <StatusIndicator>Pending</StatusIndicator>;
+                        if (item.status === 'uploading') return <StatusIndicator type="in-progress">Uploading</StatusIndicator>;
+                        if (item.status === 'success') return <StatusIndicator type="success">Success</StatusIndicator>;
+                        if (item.status === 'error') return <StatusIndicator type="error">{item.error || 'Failed'}</StatusIndicator>;
+                        return null;
+                      },
+                    },
+                  ]}
+                  items={commitUploads}
+                  variant="embedded"
+                />
+              )}
               <Box margin={{ top: "m" }}>
                 <Button
                   variant="link"

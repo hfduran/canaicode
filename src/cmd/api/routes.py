@@ -383,3 +383,38 @@ def delete_user_metrics(
     verify_admin_access(token)
     delete_user_metrics_use_case = set_delete_metrics_dependencies(db)
     delete_user_metrics_use_case.execute(username)
+
+@router.post("/admin/database/clear")
+def clear_database(
+    token: str = Body(..., embed=True),
+    db: Session = Depends(get_db),
+) -> Dict[str, str]:
+    verify_admin_access(token)
+    from src.infrastructure.database.raw_commit_metrics.postgre.dtos.model import RawCommitMetrics
+    from src.infrastructure.database.raw_copilot_code_metrics.postgre.dtos.model import RawCopilotCodeMetrics
+    from src.infrastructure.database.raw_copilot_chat_metrics.postgre.dtos.model import RawCopilotChatMetrics
+    from src.infrastructure.database.users.postgre.dtos.model import UserDbSchema
+
+    try:
+        db.query(RawCopilotChatMetrics).delete()
+        db.query(RawCopilotCodeMetrics).delete()
+        db.query(RawCommitMetrics).delete()
+        db.query(UserDbSchema).delete()
+        db.commit()
+        return {"message": "All database data cleared successfully"}
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"Error clearing database: {str(e)}")
+
+@router.post("/admin/database/init")
+def initialize_database(
+    token: str = Body(..., embed=True),
+) -> Dict[str, str]:
+    verify_admin_access(token)
+    from src.infrastructure.database.init_db import init_database
+
+    try:
+        init_database()
+        return {"message": "Database initialized successfully"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error initializing database: {str(e)}")

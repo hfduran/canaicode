@@ -19,6 +19,15 @@ export interface SendReportRequest {
   token: string;
 }
 
+export interface DeleteUserDataRequest {
+  username: string;
+  token: string;
+}
+
+export interface AdminActionRequest {
+  token: string;
+}
+
 export const adminAPI = {
   /**
    * Fetch copilot metrics from GitHub
@@ -40,5 +49,37 @@ export const adminAPI = {
       token: ADMIN_TOKEN,
     };
     await apiClient.post('/admin/report/send', request);
+  },
+
+  /**
+   * Delete all metrics data for a specific user
+   * @param username - Username of the user whose data should be deleted
+   */
+  deleteUserData: async (username: string): Promise<void> => {
+    const request: DeleteUserDataRequest = {
+      username,
+      token: ADMIN_TOKEN,
+    };
+    await apiClient.delete('/admin/user_metrics', { data: request });
+  },
+
+  /**
+   * Clear all data from the database (keeps table structure)
+   */
+  clearDatabase: async (): Promise<void> => {
+    const request: AdminActionRequest = {
+      token: ADMIN_TOKEN,
+    };
+    await apiClient.post('/admin/database/clear', request);
+  },
+
+  /**
+   * Initialize database tables (creates tables if they don't exist)
+   */
+  initializeDatabase: async (): Promise<void> => {
+    const request: AdminActionRequest = {
+      token: ADMIN_TOKEN,
+    };
+    await apiClient.post('/admin/database/init', request);
   },
 };
