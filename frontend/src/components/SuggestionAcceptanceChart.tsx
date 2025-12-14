@@ -10,25 +10,42 @@ import {
 } from "@cloudscape-design/components";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 import { CopilotMetricsByPeriodService } from "../services/copilotMetricsByPeriodService";
+import DateRangeSelector from "./DateRangeSelector";
 
 interface ChartData {
   period: string;
+  date: Date;
   suggested: number;
   accepted: number;
 }
 
 interface SuggestionsChartData {
   period: string;
+  date: Date;
   suggested: number;
   accepted: number;
 }
 
+const getDefaultDates = () => {
+  const today = new Date();
+  const sixMonthsAgo = new Date();
+  sixMonthsAgo.setMonth(today.getMonth() - 6);
+
+  return {
+    begin: sixMonthsAgo.toISOString().split('T')[0],
+    end: today.toISOString().split('T')[0]
+  };
+};
+
 const SuggestionAcceptanceChart: React.FC = () => {
+  const defaultDates = getDefaultDates();
   const [period, setPeriod] = useState<"W" | "M" | "Q" | "Y">("M");
   const [chartData, setChartData] = useState<ChartData[]>([]);
   const [suggestionsChartData, setSuggestionsChartData] = useState<SuggestionsChartData[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [beginDate, setBeginDate] = useState<string>(defaultDates.begin);
+  const [endDate, setEndDate] = useState<string>(defaultDates.end);
 
   const periodOptions: SelectProps.Option[] = [
     { label: "Weekly", value: "W" },
@@ -56,6 +73,7 @@ const SuggestionAcceptanceChart: React.FC = () => {
 
         return {
           period: periodLabel,
+          date: startDate,
           suggested: totalSuggested,
           accepted: item.total_lines_accepted,
         };
@@ -74,6 +92,7 @@ const SuggestionAcceptanceChart: React.FC = () => {
 
         return {
           period: periodLabel,
+          date: startDate,
           suggested: totalCodeSuggestions,
           accepted: item.total_code_acceptances,
         };
@@ -173,6 +192,13 @@ const SuggestionAcceptanceChart: React.FC = () => {
           />
         </FormField>
 
+        <DateRangeSelector
+          startDate={beginDate}
+          endDate={endDate}
+          onStartDateChange={setBeginDate}
+          onEndDateChange={setEndDate}
+        />
+
         {error && (
           <Box variant="div" padding="m" color="text-status-error">
             Error: {error}
@@ -183,19 +209,35 @@ const SuggestionAcceptanceChart: React.FC = () => {
           <Box variant="div" textAlign="center" padding="l">
             Loading chart data...
           </Box>
-        ) : chartData.length > 0 ? (
-          <SpaceBetween direction="vertical" size="l">
-            {/* Lines of Code Chart */}
-            <Container
-              header={
-                <Header variant="h3">
-                  Lines of Code - Suggested vs Accepted
-                </Header>
-              }
-            >
-              <div style={{ width: '100%', height: '400px' }}>
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={chartData} >
+        ) : (() => {
+          // Filter chart data by date range
+          const filteredChartData = chartData.filter((entry) => {
+            const entryTime = entry.date.getTime();
+            const beginTime = beginDate ? new Date(beginDate).getTime() : -Infinity;
+            const endTime = endDate ? new Date(endDate).getTime() : Infinity;
+            return entryTime >= beginTime && entryTime <= endTime;
+          });
+
+          const filteredSuggestionsChartData = suggestionsChartData.filter((entry) => {
+            const entryTime = entry.date.getTime();
+            const beginTime = beginDate ? new Date(beginDate).getTime() : -Infinity;
+            const endTime = endDate ? new Date(endDate).getTime() : Infinity;
+            return entryTime >= beginTime && entryTime <= endTime;
+          });
+
+          return filteredChartData.length > 0 ? (
+            <SpaceBetween direction="vertical" size="l">
+              {/* Lines of Code Chart */}
+              <Container
+                header={
+                  <Header variant="h3">
+                    Lines of Code - Suggested vs Accepted
+                  </Header>
+                }
+              >
+                <div style={{ width: '100%', height: '400px' }}>
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={filteredChartData} >
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis
                       dataKey="period"
@@ -214,17 +256,17 @@ const SuggestionAcceptanceChart: React.FC = () => {
               </div>
             </Container>
 
-            {/* Number of Suggestions Chart */}
-            <Container
-              header={
-                <Header variant="h3">
-                  Number of Suggestions - Made vs Accepted
-                </Header>
-              }
-            >
-              <div style={{ width: '100%', height: '400px' }}>
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={suggestionsChartData} >
+              {/* Number of Suggestions Chart */}
+              <Container
+                header={
+                  <Header variant="h3">
+                    Number of Suggestions - Made vs Accepted
+                  </Header>
+                }
+              >
+                <div style={{ width: '100%', height: '400px' }}>
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={filteredSuggestionsChartData} >
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis
                       dataKey="period"
@@ -243,11 +285,12 @@ const SuggestionAcceptanceChart: React.FC = () => {
               </div>
             </Container>
           </SpaceBetween>
-        ) : (
-          <Box variant="div" textAlign="center" padding="l">
-            No data available for the selected period
-          </Box>
-        )}
+          ) : (
+            <Box variant="div" textAlign="center" padding="l">
+              No data available for the selected period and date range
+            </Box>
+          );
+        })()}
       </SpaceBetween>
     </Container>
   );
