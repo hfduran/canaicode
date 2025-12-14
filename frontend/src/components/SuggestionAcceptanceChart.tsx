@@ -199,6 +199,7 @@ const SuggestionAcceptanceChart: React.FC = () => {
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis
                       dataKey="period"
+                      angle={-45}
                       textAnchor="end"
                       height={100}
                       interval={0}
@@ -227,6 +228,7 @@ const SuggestionAcceptanceChart: React.FC = () => {
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis
                       dataKey="period"
+                      angle={-45}
                       textAnchor="end"
                       height={100}
                       interval={0}
