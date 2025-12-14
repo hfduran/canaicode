@@ -11,6 +11,7 @@ import {
 import { useCopilotUsersMetrics } from "../hooks/useCopilotUsersMetrics";
 import { CopilotUsersMetrics } from "../types/model";
 import DateRangeSelector from "./DateRangeSelector";
+import { formatDateForDisplay } from "../utils/date/formatDate";
 
 const CopilotUsageChart: React.FC = () => {
   const { copilotUsersData, isLoading, error, fetchCopilotUsersMetrics } = useCopilotUsersMetrics();
@@ -147,9 +148,7 @@ const CopilotUsageChart: React.FC = () => {
                   height={100}
                   fontSize={12}
                   tickFormatter={(date) =>
-                    date instanceof Date
-                      ? date.toLocaleDateString()
-                      : new Date(date).toLocaleDateString()
+                    formatDateForDisplay(date)
                   }
                 />
 

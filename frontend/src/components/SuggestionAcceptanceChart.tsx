@@ -11,6 +11,7 @@ import {
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 import { CopilotMetricsByPeriodService } from "../services/copilotMetricsByPeriodService";
 import DateRangeSelector from "./DateRangeSelector";
+import { formatDateForDisplay } from "../utils/date/formatDate";
 
 interface ChartData {
   period: string;
@@ -63,7 +64,7 @@ const SuggestionAcceptanceChart: React.FC = () => {
       // Transform data for the Lines of Code chart
       const transformedData: ChartData[] = result.map((item) => {
         const startDate = new Date(item.period_initial_date);
-        const periodLabel = startDate.toLocaleDateString();
+        const periodLabel = formatDateForDisplay(startDate);
 
         // Calculate total suggested lines from acceptance ratio and accepted lines
         // percentage_lines_accepted is actually a ratio (0-1), not a percentage (0-100)
@@ -82,7 +83,7 @@ const SuggestionAcceptanceChart: React.FC = () => {
       // Transform data for the Number of Suggestions chart
       const transformedSuggestionsData: SuggestionsChartData[] = result.map((item) => {
         const startDate = new Date(item.period_initial_date);
-        const periodLabel = startDate.toLocaleDateString();
+        const periodLabel = formatDateForDisplay(startDate);
 
         // Calculate total suggested code suggestions from acceptance ratio and accepted suggestions
         // percentage_code_acceptances is actually a ratio (0-1), not a percentage (0-100)

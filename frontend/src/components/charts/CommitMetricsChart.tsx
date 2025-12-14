@@ -19,6 +19,9 @@ const CommitMetricsChart: React.FC<CommitMetricsChartProps> = ({ data, width, he
       <CartesianGrid strokeDasharray="3 3" stroke="#e9ecef" opacity={0.7} />
       <XAxis
         dataKey="initial_date"
+        angle={-45}
+        textAnchor="end"
+        height={100}
         tick={{ fontSize: 12, fill: "#6c757d" }}
         stroke="#6c757d"
         tickLine={{ stroke: "#6c757d" }}
