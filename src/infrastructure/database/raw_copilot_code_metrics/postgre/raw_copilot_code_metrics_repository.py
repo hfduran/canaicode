@@ -24,8 +24,8 @@ class RawCopilotCodeMetricsRepository:
     def upsert_many(self, copilot_code_metrics_list: List[CopilotCodeMetrics]) -> None:
         """
         Bulk upsert copilot code metrics.
-        Since there's no active unique constraint (commented out in model), this uses
-        conflict handling on primary key for idempotency.
+        Uses unique constraint on (date, ide, copilot_model, language) to detect duplicates.
+        On conflict, updates metric values and metadata while preserving id and created_at.
         """
         if not copilot_code_metrics_list:
             return
@@ -57,8 +57,20 @@ class RawCopilotCodeMetricsRepository:
                 for record in records_to_save
             ])
 
-            # Handle conflicts on primary key (id) - skip duplicates
-            stmt = stmt.on_conflict_do_nothing(index_elements=['id'])
+            # Handle conflicts on unique constraint (date, ide, copilot_model, language)
+            # Update metric values and metadata, preserve id and created_at
+            stmt = stmt.on_conflict_do_update(
+                index_elements=['date', 'ide', 'copilot_model', 'language'],
+                set_={
+                    'team_name': stmt.excluded.team_name,
+                    'total_users': stmt.excluded.total_users,
+                    'code_acceptances': stmt.excluded.code_acceptances,
+                    'code_suggestions': stmt.excluded.code_suggestions,
+                    'lines_accepted': stmt.excluded.lines_accepted,
+                    'lines_suggested': stmt.excluded.lines_suggested,
+                    'user_id': stmt.excluded.user_id
+                }
+            )
 
             # Execute and commit once
             self.db.execute(stmt)
