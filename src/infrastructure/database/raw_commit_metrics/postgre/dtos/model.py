@@ -23,5 +23,5 @@ class RawCommitMetrics(Base):
     user_id = Column(String, index=True)
 
     __table_args__ = (
-        UniqueConstraint('hash', 'repository_name', 'language', name='unique_commit_per_repo_lang'),
+        UniqueConstraint('user_id', 'hash', 'repository_name', 'language', name='unique_commit_per_repo_lang'),
     )

@@ -7,7 +7,7 @@ from src.infrastructure.database.connection.database_connection import Base
 class RawCopilotCodeMetrics(Base):
     __tablename__ = "raw_copilot_code_metrics"
     __table_args__ = (
-        UniqueConstraint('date', 'ide', 'copilot_model', 'language', name='uq_date_ide_model_language_code'),
+        UniqueConstraint('user_id', 'date', 'ide', 'copilot_model', 'language', name='uq_date_ide_model_language_code'),
     )
 
     id = Column(String, primary_key=True, index=True)
