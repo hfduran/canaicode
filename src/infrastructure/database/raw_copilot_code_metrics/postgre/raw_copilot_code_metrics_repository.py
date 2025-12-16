@@ -60,15 +60,14 @@ class RawCopilotCodeMetricsRepository:
             # Handle conflicts on unique constraint (date, ide, copilot_model, language)
             # Update metric values and metadata, preserve id and created_at
             stmt = stmt.on_conflict_do_update(
-                index_elements=['date', 'ide', 'copilot_model', 'language'],
+                index_elements=['user_id', 'date', 'ide', 'copilot_model', 'language'],
                 set_={
                     'team_name': stmt.excluded.team_name,
                     'total_users': stmt.excluded.total_users,
                     'code_acceptances': stmt.excluded.code_acceptances,
                     'code_suggestions': stmt.excluded.code_suggestions,
                     'lines_accepted': stmt.excluded.lines_accepted,
-                    'lines_suggested': stmt.excluded.lines_suggested,
-                    'user_id': stmt.excluded.user_id
+                    'lines_suggested': stmt.excluded.lines_suggested
                 }
             )
 

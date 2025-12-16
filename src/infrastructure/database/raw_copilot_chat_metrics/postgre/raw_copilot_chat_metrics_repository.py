@@ -57,13 +57,12 @@ class RawCopilotChatMetricsRepository:
             # Handle conflicts on unique constraint (team_name, date, ide, copilot_model)
             # Update metric values and metadata, preserve id and created_at
             stmt = stmt.on_conflict_do_update(
-                index_elements=['team_name', 'date', 'ide', 'copilot_model'],
+                index_elements=['user_id', 'team_name', 'date', 'ide', 'copilot_model'],
                 set_={
                     'total_users': stmt.excluded.total_users,
                     'total_chats': stmt.excluded.total_chats,
                     'copy_events': stmt.excluded.copy_events,
                     'insertion_events': stmt.excluded.insertion_events,
-                    'user_id': stmt.excluded.user_id
                 }
             )
 
