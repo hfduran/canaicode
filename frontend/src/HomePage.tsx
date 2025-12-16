@@ -298,16 +298,16 @@ const HomePage: React.FC = () => {
               <div>
                 <h4 style={{ color: "#111", fontSize: "1.2rem", marginBottom: "8px" }}>Creators</h4>
                 <p style={{ color: "#6c757d", lineHeight: "1.6" }}>
-                  João<br />
-                  Carlos<br />
-                  Henrique
+                  João Pedro Zanguelmi Rezende de Menezes<br />
+                  Carlos Henrique Mantovani Caliman<br />
+                  Henrique Fuga Duran
                 </p>
               </div>
               <div>
                 <h4 style={{ color: "#111", fontSize: "1.2rem", marginBottom: "8px" }}>Advisors</h4>
                 <p style={{ color: "#6c757d", lineHeight: "1.6" }}>
-                  Levy<br />
-                  João
+                  Prof. Dr. Fabio Levy Siqueira<br />
+                  Prof. Dr. João Marcos Barguil
                 </p>
               </div>
             </div>
