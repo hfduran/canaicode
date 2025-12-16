@@ -164,13 +164,13 @@ const CopilotUsageChart: React.FC = () => {
                   yAxisId="left"
                   dataKey="total_code_assistant_users"
                   fill="#8884d8"
-                  name="Number of different users who used Copilot chat"
+                  name="Number of different users who accepted a Copilot suggestion"
                 />
                 <Bar
                   yAxisId="left"
                   dataKey="total_chat_users"
                   fill="#82ca9d"
-                  name="Number of different users who accepted a Copilot suggestion"
+                  name="Number of different users who used Copilot chat"
                 />
               </ComposedChart>
             </ResponsiveContainer>

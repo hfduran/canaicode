@@ -142,7 +142,7 @@ const GitHubApp: React.FC = () => {
 
 						<div style={{ display: "flex", gap: 24, alignItems: "flex-start", flexWrap: "wrap" }}>
 							<div style={{ flex: "1 1 400px", minWidth: 320 }}>
-								<Container header={<Header variant="h2">{existingApp ? "Update GitHub App" : "Register GitHub App"}</Header>} fitHeight>
+								<Container header={<Header variant="h2">Register GitHub App</Header>} fitHeight>
 									<form onSubmit={(e) => { e.preventDefault(); submit(); }}>
 										<SpaceBetween size="m">
 											<FormField label="Organization Name" constraintText="The GitHub organization where the app is installed.">

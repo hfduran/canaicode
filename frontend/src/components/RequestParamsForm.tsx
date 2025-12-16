@@ -6,7 +6,6 @@ import {
   ColumnLayout,
 } from "@cloudscape-design/components";
 import DateRangeSelector from "./DateRangeSelector";
-import ProgrammingLanguageSelector from "./ProgrammingLanguageSelector";
 
 interface RequestParamsFormProps {
   timeRange: string;
@@ -71,13 +70,6 @@ const RequestParamsForm: React.FC<RequestParamsFormProps> = ({
             placeholder="Select metric option"
           />
         </FormField>
-
-        <ProgrammingLanguageSelector
-          selectedLanguages={programmingLanguages}
-          onSelectedLanguagesChange={setProgrammingLanguages}
-          label="Programming Languages (Optional)"
-          description="Select the programming languages to analyze"
-        />
       </SpaceBetween>
 
       <SpaceBetween direction="vertical" size="m">
